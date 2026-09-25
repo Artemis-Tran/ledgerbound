@@ -5,8 +5,10 @@
 import { buildPlanIndex, comparePos, type PlanIndex, type Pos } from "./anchors.ts";
 import type { Issue } from "./issues.ts";
 import { bookDir, pad2, type Project } from "./project.ts";
+import { chapterKey, fold, loadRecord, stagedPath } from "./record.ts";
 import { RULE_IDS } from "./rules.ts";
-import { REQUIRED_DECISIONS, VOICE_KINDS, type FieldDef, type Target } from "./schemas.ts";
+import { checkValue, fieldDef, type Kind, numericRange } from "./fields.ts";
+import { BELIEFS, REQUIRED_DECISIONS, VOICE_KINDS, type Target } from "./schemas.ts";
 
 export function validateProject(project: Project): Issue[] {
   const issues: Issue[] = [];
@@ -23,6 +25,7 @@ export function validateProject(project: Project): Issue[] {
   checkThreads(project, index, err);
   checkTargets(project, index, characterIds, err, warn);
   checkVoiceSamples(project, characterIds, err);
+  checkGeneration(project, issues, err, warn);
   return issues;
 }
 
@@ -71,6 +74,14 @@ function checkSchema(project: Project, err: Report): Set<string> {
     }
     if (t.kind === "character") characters.add(id);
     for (const [field, value] of Object.entries(e.start)) {
+      if (field === "beliefs" && t.kind === "character") {
+        const facts = new Set(project.facts.data.map((f) => f.id));
+        for (const [fact, belief] of Object.entries((value ?? {}) as Record<string, unknown>)) {
+          if (!facts.has(fact)) err("unknown-fact", schema.file, `fact '${fact}' is not in facts.yaml`, `entities.${id}.start.beliefs.${fact}`);
+          if (!BELIEFS.includes(belief as never)) err("bad-value", schema.file, `a belief is one of ${BELIEFS.join(", ")}`, `entities.${id}.start.beliefs.${fact}`);
+        }
+        continue;
+      }
       const def = fieldDef(t, field);
       if (!def) err("unknown-field", schema.file, `type '${e.type}' has no field '${field}'`, `entities.${id}.start.${field}`);
       else {
@@ -242,55 +253,6 @@ function checkThreads(project: Project, index: PlanIndex, err: Report) {
 
 // ---------- targets ----------
 
-type Kind = FieldDef | { kind: "location" };
-
-function fieldDef(type: { kind: string; fields: Record<string, FieldDef> }, field: string): Kind | undefined {
-  if (field === "location" && type.kind === "character") return { kind: "location" };
-  return type.fields[field];
-}
-
-/** Returns a problem, or undefined when the value fits the field. */
-function checkValue(def: Kind, v: unknown): string | undefined {
-  const isRange = (x: unknown): x is { min?: unknown; max?: unknown } =>
-    typeof x === "object" && x !== null && !Array.isArray(x) && Object.keys(x).every((k) => k === "min" || k === "max") && Object.keys(x).length > 0;
-  switch (def.kind) {
-    case "counter": {
-      const nums = typeof v === "number" ? [v] : isRange(v) ? [v.min, v.max].filter((x) => x !== undefined) : undefined;
-      if (!nums || nums.some((n) => typeof n !== "number")) return "a counter value is a number or {min, max}";
-      if (nums.some((n) => (def.min !== undefined && (n as number) < def.min) || (def.max !== undefined && (n as number) > def.max))) {
-        return `outside the counter bounds [${def.min ?? "-∞"}, ${def.max ?? "∞"}]`;
-      }
-      return undefined;
-    }
-    case "ladder": {
-      const steps = typeof v === "string" ? [v] : isRange(v) ? [v.min, v.max].filter((x) => x !== undefined) : undefined;
-      if (!steps) return "a ladder value is a step or {min, max}";
-      const bad = steps.find((s) => !def.steps.includes(s as string));
-      return bad === undefined ? undefined : `'${String(bad)}' is not a step of the ladder (${def.steps.join(", ")})`;
-    }
-    case "collection": {
-      if (Array.isArray(v) && v.every((x) => typeof x === "string")) return undefined;
-      if (typeof v === "object" && v !== null && Object.keys(v).every((k) => k === "has" || k === "lacks")) {
-        const o = v as { has?: unknown; lacks?: unknown };
-        if ([o.has, o.lacks].every((l) => l === undefined || (Array.isArray(l) && l.every((x) => typeof x === "string")))) return undefined;
-      }
-      return "a collection value is a list, or {has: [...], lacks: [...]}";
-    }
-    case "text":
-    case "location":
-      return typeof v === "string" ? undefined : "the value must be text";
-  }
-}
-
-/** The numeric range that a counter or ladder value allows. */
-function numericRange(def: Kind, v: unknown): [number, number] | undefined {
-  const toNum = (x: unknown) => (def.kind === "ladder" ? def.steps.indexOf(x as string) : (x as number));
-  if (def.kind !== "counter" && def.kind !== "ladder") return undefined;
-  if (typeof v === "number" || typeof v === "string") return [toNum(v), toNum(v)];
-  const r = v as { min?: unknown; max?: unknown };
-  return [r.min === undefined ? -Infinity : toNum(r.min), r.max === undefined ? Infinity : toNum(r.max)];
-}
-
 function checkTargets(project: Project, index: PlanIndex, characterIds: Set<string>, err: Report, warn: Report) {
   const file = project.targets.file;
   const schema = project.schema?.data;
@@ -433,5 +395,37 @@ function checkVoiceSamples(project: Project, characterIds: Set<string>, err: Rep
   if (!samples.some((s) => /^(```|~~~)/m.test(s.body))) err("no-status-window", "voice/", "no voice sample shows a status window in a fenced code block");
   if (samples.some((s) => s.data.status === "approved") && !project.bible?.data.window_template) {
     err("no-window-template", "bible.md", "a voice sample is approved, but bible.md has no window_template", "window_template");
+  }
+}
+
+// ---------- phase 2: the record, the chapters, the memory ----------
+
+function checkGeneration(project: Project, issues: Issue[], err: Report, warn: Report) {
+  const rec = loadRecord(project.root);
+  issues.push(...rec.issues);
+  // The committed ledger must replay with no error. The staged deltas are for `lb delta`.
+  for (const i of fold(project, rec, undefined, { staged: false }).issues) if (i.severity === "error") issues.push({ ...i, code: `ledger.${i.code}` });
+
+  const approved = (book: number, chapter: number) => project.prose.get(book)?.find((c) => c.data.chapter === chapter)?.data.status === "approved";
+  for (const k of new Set(rec.ledger.map((l) => chapterKey(l.at.book, l.at.chapter)))) {
+    const [b, c] = k.split(".").map(Number);
+    if (!approved(b, c)) err("ledger-unapproved", "ledger.jsonl", `the ledger has entries for chapter ${k}, but that chapter is not approved`);
+  }
+  for (const k of rec.staged.keys()) {
+    const [b, c] = k.split(".").map(Number);
+    if (approved(b, c)) err("staged-committed", stagedPath(b, c), `chapter ${k} is approved, so its delta must be in the ledger, not staged`);
+  }
+
+  for (const [book, files] of project.prose) {
+    for (const f of files) {
+      if (!project.chapters.get(book)?.some((p) => p.data.chapter === f.data.chapter)) err("no-plan", f.file, `there is no chapter plan for ${chapterKey(book, f.data.chapter)}`);
+    }
+  }
+  for (const [book, files] of project.memory) {
+    for (const m of files) {
+      if (!approved(book, m.data.chapter)) warn("memory-early", m.file, `chapter ${chapterKey(book, m.data.chapter)} is not approved; memory is written from the approved chapter`);
+      const plan = project.chapters.get(book)?.find((p) => p.data.chapter === m.data.chapter);
+      if (plan && plan.data.ending.type !== m.data.ending_type) warn("ending-type", m.file, `the chapter ends with '${m.data.ending_type}', but the plan says '${plan.data.ending.type}'`, "ending_type");
+    }
   }
 }

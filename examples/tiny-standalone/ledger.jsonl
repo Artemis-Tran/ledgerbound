@@ -1,0 +1,5 @@
+{"entity":"timeline","field":"day","op":"set","value":1,"cause":"The chapter opens on the first morning of the tithe season.","quote":"while the spoil tips were still grey","point":"1.01.1"}
+{"entity":"ivo","field":"location","op":"set","value":"the well lip","cause":"Ivo takes the rope before the other diggers come.","quote":"He braced a boot on the iron lip","point":"1.01.2"}
+{"entity":"ivo","field":"level","op":"add","value":1,"cause":"The well pays out his level-three token.","quote":"the number settled behind his eyes","point":"1.01.3"}
+{"entity":"tithe-well","field":"held_levels","op":"add","value":1,"cause":"The well holds a third of his new level until harvest.","quote":"a third of this one already down the shaft","point":"1.01.4"}
+{"entity":"ivo","field":"location","op":"set","value":"the counting table","cause":"Ivo takes the token to Sabine to be entered.","quote":"He took the token across the yard to the counting table","point":"1.01.5"}

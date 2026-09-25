@@ -94,12 +94,16 @@ The append-only list of delta entries for a project.
 _Avoid_: Log, history
 
 **Delta entry**:
-One change to one field of one entity at one point.
+One change to one field of one entity at one point, with its cause: one short sentence that says what in the story made the change.
 _Avoid_: Event, update
 
 **Delta**:
-The ordered delta entries of one chapter.
+The ordered delta entries of one chapter. The writer makes the delta before the prose, and the prose must agree with it.
 _Avoid_: Changeset, diff
+
+**Staged delta**:
+The delta of a chapter that is not approved yet. It can change without restriction. When the chapter is approved, it is committed: appended to the ledger, and never changed again.
+_Avoid_: Draft delta, pending delta
 
 **Point**:
 A position in the story: book, chapter and the order of the entry in that chapter (for example `1.07.3`). Chapter numbers start again at 1 in each book.
@@ -123,6 +127,10 @@ _Avoid_: Goal, milestone
 **Barrier**:
 An absolute `set` delta entry. Replay does not need the entries before it for that field (a reset or a correction).
 
+**Claim**:
+One statement of record state in the prose (a stat, an item, the day, a location or a belief), with its line. It is compared with the fold at that line.
+_Avoid_: Assertion, fact (a fact is a piece of story truth)
+
 **Knowledge**:
 Who knows what at a point. A character's belief can differ from the truth.
 
@@ -138,12 +146,12 @@ _Avoid_: Story clock, calendar
 Where an entity is at a point.
 
 **Rolling memory**:
-The per-chapter files (summary, what changed, open questions, ending type) that later chapters read in place of the old prose.
+The per-chapter files (summary, what changed, open questions, ending type, phrase log) that later chapters read in place of the old prose. A reader that did not write the chapter makes each file from the approved chapter.
 _Avoid_: Recap, summary
 
 **Phrase log**:
 The part of rolling memory that lists similes, notable images, character gestures and ending types, so that none repeats.
 
 **Context brief**:
-The one input that a chapter-writing subagent gets: the chapter plan, the fold at the chapter start, the relevant rolling memory and the voice sample.
+The one input that a chapter-writing subagent gets: the prose decisions, the chapter plan and the next plans, the fold at the chapter start, the targets, the voice cards, the voice samples, the relevant rolling memory, the phrase log, the open threads and the last words of the previous chapter.
 _Avoid_: Prompt, context pack

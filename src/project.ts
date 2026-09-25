@@ -7,10 +7,12 @@ import type { Issue } from "./issues.ts";
 import {
   Bible,
   BookPlan,
+  Chapter,
   ChapterPlan,
   Character,
   Facts,
   ProjectConfig,
+  RollingMemory,
   Schema,
   SeriesPlan,
   Targets,
@@ -41,6 +43,10 @@ export interface Project {
   characters: Loaded<Character>[];
   /** voice/*.md, one per kind. */
   voiceSamples: Loaded<VoiceSample>[];
+  /** book number → chapter prose files (books/NN/chapters/MM.md), sorted by chapter */
+  prose: Map<number, Loaded<Chapter>[]>;
+  /** book number → rolling memory files (books/NN/memory/MM.md), sorted by chapter */
+  memory: Map<number, Loaded<RollingMemory>[]>;
 }
 
 export const pad2 = (n: number) => String(n).padStart(2, "0");
@@ -119,7 +125,22 @@ export function loadProject(root: string): { project?: Project; issues: Issue[] 
     chapters: new Map(),
     characters: mdFiles("characters").flatMap((p) => readMd(Character, p) ?? []),
     voiceSamples: mdFiles("voice").flatMap((p) => readMd(VoiceSample, p) ?? []),
+    prose: new Map(),
+    memory: new Map(),
   };
+
+  /** Files whose name is the chapter number: the frontmatter must agree with the path. */
+  function perChapter<T extends { book: number; chapter: number }>(schema: z.ZodType<T>, book: number, dir: string, into: Map<number, Loaded<T>[]>) {
+    const files = mdFiles(dir).flatMap((p) => readMd(schema, p) ?? []);
+    for (const c of files) {
+      const fileNum = Number(/(\d+)\.md$/.exec(c.file)?.[1]);
+      if (c.data.chapter !== fileNum || c.data.book !== book) {
+        issues.push({ code: "file-name", severity: "error", file: c.file, message: `frontmatter says book ${c.data.book} chapter ${c.data.chapter}, but the file is ${c.file}` });
+      }
+    }
+    if (files.length > 0) into.set(book, files.sort((a, b) => a.data.chapter - b.data.chapter));
+    return files;
+  }
 
   const booksRoot = join(root, "books");
   const bookDirs = existsSync(booksRoot) ? readdirSync(booksRoot).filter((d) => /^\d+$/.test(d)).sort() : [];
@@ -135,19 +156,9 @@ export function loadProject(root: string): { project?: Project; issues: Issue[] 
         project.books.set(n, plan);
       }
     }
-    const chapters = mdFiles(join("books", d, "plan")).flatMap((p) => readMd(ChapterPlan, p) ?? []);
-    for (const c of chapters) {
-      const fileNum = Number(/(\d+)\.md$/.exec(c.file)?.[1]);
-      if (c.data.chapter !== fileNum || c.data.book !== n) {
-        issues.push({
-          code: "file-name",
-          severity: "error",
-          file: c.file,
-          message: `frontmatter says book ${c.data.book} chapter ${c.data.chapter}, but the file is ${c.file}`,
-        });
-      }
-    }
-    if (chapters.length > 0) project.chapters.set(n, chapters.sort((a, b) => a.data.chapter - b.data.chapter));
+    perChapter(ChapterPlan, n, join("books", d, "plan"), project.chapters);
+    perChapter(Chapter, n, join("books", d, "chapters"), project.prose);
+    perChapter(RollingMemory, n, join("books", d, "memory"), project.memory);
   }
 
   return { project, issues };

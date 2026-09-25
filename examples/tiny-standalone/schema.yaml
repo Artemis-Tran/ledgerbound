@@ -13,15 +13,21 @@ entities:
   ivo:
     type: person
     name: Ivo Marsh
-    start: { level: 1, rank: unranked, skills: [stonesense], inventory: [rope-hook] }
+    start: { level: 2, rank: unranked, skills: [stonesense], inventory: [rope-hook] }
   sabine:
     type: person
     name: Sabine Rook
-    start: { level: 4, rank: copper }
+    start:
+      level: 4
+      rank: copper
+      beliefs: { father-debt: knows }
   hale:
     type: person
     name: Warden Hale
-    start: { level: 14, rank: iron }
+    start:
+      level: 14
+      rank: iron
+      beliefs: { warden-sells-tithes: knows, father-debt: knows }
   tithe-well:
     type: well
     name: The Tithe Well

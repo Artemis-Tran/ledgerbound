@@ -11,14 +11,15 @@ import type { Issue } from "./issues.ts";
 import { bookDir, type Loaded, type Project } from "./project.ts";
 import type { Checkpoint } from "./schemas.ts";
 
-/** Phase-1 checkpoints in workflow order, and the skill that produces each one. */
-export const PHASE1: { checkpoint: Checkpoint; skill: string }[] = [
+/** The checkpoints in workflow order, and the skill that produces each one. `replan` is not in the order: it can come at any time. */
+export const WORKFLOW: { checkpoint: Checkpoint; skill: string }[] = [
   { checkpoint: "bible", skill: "start-project" },
   { checkpoint: "series-plan", skill: "plan-series" },
   { checkpoint: "book-plan", skill: "plan-series" },
   { checkpoint: "character-arcs", skill: "plan-arcs" },
   { checkpoint: "chapter-plans", skill: "plan-book" },
   { checkpoint: "voice-sample", skill: "voice-sample" },
+  { checkpoint: "chapter-1", skill: "generate-chapter" },
 ];
 
 export function isOn(project: Project, cp: Checkpoint): boolean {
@@ -74,21 +75,27 @@ function owned(project: Project, cp: Checkpoint, book: number): Owned {
     }
     case "voice-sample":
       return { approvable: project.voiceSamples, owns: ["voice/"], missing: project.voiceSamples.length === 0 ? "voice/ has no voice samples" : undefined };
-    case "chapter-1":
-    case "replan":
-      return { approvable: [], owns: [], notApplicable: `${cp} is a phase-2 checkpoint` };
+    case "chapter-1": {
+      // Chapter 1 of book 1 only. Its approval also commits its delta (see `lb approve chapter-1`).
+      const ch = project.prose.get(1)?.find((c) => c.data.chapter === 1);
+      return { approvable: ch ? [ch] : [], owns: ["books/01/chapters/01.md", "books/01/deltas/01.jsonl"], missing: ch ? undefined : "chapter 1.01 is not written yet" };
+    }
+    case "replan": {
+      // The plan files that a replan can change. They are drafts again until the user approves the replan.
+      const planned = [...project.chapters.keys()].map((b) => `${bookDir(b)}/plan/`);
+      const approvable = [...(project.series ? [project.series] : []), ...project.books.values(), ...[...project.chapters.values()].flat(), ...project.characters];
+      return { approvable, owns: ["series.md", "books/", ...planned, "characters/", "threads.yaml", "targets.yaml"] };
+    }
   }
 }
 
 const belongs = (issue: Issue, owns: string[]) =>
-  owns.some((o) => issue.file === o || (o.endsWith("/") && issue.file.startsWith(o))) &&
-  // books/NN/plan/ and books/NN/plan belong to chapter-plans, not to book-plan.
-  !(owns.includes("books/") && /^books\/\d+\/plan(\/|$)/.test(issue.file));
+  owns.some((o) => issue.file === o || (o.endsWith("/") && issue.file.startsWith(o) && !(o === "books/" && /^books\/\d+\/(plan\/|plan$|chapters|deltas|memory)/.test(issue.file))));
 
 /** The checkpoint itself and every checkpoint before it in the workflow. */
 function upstreamAndSelf(cp: Checkpoint): Checkpoint[] {
-  const i = PHASE1.findIndex((p) => p.checkpoint === cp);
-  return i < 0 ? [cp] : PHASE1.slice(0, i + 1).map((p) => p.checkpoint);
+  const i = WORKFLOW.findIndex((p) => p.checkpoint === cp);
+  return i < 0 ? [cp] : WORKFLOW.slice(0, i + 1).map((p) => p.checkpoint);
 }
 
 export interface GateResult {
@@ -122,6 +129,7 @@ export function gate(project: Project, issues: Issue[], cp: Checkpoint, book = c
 
 /** Sets `status: approved` in every file of the checkpoint. Refuses when the gate has errors or files are missing. */
 export function approve(project: Project, issues: Issue[], cp: Checkpoint, book = currentBook(project)): GateResult {
+  if (cp === "chapter-1") throw new Error("chapter-1 is approved by commitChapter, which also commits the delta");
   const g = gate(project, issues, cp, book);
   if (g.state === "missing" || g.state === "invalid" || g.state === "n/a") return g;
   for (const f of owned(project, cp, book).approvable) {
@@ -141,23 +149,27 @@ export interface StatusReport {
 
 export function status(project: Project, issues: Issue[]): StatusReport {
   const book = currentBook(project);
-  const checkpoints = PHASE1.map((p) => gate(project, issues, p.checkpoint, book));
+  const checkpoints = WORKFLOW.map((p) => gate(project, issues, p.checkpoint, book));
   const blocked = checkpoints.findIndex((g) => !g.cleared);
   let next: string;
-  if (blocked < 0) next = "Phase 1 is complete. Generation is phase 2.";
+  if (blocked < 0) next = "Run `lb run` for the next generation step.";
   else {
     const g = checkpoints[blocked];
-    const skill = PHASE1[blocked].skill;
+    const skill = WORKFLOW[blocked].skill;
     next =
       g.state === "missing" && g.checkpoint === "bible"
         ? existsSync(join(project.root, "pitch.md"))
           ? "Run the start-project skill. It reads pitch.md."
           : "Run the start-project skill (bible.md is missing). For an idea of only one or two sentences, run develop-idea first."
+        : g.state === "missing" && g.checkpoint === "chapter-1"
+          ? "Run the generate-book skill (or generate-chapter for 1.01)."
         : g.state === "missing"
         ? `Run the ${skill} skill (${g.reason}).`
         : g.state === "invalid"
           ? `Fix the errors (run \`lb validate\`), then continue with the ${skill} skill.`
-          : `Show the ${g.checkpoint} output to the user. When they approve it, run \`lb approve ${g.checkpoint}\`.`;
+          : g.checkpoint === "chapter-1"
+            ? "Run `lb run`: chapter 1.01 needs verify-chapter, then the user's approval (`lb approve chapter-1`)."
+            : `Show the ${g.checkpoint} output to the user. When they approve it, run \`lb approve ${g.checkpoint}\`.`;
   }
   return { mode: project.config.mode, book, checkpoints, next };
 }

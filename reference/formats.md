@@ -22,7 +22,7 @@ The complete worked example is `${CLAUDE_PLUGIN_ROOT}/examples/tiny-standalone/`
 | `pitch.md` | optional, from develop-idea: frontmatter `working_title`, `format`, `premise`; sections per bible decision; each bullet marked `(yours)`, `(chosen)` or `(filled)`. Not validated. | – |
 | `project.yaml` | title, `format` (series/standalone), `chapter_words`, `mode`, `checkpoints`, `lint` overrides | – |
 | `bible.md` | `decisions:` list of `{id, topic, value, status: locked\|open, options_considered, reason}`. Required IDs: `plot`, `prose-style`, `pov-tense`, `characters`, `setting`, `stat-system`, `themes`, `tone`. `window_template:` after the voice sample. | `bible` |
-| `schema.yaml` | `types:` (each with `kind: character` or not, and `fields:`), `entities:` (each with `type`, `name`, `start` values) | `bible` |
+| `schema.yaml` | `types:` (each with `kind: character` or not, and `fields:`), `entities:` (each with `type`, `name`, `start` values; a character can also have `beliefs: {fact: belief}` in `start`) | `bible` |
 | `facts.yaml` | list of `{id, truth}`: things a character can know, not know, or believe falsely | `bible` |
 | `series.md` | `books`, `ending_state`, `promise`, `question: {raises, answers}`, `handoff` | `series-plan` |
 | `books/NN/plan.md` | the same four level fields, plus `acts:` (each with `id` and the four fields) and custom `anchors:` | `book-plan` |
@@ -31,6 +31,11 @@ The complete worked example is `${CLAUDE_PLUGIN_ROOT}/examples/tiny-standalone/`
 | `books/NN/plan/MM.md` | one chapter: `pov`, `job: {value, from, to}`, `arc_beats`, `threads: {plants, advances, pays_off}`, `ending: {type, hook}`, `anchors`, `exceptions`, `day`, `scenes: [{goal, conflict, outcome}]` | `chapter-plans` |
 | `threads.yaml` | list of `{id, kind, summary, plant, beats, payoff}` | `chapter-plans` |
 | `voice/<kind>.md` | three files: `dialogue`, `action`, `quiet`. Frontmatter `kind`, `pov`, `characters` (2 or more for `dialogue`), `source`; then the prose. At least one sample has a status window in a fenced code block. | `voice-sample` |
+| `books/NN/deltas/MM.jsonl` | the staged delta of a chapter: one delta entry per line (see below), in the order of the prose. No `point`. | – |
+| `books/NN/chapters/MM.md` | frontmatter `status`, `book`, `chapter`, `title`; then the prose. `status: approved` only through `lb commit` or `lb approve chapter-1`. | `chapter-1` (1.01 only) |
+| `books/NN/memory/MM.md` | rolling memory: `book`, `chapter`, `summary`, `changed`, `open_questions`, `ending_type`, `phrase_log: {similes, images, gestures: {character: [...]}}`. No body. | – |
+| `ledger.jsonl` | the committed delta entries, each with its `point`. Only `lb commit` writes it. | – |
+| `runs/` | `briefs/NN-MM.md` (from `lb brief`), `verify/NN-MM.json` (`{round, verdict, open}` from verify-chapter), `book-NN.json` (from `lb run`). | – |
 
 ## Schema field kinds
 
@@ -49,3 +54,40 @@ A target value for a counter or ladder is exact (`rank: iron`) or a range (`leve
 - `threads` agrees exactly with `threads.yaml`: a chapter lists a thread under `plants` when the thread's `plant` is that chapter, and the same for `advances` (`beats`) and `pays_off` (`payoff`).
 - `arc_beats` lists `character/beat` IDs. Each arc beat of the book is in exactly one chapter, inside its act.
 - `exceptions` lists `{rule, reason}` with rule IDs from `lb rules`. An exception waives the rule for this chapter only, and the reason says what effect it buys.
+
+## Delta entries
+
+One JSON object per line. `lb delta <point>` checks a staged delta; it is right when it reports no errors.
+
+```json
+{"entity":"ivo","field":"level","op":"add","value":1,"cause":"The dive pays out a level.","quote":"The token came up hot"}
+{"entity":"ivo","field":"rank","op":"set","value":"copper","cause":"Level four is copper.","quote":"Copper, the window said"}
+{"entity":"ivo","field":"belief.father-debt","op":"set","value":"knows","cause":"He reads the red page.","quote":"his father's name in red"}
+{"entity":"timeline","field":"day","op":"set","value":3,"cause":"Two days pass.","quote":"On the third day"}
+{"entity":"oren","op":"create","type":"person","name":"Oren Pell","value":{"level":6,"rank":"copper"},"cause":"The crew boss appears.","quote":"Oren Pell ran the crew"}
+```
+
+| Field kind | Operations |
+|---|---|
+| `counter` | `add` (a change, which can be negative), `set` (a barrier) |
+| `ladder` | `set` (one step up is `set` to the next step) |
+| `collection` | `add`, `remove` (an item ID or a list), `set` (a barrier) |
+| `text`, `location` | `set` |
+| `belief.<fact>` (characters) | `set` to `knows`, `believes-false` or `unaware` |
+| `timeline`: `day` / `time` | `day`: `add` or `set`, never back; `time`: `set` (free text, for example `dusk`) |
+| a new entity | `create` with `type`, `name`, and the start values in `value` |
+
+- `cause` is required: one short sentence on what in the story made the change.
+- `quote` is added after the prose is written: the exact words (at most 15) where the change occurs. The entries are in the order of their quotes.
+- In one chapter, a counter changes by at most its `max_step`, and a counter or ladder changes only in its `direction` (a ladder only goes up). The chapter plan exceptions `record.max-step` and `record.direction` allow it.
+- At the end of a chapter, the fold must meet the targets of the anchors mapped to that chapter.
+
+## Claims
+
+The continuity-checker writes the claims of a chapter as a JSON list for `lb claims <point> <file>`:
+
+```json
+[{"line":14,"quote":"Level ........ 3 → 4","entity":"ivo","field":"level","value":4}]
+```
+
+`entity`, `field` and `value` use the same names as delta entries. For a collection, `value` is an item ID that the entity has, or `{"has":[...],"lacks":[...]}`.

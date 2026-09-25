@@ -41,6 +41,8 @@ export const ProjectConfig = z.strictObject({
   format: z.enum(["series", "standalone"]).default("series"),
   chapter_words: z.number().int().positive().default(3000),
   mode: z.enum(["normal", "just-write-it"]).default("normal"),
+  /** The size limit of a context brief, in characters. */
+  brief_chars: z.number().int().positive().default(60000),
   checkpoints: z.partialRecord(z.enum(CHECKPOINTS), OnOff).default({}),
   lint: z
     .strictObject({
@@ -110,7 +112,7 @@ export const EntityType = z.strictObject({
 export const Entity = z.strictObject({
   type: Slug,
   name: Text,
-  /** Values at the start of book 1. Phase 2 turns them into the first delta entries. */
+  /** Values at the start of book 1: the state that the fold starts from. A character can also have `beliefs: {fact: belief}` here. */
   start: z.record(z.string(), z.unknown()).default({}),
 });
 
@@ -263,3 +265,73 @@ export const VoiceSample = z
     }
   });
 export type VoiceSample = z.infer<typeof VoiceSample>;
+
+// ---------- ledger.jsonl, books/NN/deltas/MM.jsonl ----------
+
+/** A point with the entry order: `1.07.3` = book 1, chapter 7, entry 3. `1.07.0` is the start of the chapter. */
+export const EntryPointRe = /^(\d+)\.(\d+)\.(\d+)$/;
+
+export const DELTA_OPS = ["add", "remove", "set", "create"] as const;
+
+/**
+ * One delta entry: one change to one field of one entity. In a staged delta the point is optional
+ * (the order of the lines gives it); in the ledger it is required.
+ */
+export const DeltaEntry = z
+  .strictObject({
+    point: z.string().regex(EntryPointRe, "must look like 1.07.3").optional(),
+    /** An entity ID from schema.yaml, an ID made by an earlier `create`, or `timeline`. */
+    entity: Slug,
+    /** A schema field, `location`, `belief.<fact>`, or for the timeline `day` or `time`. Absent for `create`. */
+    field: z.string().regex(/^[a-z][a-z0-9_]*(\.[a-z0-9-]+)?$/).optional(),
+    op: z.enum(DELTA_OPS),
+    value: z.unknown(),
+    /** For `create`: the entity type and name. `value` holds the start values. */
+    type: Slug.optional(),
+    name: Text.optional(),
+    /** What in the story made the change, in one short sentence. */
+    cause: Text,
+    /** The exact words of the prose (at most 15) where the change occurs. Added after the prose is written. */
+    quote: z.string().trim().min(1).optional(),
+  })
+  .superRefine((e, ctx) => {
+    if (e.op === "create") {
+      if (!e.type) ctx.addIssue({ code: "custom", path: ["type"], message: "a create entry needs 'type'" });
+      if (!e.name) ctx.addIssue({ code: "custom", path: ["name"], message: "a create entry needs 'name'" });
+      if (e.field) ctx.addIssue({ code: "custom", path: ["field"], message: "a create entry has no 'field'" });
+    } else if (!e.field) ctx.addIssue({ code: "custom", path: ["field"], message: `an '${e.op}' entry needs 'field'` });
+    if (e.quote && e.quote.split(/\s+/).length > 15) ctx.addIssue({ code: "custom", path: ["quote"], message: "a quote has at most 15 words" });
+  });
+export type DeltaEntry = z.infer<typeof DeltaEntry>;
+
+// ---------- books/NN/chapters/MM.md ----------
+
+export const Chapter = z.strictObject({
+  /** `approved` only through `lb commit` or `lb approve chapter-1`, which also commit the delta. */
+  status: Status,
+  book: z.number().int().min(1),
+  chapter: z.number().int().min(1),
+  title: z.string().optional(),
+});
+export type Chapter = z.infer<typeof Chapter>;
+
+// ---------- books/NN/memory/MM.md ----------
+
+export const RollingMemory = z.strictObject({
+  book: z.number().int().min(1),
+  chapter: z.number().int().min(1),
+  /** 3-5 sentences, facts only. */
+  summary: Text,
+  changed: TextList,
+  open_questions: TextList,
+  ending_type: z.enum(ENDING_TYPES),
+  phrase_log: z
+    .strictObject({
+      similes: TextList,
+      images: TextList,
+      /** character ID → gestures */
+      gestures: z.record(Slug, TextList).default({}),
+    })
+    .prefault({}),
+});
+export type RollingMemory = z.infer<typeof RollingMemory>;

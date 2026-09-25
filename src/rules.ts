@@ -2,12 +2,13 @@
  * The rule IDs of guidelines/writing.md. Lint findings, check-prose findings and
  * chapter-plan `exceptions` all use these IDs. `lb rules` prints this list.
  *
- * check: `lint` = lb lint checks it; `judge` = check-prose judges it; `plan` = lb validate checks it.
+ * check: `lint` = lb lint checks it; `judge` = check-prose judges it; `plan` = lb validate checks it;
+ * `record` = lb delta checks it (not in guidelines/writing.md: the record's own limits).
  */
 export interface Rule {
   id: string;
   section: string;
-  check: ("lint" | "judge" | "plan")[];
+  check: ("lint" | "judge" | "plan" | "record")[];
   summary: string;
 }
 
@@ -56,6 +57,8 @@ export const RULES: Rule[] = [
   { id: "litrpg.fights", section: "7", check: ["judge"], summary: "Fights have clear geography, a changing situation and a cost." },
   { id: "repetition.simile", section: "4, 8", check: ["lint"], summary: "The same simile never twice in a book." },
   { id: "repetition.phrase", section: "8", check: ["lint", "judge"], summary: "The same distinctive phrase never twice in a book." },
+  { id: "record.max-step", section: "rec", check: ["record"], summary: "A counter changes by at most its max_step in one chapter." },
+  { id: "record.direction", section: "rec", check: ["record"], summary: "A counter or ladder changes only in its direction (a ladder only goes up)." },
   { id: "repetition.verbal-habit", section: "8", check: ["judge"], summary: "A character's verbal habit at most once every few chapters." },
 ];
 

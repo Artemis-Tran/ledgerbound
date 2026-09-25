@@ -101,9 +101,11 @@ describe("status", () => {
     expect(status(load(dir).project, []).next).toBe("Run the start-project skill. It reads pitch.md.");
   });
 
-  test("the fixture has finished phase 1", () => {
+  test("the fixture has finished planning and chapter 1, so generation continues with lb run", () => {
     const { project, issues } = load(fixtureCopy());
-    expect(status(project, issues).next).toContain("Phase 1 is complete");
+    const s = status(project, issues);
+    expect(s.checkpoints.every((g) => g.cleared)).toBe(true);
+    expect(s.next).toContain("lb run");
   });
 
   test("a draft asks for the user's approval", () => {
