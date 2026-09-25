@@ -1,0 +1,4 @@
+# Facts that knowledge tracks. Each character knows, believes-false or is unaware of each fact.
+# - id: mentor-loyal
+#   truth: Oren reports every move Kael makes to the Guild.
+[]

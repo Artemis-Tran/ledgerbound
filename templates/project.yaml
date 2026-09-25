@@ -1,0 +1,22 @@
+# Ledgerbound project config. Format: see reference/formats.md in the Ledgerbound plugin.
+title: {{TITLE}}
+format: {{FORMAT}}        # series | standalone
+chapter_words: 3000
+mode: normal              # normal | just-write-it (switches off every checkpoint except replan)
+
+# Each checkpoint is on unless you set it to off here.
+checkpoints:
+  bible: on
+  series-plan: on
+  book-plan: on
+  character-arcs: on
+  chapter-plans: on
+  voice-sample: on
+  chapter-1: on
+  replan: on
+
+lint:
+  banned_add: []          # extra banned phrases for this story
+  banned_remove: []       # IDs from `lb rules` / the lint output, e.g. dance-metaphor
+  body_tells_add: {}      # id: regex, for gestures this story tends to repeat
+  max_em_dash_per_1000: 3

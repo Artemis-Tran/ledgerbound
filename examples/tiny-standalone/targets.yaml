@@ -1,0 +1,31 @@
+- anchor: b1/act1/end
+  expect:
+    ivo.rank: copper
+    ivo.level: { min: 3 }
+    ivo.skills: { has: [stonesense] }
+  knowledge:
+    ivo: { warden-sells-tithes: unaware, father-debt: unaware }
+    sabine: { father-debt: knows }
+  day: 1
+- anchor: b1/midpoint
+  expect:
+    ivo.level: { min: 4, max: 6 }
+  knowledge:
+    ivo: { father-debt: knows }
+- anchor: b1/act2/end
+  expect:
+    ivo.level: { min: 6, max: 8 }
+  knowledge:
+    ivo: { warden-sells-tithes: believes-false }
+  day: 4
+- anchor: b1/act3/end
+  expect:
+    ivo.rank: iron
+    ivo.level: { min: 9 }
+    ivo.inventory: { has: [tithe-ledger] }
+    ivo.location: the manor gate
+  knowledge:
+    ivo: { warden-sells-tithes: knows }
+- anchor: b1/end
+  expect:
+    ivo.rank: iron

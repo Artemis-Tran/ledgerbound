@@ -1,0 +1,6 @@
+{
+  "name": "ledgerbound-local",
+  "owner": { "name": "Artemis Tran" },
+  "description": "Local marketplace for the Ledgerbound plugin.",
+  "plugins": [{ "name": "ledgerbound", "source": "./", "description": "Plan and write LitRPG / progression-fantasy novels." }]
+}

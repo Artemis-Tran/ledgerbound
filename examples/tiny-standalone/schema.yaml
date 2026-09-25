@@ -1,0 +1,28 @@
+types:
+  person:
+    kind: character
+    fields:
+      level: { kind: counter, min: 1, max: 30, max_step: 3, direction: up }
+      rank: { kind: ladder, steps: [unranked, copper, iron, silver] }
+      skills: { kind: collection }
+      inventory: { kind: collection }
+  well:
+    fields:
+      held_levels: { kind: counter, min: 0 }
+entities:
+  ivo:
+    type: person
+    name: Ivo Marsh
+    start: { level: 1, rank: unranked, skills: [stonesense], inventory: [rope-hook] }
+  sabine:
+    type: person
+    name: Sabine Rook
+    start: { level: 4, rank: copper }
+  hale:
+    type: person
+    name: Warden Hale
+    start: { level: 14, rank: iron }
+  tithe-well:
+    type: well
+    name: The Tithe Well
+    start: { held_levels: 212 }

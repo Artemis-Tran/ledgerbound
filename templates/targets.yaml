@@ -1,0 +1,8 @@
+# Targets: ending states as expected record values at plan anchors.
+# - anchor: b1/act1/end
+#   expect:
+#     kael.rank: bronze
+#     kael.inventory: { has: [ashen-sword] }
+#   knowledge:
+#     kael: { mentor-loyal: believes-false }
+[]

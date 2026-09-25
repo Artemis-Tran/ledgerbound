@@ -1,0 +1,23 @@
+{
+  "name": "ledgerbound",
+  "version": "0.1.0",
+  "description": "Plan and write LitRPG / progression-fantasy novels with Claude Code: skills plus a deterministic CLI.",
+  "type": "module",
+  "private": true,
+  "bin": { "lb": "bin/lb.js" },
+  "engines": { "node": ">=22.18" },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lb": "node src/cli.ts"
+  },
+  "dependencies": {
+    "yaml": "^2.9.1",
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  }
+}

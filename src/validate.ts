@@ -1,0 +1,428 @@
+/**
+ * The plan validator. It checks every file that exists, and the references between files.
+ * Missing files are the business of checkpoints.ts, which knows which step is next.
+ */
+import { buildPlanIndex, comparePos, type PlanIndex, type Pos } from "./anchors.ts";
+import type { Issue } from "./issues.ts";
+import { bookDir, pad2, type Project } from "./project.ts";
+import { RULE_IDS } from "./rules.ts";
+import { REQUIRED_DECISIONS, type FieldDef, type Target } from "./schemas.ts";
+
+export function validateProject(project: Project): Issue[] {
+  const issues: Issue[] = [];
+  const err = (code: string, file: string, message: string, path?: string) => issues.push({ code, severity: "error", file, path, message });
+  const warn = (code: string, file: string, message: string, path?: string) => issues.push({ code, severity: "warn", file, path, message });
+
+  const index = buildPlanIndex(project, issues);
+  const characterIds = checkSchema(project, err);
+  checkBible(project, err);
+  checkFacts(project, err);
+  const totalBooks = checkLevels(project, err, warn);
+  checkCharacters(project, index, characterIds, totalBooks, err, warn);
+  checkChapters(project, index, characterIds, err, warn);
+  checkThreads(project, index, err);
+  checkTargets(project, index, characterIds, err, warn);
+  checkVoiceSample(project, characterIds, err);
+  return issues;
+}
+
+type Report = (code: string, file: string, message: string, path?: string) => void;
+
+function duplicates<T>(items: T[], key: (t: T) => string): string[] {
+  const seen = new Set<string>();
+  const dup = new Set<string>();
+  for (const k of items.map(key)) (seen.has(k) ? dup : seen).add(k);
+  return [...dup];
+}
+
+// ---------- bible, schema, facts ----------
+
+function checkBible(project: Project, err: Report) {
+  const bible = project.bible;
+  if (!bible) return;
+  const ids = new Set(bible.data.decisions.map((d) => d.id));
+  for (const id of REQUIRED_DECISIONS) {
+    if (!ids.has(id)) err("decision-missing", bible.file, `the bible has no '${id}' decision`, "decisions");
+  }
+  for (const d of duplicates(bible.data.decisions, (d) => d.id)) err("duplicate-id", bible.file, `decision '${d}' is defined twice`, "decisions");
+}
+
+/** Returns the IDs of all entities whose type has kind `character`. */
+function checkSchema(project: Project, err: Report): Set<string> {
+  const characters = new Set<string>();
+  const schema = project.schema;
+  if (!schema) return characters;
+  const { types, entities } = schema.data;
+  for (const [name, t] of Object.entries(types)) {
+    if (t.kind === "character" && "location" in t.fields) {
+      err("reserved-field", schema.file, "'location' is built in for characters; remove it from the fields", `types.${name}.fields.location`);
+    }
+    for (const [fname, f] of Object.entries(t.fields)) {
+      if (f.kind === "ladder" && duplicates(f.steps, (s) => s).length > 0) err("ladder-steps", schema.file, "ladder steps must be unique", `types.${name}.fields.${fname}.steps`);
+      if (f.kind === "counter" && f.min !== undefined && f.max !== undefined && f.min > f.max) err("counter-bounds", schema.file, "min is larger than max", `types.${name}.fields.${fname}`);
+    }
+  }
+  if (!Object.values(types).some((t) => t.kind === "character")) err("no-character-type", schema.file, "no entity type has kind: character", "types");
+  for (const [id, e] of Object.entries(entities)) {
+    const t = types[e.type];
+    if (!t) {
+      err("unknown-type", schema.file, `type '${e.type}' is not defined`, `entities.${id}.type`);
+      continue;
+    }
+    if (t.kind === "character") characters.add(id);
+    for (const [field, value] of Object.entries(e.start)) {
+      const def = fieldDef(t, field);
+      if (!def) err("unknown-field", schema.file, `type '${e.type}' has no field '${field}'`, `entities.${id}.start.${field}`);
+      else {
+        const problem = checkValue(def, value);
+        if (problem) err("bad-value", schema.file, problem, `entities.${id}.start.${field}`);
+      }
+    }
+  }
+  return characters;
+}
+
+function checkFacts(project: Project, err: Report) {
+  for (const d of duplicates(project.facts.data, (f) => f.id)) err("duplicate-id", project.facts.file, `fact '${d}' is defined twice`);
+}
+
+// ---------- series and book levels ----------
+
+function checkLevels(project: Project, err: Report, warn: Report): number {
+  const standalone = project.config.format === "standalone";
+  const series = project.series;
+  if (standalone && series) warn("standalone-series", series.file, "project.yaml says standalone, so series.md is not used");
+  const total = standalone ? 1 : (series?.data.books ?? Math.max(0, ...project.books.keys()));
+
+  if (series && !standalone && series.data.question.answers.length === 0) {
+    err("no-answer", series.file, "the series must answer at least one question", "question.answers");
+  }
+  if (series || standalone) {
+    for (let b = 1; b <= total; b++) {
+      if (!project.books.has(b)) err("missing", `${bookDir(b)}/plan.md`, `book ${b} has no book-level plan`);
+    }
+  }
+  for (const [b, plan] of project.books) {
+    if (b > total && total > 0) err("extra-book", plan.file, `book ${b} is beyond the ${total} book(s) in the plan`);
+    if (plan.data.question.answers.length === 0) err("no-answer", plan.file, "each book must resolve at least one main question", "question.answers");
+    if (!standalone && b < total && plan.data.handoff.length === 0) err("no-handoff", plan.file, "a book before the last one needs a handoff", "handoff");
+    for (const d of duplicates(plan.data.acts, (a) => a.id)) err("duplicate-id", plan.file, `act '${d}' is defined twice`, "acts");
+  }
+  return total;
+}
+
+// ---------- characters and arc beats ----------
+
+function checkCharacters(project: Project, index: PlanIndex, characterIds: Set<string>, totalBooks: number, err: Report, warn: Report) {
+  const chars = project.characters;
+  if (chars.length === 0) return;
+  const protagonists = chars.filter((c) => c.data.role === "protagonist");
+  if (protagonists.length !== 1) err("protagonist", "characters/", `there must be exactly one protagonist, found ${protagonists.length}`);
+
+  for (const c of chars) {
+    const expectedFile = `characters/${c.data.id}.md`;
+    if (c.file !== expectedFile) err("file-name", c.file, `id is '${c.data.id}', so the file must be ${expectedFile}`, "id");
+    if (project.schema && !characterIds.has(c.data.id)) warn("not-in-schema", c.file, `'${c.data.id}' is not a character entity in schema.yaml`, "id");
+    for (const d of duplicates(c.data.arc_beats, (b) => b.id)) err("duplicate-id", c.file, `arc beat '${d}' is defined twice`, "arc_beats");
+    c.data.arc_beats.forEach((beat, i) => {
+      if (totalBooks > 0 && beat.book > totalBooks) err("unknown-book", c.file, `book ${beat.book} is not in the plan`, `arc_beats.${i}.book`);
+      const plan = project.books.get(beat.book);
+      if (plan && !plan.data.acts.some((a) => a.id === beat.act)) err("unknown-act", c.file, `book ${beat.book} has no act '${beat.act}'`, `arc_beats.${i}.act`);
+    });
+    if (c.data.role !== "supporting") {
+      for (const b of project.books.keys()) {
+        if (!c.data.arc_beats.some((beat) => beat.book === b)) warn("no-arc-beat", c.file, `${c.data.id} has no arc beat in book ${b}`, "arc_beats");
+      }
+    }
+  }
+
+  // Every arc beat of a book with chapter plans is placed in exactly one chapter of its act.
+  for (const book of index.planned) {
+    const chapters = project.chapters.get(book)!;
+    for (const c of chars) {
+      for (const beat of c.data.arc_beats.filter((b) => b.book === book)) {
+        const ref = `${c.data.id}/${beat.id}`;
+        const placed = chapters.filter((ch) => ch.data.arc_beats.includes(ref));
+        if (placed.length === 0) err("beat-unplaced", `${bookDir(book)}/plan`, `arc beat ${ref} is not in any chapter plan`);
+        if (placed.length > 1) err("beat-twice", `${bookDir(book)}/plan`, `arc beat ${ref} is in chapters ${placed.map((p) => p.data.chapter).join(", ")}`);
+        const range = index.actRanges.get(book)?.get(beat.act);
+        for (const p of placed) {
+          if (range && (p.data.chapter < range[0] || p.data.chapter > range[1])) {
+            err("beat-wrong-act", p.file, `arc beat ${ref} belongs to ${beat.act} (chapters ${range[0]}–${range[1]})`, "arc_beats");
+          }
+        }
+      }
+    }
+  }
+}
+
+// ---------- chapter plans ----------
+
+function checkChapters(project: Project, index: PlanIndex, characterIds: Set<string>, err: Report, warn: Report) {
+  const beats = new Map(project.characters.flatMap((c) => c.data.arc_beats.map((b): [string, typeof b] => [`${c.data.id}/${b.id}`, b])));
+  const threads = new Set(project.threads.data.map((t) => t.id));
+  const knownPov = new Set([...characterIds, ...project.characters.map((c) => c.data.id)]);
+
+  for (const [book, chapters] of project.chapters) {
+    chapters.forEach((c, i) => {
+      const d = c.data;
+      if (d.chapter !== i + 1) err("chapter-gap", c.file, `chapters must be numbered 1, 2, 3… with no gap; expected ${pad2(i + 1)}`, "chapter");
+      const waived = new Set(d.exceptions.map((e) => e.rule));
+      d.exceptions.forEach((e, k) => {
+        if (!RULE_IDS.has(e.rule)) err("unknown-rule", c.file, `'${e.rule}' is not a rule ID (see \`lb rules\`)`, `exceptions.${k}.rule`);
+      });
+      if (!knownPov.has(d.pov)) err("unknown-character", c.file, `pov '${d.pov}' is not a character`, "pov");
+      if (d.job.from.trim().toLowerCase() === d.job.to.trim().toLowerCase()) err("no-value-shift", c.file, "job.from and job.to are the same: the chapter has no job", "job");
+
+      const prev = chapters[i - 1];
+      if (prev && prev.data.ending.type === d.ending.type && !waived.has("endings.type-repeat")) {
+        err("endings.type-repeat", c.file, `ending type '${d.ending.type}' is the same as in chapter ${prev.data.chapter}`, "ending.type");
+      }
+      const window = chapters.slice(Math.max(0, i - 2), i + 1);
+      if (d.ending.type === "cliffhanger" && window.filter((w) => w.data.ending.type === "cliffhanger").length > 1 && !waived.has("endings.cliffhanger-rate")) {
+        err("endings.cliffhanger-rate", c.file, "more than one cliffhanger in three consecutive chapters", "ending.type");
+      }
+      if (prev?.data.day !== undefined && d.day !== undefined && d.day < prev.data.day) warn("day-order", c.file, `day ${d.day} is before day ${prev.data.day} of the chapter before`, "day");
+
+      if (d.arc_beats.length === 0) warn("no-arc-beat", c.file, "the chapter serves no arc beat", "arc_beats");
+      d.arc_beats.forEach((ref, k) => {
+        const beat = beats.get(ref);
+        if (!beat) err("unknown-beat", c.file, `arc beat ${ref} is not defined in characters/`, `arc_beats.${k}`);
+        else if (beat.book !== book) err("beat-wrong-book", c.file, `arc beat ${ref} belongs to book ${beat.book}`, `arc_beats.${k}`);
+      });
+      for (const kind of ["plants", "advances", "pays_off"] as const) {
+        d.threads[kind].forEach((t, k) => {
+          if (!threads.has(t)) err("unknown-thread", c.file, `thread '${t}' is not in threads.yaml`, `threads.${kind}.${k}`);
+        });
+      }
+    });
+  }
+}
+
+// ---------- threads ----------
+
+function checkThreads(project: Project, index: PlanIndex, err: Report) {
+  const file = project.threads.file;
+  for (const d of duplicates(project.threads.data, (t) => t.id)) err("duplicate-id", file, `thread '${d}' is defined twice`);
+
+  project.threads.data.forEach((t, i) => {
+    const at = (ref: string, path: string) => {
+      const r = index.resolve(ref);
+      if ("error" in r) {
+        err("bad-position", file, r.error, `${i}.${path}`);
+        return undefined;
+      }
+      return r;
+    };
+    const plant = at(t.plant, "plant");
+    const beats = t.beats.map((b, k) => at(b, `beats.${k}`));
+    const payoff = at(t.payoff, "payoff");
+    if (plant && payoff && comparePos(plant.pos, payoff.pos) >= 0) err("thread-order", file, `${t.id}: the payoff must come after the plant`, `${i}.payoff`);
+    beats.forEach((b, k) => {
+      if (!b) return;
+      if ((plant && comparePos(b.pos, plant.pos) < 0) || (payoff && comparePos(b.pos, payoff.pos) > 0)) {
+        err("thread-order", file, `${t.id}: beat ${t.beats[k]} is not between the plant and the payoff`, `${i}.beats.${k}`);
+      }
+    });
+
+    // threads.yaml and the chapter plans must agree, in both directions.
+    const expected = { plants: [plant], advances: beats, pays_off: [payoff] };
+    for (const [book, chapters] of project.chapters) {
+      for (const c of chapters) {
+        for (const kind of ["plants", "advances", "pays_off"] as const) {
+          const planned = expected[kind].some((p) => p?.book === book && p.chapter === c.data.chapter);
+          const listed = c.data.threads[kind].includes(t.id);
+          if (planned && !listed) err("thread-mismatch", c.file, `threads.yaml puts a '${kind}' of ${t.id} here, but threads.${kind} does not list it`, `threads.${kind}`);
+          if (listed && !planned) err("thread-mismatch", c.file, `threads.${kind} lists ${t.id}, but threads.yaml does not put it in this chapter`, `threads.${kind}`);
+        }
+      }
+    }
+  });
+}
+
+// ---------- targets ----------
+
+type Kind = FieldDef | { kind: "location" };
+
+function fieldDef(type: { kind: string; fields: Record<string, FieldDef> }, field: string): Kind | undefined {
+  if (field === "location" && type.kind === "character") return { kind: "location" };
+  return type.fields[field];
+}
+
+/** Returns a problem, or undefined when the value fits the field. */
+function checkValue(def: Kind, v: unknown): string | undefined {
+  const isRange = (x: unknown): x is { min?: unknown; max?: unknown } =>
+    typeof x === "object" && x !== null && !Array.isArray(x) && Object.keys(x).every((k) => k === "min" || k === "max") && Object.keys(x).length > 0;
+  switch (def.kind) {
+    case "counter": {
+      const nums = typeof v === "number" ? [v] : isRange(v) ? [v.min, v.max].filter((x) => x !== undefined) : undefined;
+      if (!nums || nums.some((n) => typeof n !== "number")) return "a counter value is a number or {min, max}";
+      if (nums.some((n) => (def.min !== undefined && (n as number) < def.min) || (def.max !== undefined && (n as number) > def.max))) {
+        return `outside the counter bounds [${def.min ?? "-∞"}, ${def.max ?? "∞"}]`;
+      }
+      return undefined;
+    }
+    case "ladder": {
+      const steps = typeof v === "string" ? [v] : isRange(v) ? [v.min, v.max].filter((x) => x !== undefined) : undefined;
+      if (!steps) return "a ladder value is a step or {min, max}";
+      const bad = steps.find((s) => !def.steps.includes(s as string));
+      return bad === undefined ? undefined : `'${String(bad)}' is not a step of the ladder (${def.steps.join(", ")})`;
+    }
+    case "collection": {
+      if (Array.isArray(v) && v.every((x) => typeof x === "string")) return undefined;
+      if (typeof v === "object" && v !== null && Object.keys(v).every((k) => k === "has" || k === "lacks")) {
+        const o = v as { has?: unknown; lacks?: unknown };
+        if ([o.has, o.lacks].every((l) => l === undefined || (Array.isArray(l) && l.every((x) => typeof x === "string")))) return undefined;
+      }
+      return "a collection value is a list, or {has: [...], lacks: [...]}";
+    }
+    case "text":
+    case "location":
+      return typeof v === "string" ? undefined : "the value must be text";
+  }
+}
+
+/** The numeric range that a counter or ladder value allows. */
+function numericRange(def: Kind, v: unknown): [number, number] | undefined {
+  const toNum = (x: unknown) => (def.kind === "ladder" ? def.steps.indexOf(x as string) : (x as number));
+  if (def.kind !== "counter" && def.kind !== "ladder") return undefined;
+  if (typeof v === "number" || typeof v === "string") return [toNum(v), toNum(v)];
+  const r = v as { min?: unknown; max?: unknown };
+  return [r.min === undefined ? -Infinity : toNum(r.min), r.max === undefined ? Infinity : toNum(r.max)];
+}
+
+function checkTargets(project: Project, index: PlanIndex, characterIds: Set<string>, err: Report, warn: Report) {
+  const file = project.targets.file;
+  const schema = project.schema?.data;
+  const facts = new Set(project.facts.data.map((f) => f.id));
+
+  interface Sample {
+    pos: Pos;
+    chapterIndex?: number;
+    value: unknown;
+    reset: boolean;
+    where: string;
+  }
+  const series = new Map<string, Sample[]>();
+  const push = (key: string, s: Sample) => series.set(key, [...(series.get(key) ?? []), s]);
+
+  // A chapter number counted from the start of book 1, when all books before it have chapter plans.
+  const globalChapter = (book: number, chapter?: number) => {
+    if (chapter === undefined) return undefined;
+    let n = chapter;
+    for (let b = 1; b < book; b++) {
+      const cs = project.chapters.get(b);
+      if (!cs) return undefined;
+      n += cs.length;
+    }
+    return n;
+  };
+
+  if (schema) {
+    for (const [id, e] of Object.entries(schema.entities)) {
+      for (const [field, value] of Object.entries(e.start)) push(`${id}.${field}`, { pos: [0, 0, 0], chapterIndex: 0, value, reset: false, where: `schema.yaml start of ${id}` });
+    }
+  }
+
+  project.targets.data.forEach((t: Target, i) => {
+    const r = index.resolve(t.anchor);
+    if ("error" in r) {
+      err("unknown-anchor", file, r.error, `${i}.anchor`);
+      return;
+    }
+    const sample = (value: unknown): Sample => ({ pos: r.pos, chapterIndex: globalChapter(r.book, r.chapter), value, reset: t.reset, where: t.anchor });
+    for (const [key, value] of Object.entries(t.expect)) {
+      if (!schema) break;
+      const [entityId, field] = key.split(".");
+      const entity = schema.entities[entityId];
+      if (!entity) {
+        err("unknown-entity", file, `entity '${entityId}' is not in schema.yaml`, `${i}.expect.${key}`);
+        continue;
+      }
+      const def = fieldDef(schema.types[entity.type] ?? { kind: "other", fields: {} }, field);
+      if (!def) {
+        err("unknown-field", file, `'${entityId}' has no field '${field}'`, `${i}.expect.${key}`);
+        continue;
+      }
+      const problem = checkValue(def, value);
+      if (problem) err("bad-value", file, problem, `${i}.expect.${key}`);
+      else push(key, sample(value));
+    }
+    for (const [who, beliefs] of Object.entries(t.knowledge)) {
+      if (schema && !characterIds.has(who)) err("unknown-character", file, `'${who}' is not a character entity`, `${i}.knowledge.${who}`);
+      for (const [fact, belief] of Object.entries(beliefs)) {
+        if (!facts.has(fact)) err("unknown-fact", file, `fact '${fact}' is not in facts.yaml`, `${i}.knowledge.${who}.${fact}`);
+        else push(`knowledge:${who}:${fact}`, sample(belief));
+      }
+    }
+    if (t.day !== undefined) push("day", sample(t.day));
+  });
+
+  // Order and reachability along the plan.
+  for (const [key, samples] of series) {
+    samples.sort((a, b) => comparePos(a.pos, b.pos));
+    const def: Kind | undefined =
+      key === "day"
+        ? { kind: "counter", direction: "up" }
+        : key.startsWith("knowledge:")
+          ? undefined
+          : (() => {
+              const [id, field] = key.split(".");
+              const e = schema?.entities[id];
+              return e && schema ? fieldDef(schema.types[e.type], field) : undefined;
+            })();
+    for (let k = 1; k < samples.length; k++) {
+      const a = samples[k - 1];
+      const b = samples[k];
+      if (comparePos(a.pos, b.pos) === 0 && JSON.stringify(a.value) !== JSON.stringify(b.value)) {
+        err("target-conflict", file, `${key} has two different targets at ${b.where}`);
+        continue;
+      }
+      if (key.startsWith("knowledge:")) {
+        if (a.value === "knows" && b.value === "unaware" && !b.reset) {
+          err("target-order", file, `${key.slice(10).replace(":", " / ")}: 'knows' at ${a.where} but 'unaware' at ${b.where} (set reset: true for a memory loss)`);
+        }
+        continue;
+      }
+      if (!def) continue;
+      const ra = numericRange(def, a.value);
+      const rb = numericRange(def, b.value);
+      if (!ra || !rb) continue;
+      const direction = def.kind === "ladder" ? "up" : def.kind === "counter" ? def.direction : "any";
+      if (!b.reset && direction === "up" && rb[1] < ra[0]) err("target-order", file, `${key} goes down from ${a.where} to ${b.where} (set reset: true if that is planned)`);
+      if (!b.reset && direction === "down" && rb[0] > ra[1]) err("target-order", file, `${key} goes up from ${a.where} to ${b.where} (set reset: true if that is planned)`);
+      if (def.kind === "counter" && def.max_step && a.chapterIndex !== undefined && b.chapterIndex !== undefined) {
+        const need = Math.max(rb[0] - ra[1], ra[0] - rb[1], 0);
+        const allowed = def.max_step * (b.chapterIndex - a.chapterIndex);
+        if (need > allowed && !b.reset) {
+          err("target-unreachable", file, `${key} must change by ${need} between ${a.where} and ${b.where}, but max_step ${def.max_step} allows ${allowed}`);
+        }
+      }
+    }
+  }
+
+  // Ending states are targets: each act end and book end should have one.
+  if (project.targets.data.length > 0 || project.books.size > 0) {
+    const targeted = new Set(project.targets.data.map((t) => t.anchor));
+    for (const [book, plan] of project.books) {
+      for (const id of [...plan.data.acts.map((a) => `b${book}/${a.id}/end`), `b${book}/end`]) {
+        if (!targeted.has(id)) warn("target-missing", file, `the ending state at ${id} has no target`);
+      }
+    }
+  }
+}
+
+// ---------- voice sample ----------
+
+function checkVoiceSample(project: Project, characterIds: Set<string>, err: Report) {
+  const vs = project.voiceSample;
+  if (!vs) return;
+  const known = new Set([...characterIds, ...project.characters.map((c) => c.data.id)]);
+  vs.data.characters.forEach((c, i) => {
+    if (!known.has(c)) err("unknown-character", vs.file, `'${c}' is not a character`, `characters.${i}`);
+  });
+  if (!vs.data.characters.includes(vs.data.pov)) err("pov", vs.file, "pov must be one of the characters", "pov");
+  if (vs.data.status === "approved" && !project.bible?.data.window_template) {
+    err("no-window-template", "bible.md", "the voice sample is approved, but bible.md has no window_template", "window_template");
+  }
+}
