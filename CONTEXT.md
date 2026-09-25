@@ -6,6 +6,18 @@ A skills-based system for Claude Code that plans and writes LitRPG / progression
 
 ### Story and plan
 
+**Seed**:
+The user's own short idea for a story, kept word for word.
+_Avoid_: Prompt, concept
+
+**Premise**:
+One complete candidate for the whole story, in about 200 words, offered next to 2 others so the user can choose or mix.
+_Avoid_: Option, pitch (for an unchosen premise)
+
+**Pitch**:
+The chosen premise, developed into a note that intake reads as the user's material. Each item in it is marked `yours`, `chosen` or `filled`.
+_Avoid_: Outline, synopsis, treatment
+
 **Story bible**:
 The output of intake: every story decision (plot, prose style, POV, tense, characters, setting, stat system), each one marked `locked` or `open`.
 _Avoid_: Bible doc, world doc, setup

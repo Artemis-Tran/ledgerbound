@@ -1,4 +1,4 @@
-import { mkdtempSync, readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
@@ -86,6 +86,19 @@ describe("status", () => {
     initProject(dir, "Test", "series");
     const { project, issues } = load(dir);
     expect(status(project, issues).next).toContain("start-project");
+  });
+
+  test("a new project offers develop-idea for a short idea", () => {
+    const dir = mkdtempSync(join(tmpdir(), "lb-init-"));
+    initProject(dir, "Test", "series");
+    expect(status(load(dir).project, []).next).toContain("develop-idea");
+  });
+
+  test("with a pitch, start-project reads it", () => {
+    const dir = mkdtempSync(join(tmpdir(), "lb-init-"));
+    initProject(dir, "Test", "series");
+    writeFileSync(join(dir, "pitch.md"), "## Seed\n> A debt collector in a dungeon city.\n");
+    expect(status(load(dir).project, []).next).toBe("Run the start-project skill. It reads pitch.md.");
   });
 
   test("the fixture has finished phase 1", () => {

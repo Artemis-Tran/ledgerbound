@@ -11,6 +11,7 @@ This is the approved design for phase 1. The terms come from [`CONTEXT.md`](../C
 
 | Step | Skill | Writes | Checkpoint |
 |---|---|---|---|
+| 0 (optional) | `develop-idea` | `pitch.md` from the seed, via 3 premises | – (choosing a premise is the approval) |
 | 1 | `start-project` | `bible.md`, `schema.yaml`, `facts.yaml`, `project.yaml` | `bible` |
 | 2 | `plan-series` | `series.md`, `books/NN/plan.md` (book level, every book), `targets.yaml` | `series-plan` (series only), `book-plan` |
 | 3 | `plan-arcs` | `characters/*.md` | `character-arcs` |

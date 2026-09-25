@@ -4,7 +4,7 @@
  * A checkpoint is cleared when its files exist, the validator finds no errors in them or in
  * any upstream file, and they are approved (or the checkpoint is off).
  */
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { setFrontmatterKey } from "./frontmatter.ts";
 import type { Issue } from "./issues.ts";
@@ -149,7 +149,11 @@ export function status(project: Project, issues: Issue[]): StatusReport {
     const g = checkpoints[blocked];
     const skill = PHASE1[blocked].skill;
     next =
-      g.state === "missing"
+      g.state === "missing" && g.checkpoint === "bible"
+        ? existsSync(join(project.root, "pitch.md"))
+          ? "Run the start-project skill. It reads pitch.md."
+          : "Run the start-project skill (bible.md is missing). For an idea of only one or two sentences, run develop-idea first."
+        : g.state === "missing"
         ? `Run the ${skill} skill (${g.reason}).`
         : g.state === "invalid"
           ? `Fix the errors (run \`lb validate\`), then continue with the ${skill} skill.`

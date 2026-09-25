@@ -31,12 +31,13 @@ mkdir ~/novels/my-story && cd ~/novels/my-story && git init
 claude
 ```
 
-Then tell Claude what you have (plot, style, POV, characters, setting, stat system). The `start-project` skill takes it from there. At any time, `lb status` shows the checkpoints and the next step.
+Then run `/ledgerbound:start-project` followed by what you have (plot, style, POV, characters, setting, stat system). With only a one- or two-sentence idea, run `/ledgerbound:develop-idea <idea>` instead: it offers three premises, develops the one you pick into `pitch.md`, and hands over to `start-project`. At any time, `lb status` shows the checkpoints and the next step.
 
 ## Phase 1 workflow
 
 | Skill | Output | Checkpoint |
 |---|---|---|
+| `develop-idea` (optional) | 3 premises → `pitch.md`, from a 1–2 sentence idea | – |
 | `start-project` | `bible.md`, `schema.yaml`, `facts.yaml` | `bible` |
 | `plan-series` | `series.md`, `books/NN/plan.md`, `targets.yaml` | `series-plan`, `book-plan` |
 | `plan-arcs` | `characters/*.md` | `character-arcs` |

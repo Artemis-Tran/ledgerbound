@@ -19,6 +19,7 @@ The complete worked example is `${CLAUDE_PLUGIN_ROOT}/examples/tiny-standalone/`
 
 | File | Holds | Checkpoint |
 |---|---|---|
+| `pitch.md` | optional, from develop-idea: frontmatter `working_title`, `format`, `premise`; sections per bible decision; each bullet marked `(yours)`, `(chosen)` or `(filled)`. Not validated. | – |
 | `project.yaml` | title, `format` (series/standalone), `chapter_words`, `mode`, `checkpoints`, `lint` overrides | – |
 | `bible.md` | `decisions:` list of `{id, topic, value, status: locked\|open, options_considered, reason}`. Required IDs: `plot`, `prose-style`, `pov-tense`, `characters`, `setting`, `stat-system`, `themes`, `tone`. `window_template:` after the voice sample. | `bible` |
 | `schema.yaml` | `types:` (each with `kind: character` or not, and `fields:`), `entities:` (each with `type`, `name`, `start` values) | `bible` |
