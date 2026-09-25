@@ -78,6 +78,7 @@ One JSON object per line. `lb delta <point>` checks a staged delta; it is right 
 | a new entity | `create` with `type`, `name`, and the start values in `value` |
 
 - `cause` is required: one short sentence on what in the story made the change.
+- A correction of the committed record comes only from `replan`. It goes first in the next chapter's staged delta, with a `cause` that starts with `Correction:`, and it needs no `quote`: it applies from the chapter start.
 - `quote` is added after the prose is written: the exact words (at most 15) where the change occurs. The entries are in the order of their quotes.
 - In one chapter, a counter changes by at most its `max_step`, and a counter or ladder changes only in its `direction` (a ladder only goes up). The chapter plan exceptions `record.max-step` and `record.direction` allow it.
 - At the end of a chapter, the fold must meet the targets of the anchors mapped to that chapter.

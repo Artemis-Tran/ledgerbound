@@ -145,6 +145,16 @@ describe("lb delta", () => {
     expect(codes(dir)).toEqual(["quote-missing", "quote-not-found"]);
   });
 
+  test("a correction from replan needs no quote and comes first", () => {
+    const dir = fixtureCopy();
+    writeChapter2(dir);
+    const fix = { entity: "tithe-well", field: "held_levels", op: "set", value: 200, cause: "Correction: the well held 200 levels, not 213." };
+    stage(dir, [fix, ...GOOD_DELTA]);
+    expect(codes(dir)).toEqual([]);
+    stage(dir, [GOOD_DELTA[0], fix, ...GOOD_DELTA.slice(1)]);
+    expect(codes(dir)).toEqual(["correction-order"]);
+  });
+
   test("the earlier chapters must be committed first", () => {
     const dir = fixtureCopy();
     stage(dir, [{ entity: "timeline", field: "day", op: "set", value: 3, cause: "Two days pass." }], 3);

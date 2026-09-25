@@ -1,7 +1,7 @@
 {
   "name": "ledgerbound",
-  "version": "0.3.1",
-  "description": "Plan and write LitRPG / progression-fantasy novels: story bible, top-down plans, character arcs, chapter plans, a voice sample and prose checks, with a deterministic CLI (lb) for the record.",
+  "version": "0.4.0",
+  "description": "Plan and write LitRPG / progression-fantasy novels: story bible, top-down plans, character arcs, chapter plans, voice samples, chapter generation with prose and continuity checks, and a deterministic CLI (lb) for the record.",
   "author": {
     "name": "Artemis Tran"
   },

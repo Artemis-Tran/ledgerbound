@@ -1,0 +1,31 @@
+---
+name: verify-chapter
+description: Check one chapter of a Ledgerbound novel with the prose-checker and continuity-checker agents at the same time, then revise only the flagged spans, for at most 3 rounds. Use after a chapter is drafted, or when `lb run` names verify-chapter.
+---
+
+# verify-chapter
+
+Two checkers that did not write the chapter find the problems, and a reviser fixes only the flagged spans. Each round is recorded in `runs/verify/NN-MM.json`, so a stopped check continues at the right round. NN is the book and MM the chapter, two digits each.
+
+## Steps
+
+1. **Round.** When `runs/verify/NN-MM.json` exists, this round is its `round` + 1; else it is round 1. When `runs/briefs/NN-MM.md` is missing, run `lb brief <point>`.
+
+2. **Check.** In one message, start both agents with paths only:
+   - `ledgerbound:prose-checker` with the chapter `books/NN/chapters/MM.md`, its plan `books/NN/plan/MM.md`, the voice samples in `voice/`, and `characters/<id>.md` for each character who speaks. Say: "chapter M of book N".
+   - `ledgerbound:continuity-checker` with the point.
+
+3. **Record.** Put the findings of both agents in one list, sorted by line, in `runs/verify/NN-MM.findings.json`. Write `runs/verify/NN-MM.json`:
+
+   ```json
+   { "round": 1, "verdict": "pass | fail", "open": [{ "severity": "error", "rule": "plan.ending", "line": 88, "problem": "..." }] }
+   ```
+
+   `verdict` is `pass` when no finding is an `error`. `open` holds every finding, with its severity.
+
+4. **Decide.**
+   - `pass`: return `pass`. The open warnings stay in the record for the report at the end of the book.
+   - `fail` in round 1 or 2: start the `ledgerbound:reviser` agent with the point, the brief path and the findings path. When it returns a `not_fixed` item with `"replan": true`, return `replan` with its reason. Else go back to step 1.
+   - `fail` in round 3: return `blocked` with the open errors.
+
+   Done when the result is `pass`, `blocked` or `replan`.

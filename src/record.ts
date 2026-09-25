@@ -497,6 +497,12 @@ export function checkDelta(project: Project, rec: RecordFiles, book: number, cha
     lines = quoteLines(readFileSync(chapterFile, "utf8"), entries.map((l) => l.entry));
     let prev = 0;
     entries.forEach((l, i) => {
+      if (isCorrection(l.entry)) {
+        // A correction applies from the chapter start, so it needs no quote, and it comes before every other entry.
+        if (prev > 0 || entries.slice(0, i).some((x) => !isCorrection(x.entry))) err("correction-order", "a correction entry must come before the other entries of the delta", `line ${l.line}`);
+        lines[i] = 0;
+        return;
+      }
       if (!l.entry.quote) err("quote-missing", "the chapter exists, so this entry needs a 'quote' from it", `line ${l.line}`);
       else if (lines[i] === undefined) err("quote-not-found", `the quote is not in ${chapterPath(book, chapter)}: "${l.entry.quote}"`, `line ${l.line}`);
       else {
@@ -508,6 +514,9 @@ export function checkDelta(project: Project, rec: RecordFiles, book: number, cha
 
   return { issues, before, after, lines, entries };
 }
+
+/** A correction of the committed record, added by replan: its cause starts with "Correction:". */
+export const isCorrection = (e: DeltaEntry) => /^correction:/i.test(e.cause);
 
 /** The state at a line of the chapter: the chapter start plus the entries whose quote is on or before that line. */
 export function stateAtLine(project: Project, check: DeltaCheck, line: number): State {

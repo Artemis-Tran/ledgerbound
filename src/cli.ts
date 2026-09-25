@@ -27,6 +27,7 @@ const HELP = `lb: the Ledgerbound CLI. Run it inside a novel repo (or pass --dir
   lb lint <file...> [--lines A-B] [--corpus DIR] [--json]
                                          deterministic prose checks (exit 1 on an unwaived error)
   lb rules [--json]                      the rule IDs of guidelines/writing.md
+  lb where                               the ledgerbound folder (reference/, examples/)
 
 Generation (a point is 1.07 = book 1, chapter 7):
   lb run [--book N] [--json]             the stage of each chapter, and the next step
@@ -174,6 +175,11 @@ switch (command) {
 
   case "rules": {
     out(RULES.map((r) => `${r.id.padEnd(28)} §${r.section.padEnd(5)} ${r.check.join("+").padEnd(11)} ${r.summary}`).join("\n"), RULES);
+    break;
+  }
+
+  case "where": {
+    console.log(resolve(import.meta.dirname, ".."));
     break;
   }
 
