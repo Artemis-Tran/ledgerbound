@@ -111,4 +111,4 @@ AI dialogue is too complete, too articulate and too self-aware. Everyone sounds 
 ## 9. Revision rules
 - Fix only the flagged spans. A full rewrite brings in new tics.
 - After a fix, run the lint again on the changed paragraph.
-- When two rules conflict, the story bible and the voice sample win over these guidelines.
+- When two rules conflict, the story bible and the voice samples win over these guidelines.
