@@ -1,6 +1,6 @@
-import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
+import { lintFile } from "../src/lint/index.ts";
 import { lintProse, type LintOptions } from "../src/lint/lint.ts";
 import { parseProse } from "../src/lint/text.ts";
 import { FIXTURE } from "./helpers.ts";
@@ -26,10 +26,9 @@ describe("the parser", () => {
   });
 });
 
-describe("the voice sample of the fixture", () => {
-  test("is clean", () => {
-    const text = readFileSync(join(FIXTURE, "voice-sample.md"), "utf8").split("---\n").slice(2).join("---\n");
-    expect(lint(text)).toEqual([]);
+describe("the voice samples of the fixture", () => {
+  test.each(["dialogue", "action", "quiet"])("%s is clean, also against the other two", (kind) => {
+    expect(lintFile(join(FIXTURE, "voice", `${kind}.md`)).findings).toEqual([]);
   });
 });
 

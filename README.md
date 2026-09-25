@@ -42,7 +42,7 @@ Then run `/ledgerbound:start-project` followed by what you have (plot, style, PO
 | `plan-series` | `series.md`, `books/NN/plan.md`, `targets.yaml` | `series-plan`, `book-plan` |
 | `plan-arcs` | `characters/*.md` | `character-arcs` |
 | `plan-book` | `books/NN/plan/MM.md`, `threads.yaml` | `chapter-plans` |
-| `voice-sample` | `voice-sample.md`, window template | `voice-sample` |
+| `voice-sample` | `voice/` (dialogue, action, quiet), window template | `voice-sample` |
 | `check-prose` | findings from a fresh `prose-checker` agent | – |
 
 Switch checkpoints off in `project.yaml`, or set `mode: just-write-it` (all off except `replan`).

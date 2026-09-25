@@ -22,7 +22,7 @@ function readBody(path: string) {
 
 export interface FileLintOptions {
   lines?: [number, number];
-  /** Folder of other chapters to compare with. Default: the other files in books/NN/chapters/. */
+  /** Folder of other files to compare with. Default: the other chapters in books/NN/chapters/, or the other voice samples in voice/. */
   corpusDir?: string;
 }
 
@@ -33,7 +33,9 @@ export function lintFile(path: string, opts: FileLintOptions = {}): LintResult &
   const config = root ? ProjectConfig.safeParse(parseYaml(readFileSync(join(root, "project.yaml"), "utf8"))) : undefined;
 
   const chapterMatch = /(?:^|\/)books\/(\d+)\/chapters\/(\d+)\.md$/.exec(abs);
-  const corpusDir = opts.corpusDir ?? (chapterMatch ? dirname(abs) : undefined);
+  // Chapters of one book, and the voice samples, are checked against each other for repeats.
+  const voiceSample = root !== undefined && dirname(abs) === join(root, "voice");
+  const corpusDir = opts.corpusDir ?? (chapterMatch || voiceSample ? dirname(abs) : undefined);
   const corpus: CorpusFile[] = corpusDir
     ? readdirSync(corpusDir)
         .filter((f) => f.endsWith(".md") && join(resolve(corpusDir), f) !== abs)

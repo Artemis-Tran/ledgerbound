@@ -1,7 +1,9 @@
 ---
 status: approved
+kind: dialogue
 pov: ivo
 characters: [ivo, sabine]
+source: 1.01, scene 2
 ---
 
 Ivo had the bucket halfway up the shaft when the rope went slack in his hands and the well rang its tithe bell. One stroke, low, from under forty fathoms of black water. He hauled the rest of the rope in fast, knuckles scraping the iron lip, and the bucket came up empty except for a slate token the size of a thumbnail.

@@ -1,0 +1,23 @@
+---
+status: approved
+kind: quiet
+pov: ivo
+characters: [ivo]
+source: 1.03, after scene 2
+---
+
+Ivo's father had kept his tallies on hazel sticks, one notch for each bucket and a cross-cut for each level, and after the funeral his mother had tied them in bundles with washing twine and put them on the shelf above the tool bench. Ivo took the bundles down one at a time and laid them on the bench in the order of the seasons, oldest at the left.
+
+Twelve bundles. He had known there were twelve.
+
+The shed smelled of lamp oil and mice. His mother was asleep on the other side of the wall, and when the bench creaked he could hear her turn over, so he stopped leaning on it and worked standing up, with the wick trimmed low and the door pulled to against the wind off the spoil tips.
+
+He untied the first bundle. Forty-one notches, three cross-cuts. Beside each cross-cut his father had scratched a mark with the point of a knife, a single stroke, the same for every level. Ivo had always taken it for a signature, the way some diggers carved their initials into a pick handle.
+
+The second bundle had the same stroke on every cross-cut, and so did the third. In the last four bundles the strokes changed. Some cross-cuts had two beside them, and a few had three.
+
+One stroke was the warden's third. His father had paid it every season and marked it every time. Two strokes was two levels of three, and three strokes was the whole level, gone into the well.
+
+He counted them with his thumbnail, twice, the way his father had taught him to count anything that mattered. Seven levels paid over the rate in four seasons, and nobody at the counting table had said a word about it to the man who paid them, or to his son.
+
+He tied the bundles again with the same twine and the same knots, and put them back on the shelf in the order his mother had left them. Then he took the last bundle down, slid it inside his shirt, and blew out the lamp.

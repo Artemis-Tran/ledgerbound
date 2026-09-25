@@ -73,7 +73,7 @@ _Avoid_: Using "arc" for a thread or a plot line
 The rules for how one character speaks: vocabulary, sentence length, verbal habits.
 
 **Voice sample**:
-About 500 words of approved prose that is the reference for all prose in a project. It has the protagonist, one other main character with dialogue, and one status window.
+One of three approved scenes of about 500 words (a `dialogue`, an `action` and a `quiet` scene) that together are the reference for all prose in a project.
 
 **Window template**:
 The approved format of a status window. Every status window in the project uses it.

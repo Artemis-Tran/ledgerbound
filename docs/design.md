@@ -16,7 +16,7 @@ This is the approved design for phase 1. The terms come from [`CONTEXT.md`](../C
 | 2 | `plan-series` | `series.md`, `books/NN/plan.md` (book level, every book), `targets.yaml` | `series-plan` (series only), `book-plan` |
 | 3 | `plan-arcs` | `characters/*.md` | `character-arcs` |
 | 4 | `plan-book` | `books/NN/plan/MM.md`, `threads.yaml`, anchors | `chapter-plans` |
-| 5 | `voice-sample` | `voice-sample.md`, window template in `bible.md` | `voice-sample` |
+| 5 | `voice-sample` | `voice/dialogue.md`, `voice/action.md`, `voice/quiet.md`, window template in `bible.md` | `voice-sample` |
 | phase 2 | `generate-chapter`, `verify-chapter`, `replan`, … | chapters, memory, ledger | `chapter-1`, `replan` |
 
 - A series plans the series level and every book at book level. Only the next book to write gets act, chapter and scene plans.

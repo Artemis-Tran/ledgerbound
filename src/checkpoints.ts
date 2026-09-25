@@ -73,7 +73,7 @@ function owned(project: Project, cp: Checkpoint, book: number): Owned {
       };
     }
     case "voice-sample":
-      return { approvable: project.voiceSample ? [project.voiceSample] : [], owns: ["voice-sample.md"], missing: project.voiceSample ? undefined : "voice-sample.md is missing" };
+      return { approvable: project.voiceSamples, owns: ["voice/"], missing: project.voiceSamples.length === 0 ? "voice/ has no voice samples" : undefined };
     case "chapter-1":
     case "replan":
       return { approvable: [], owns: [], notApplicable: `${cp} is a phase-2 checkpoint` };

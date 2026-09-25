@@ -6,7 +6,7 @@ import { buildPlanIndex, comparePos, type PlanIndex, type Pos } from "./anchors.
 import type { Issue } from "./issues.ts";
 import { bookDir, pad2, type Project } from "./project.ts";
 import { RULE_IDS } from "./rules.ts";
-import { REQUIRED_DECISIONS, type FieldDef, type Target } from "./schemas.ts";
+import { REQUIRED_DECISIONS, VOICE_KINDS, type FieldDef, type Target } from "./schemas.ts";
 
 export function validateProject(project: Project): Issue[] {
   const issues: Issue[] = [];
@@ -22,7 +22,7 @@ export function validateProject(project: Project): Issue[] {
   checkChapters(project, index, characterIds, err, warn);
   checkThreads(project, index, err);
   checkTargets(project, index, characterIds, err, warn);
-  checkVoiceSample(project, characterIds, err);
+  checkVoiceSamples(project, characterIds, err);
   return issues;
 }
 
@@ -412,17 +412,26 @@ function checkTargets(project: Project, index: PlanIndex, characterIds: Set<stri
   }
 }
 
-// ---------- voice sample ----------
+// ---------- voice samples ----------
 
-function checkVoiceSample(project: Project, characterIds: Set<string>, err: Report) {
-  const vs = project.voiceSample;
-  if (!vs) return;
+function checkVoiceSamples(project: Project, characterIds: Set<string>, err: Report) {
+  const samples = project.voiceSamples;
+  if (samples.length === 0) return;
   const known = new Set([...characterIds, ...project.characters.map((c) => c.data.id)]);
-  vs.data.characters.forEach((c, i) => {
-    if (!known.has(c)) err("unknown-character", vs.file, `'${c}' is not a character`, `characters.${i}`);
-  });
-  if (!vs.data.characters.includes(vs.data.pov)) err("pov", vs.file, "pov must be one of the characters", "pov");
-  if (vs.data.status === "approved" && !project.bible?.data.window_template) {
-    err("no-window-template", "bible.md", "the voice sample is approved, but bible.md has no window_template", "window_template");
+  for (const vs of samples) {
+    const expected = `voice/${vs.data.kind}.md`;
+    if (vs.file !== expected) err("file-name", vs.file, `kind is '${vs.data.kind}', so the file must be ${expected}`, "kind");
+    vs.data.characters.forEach((c, i) => {
+      if (!known.has(c)) err("unknown-character", vs.file, `'${c}' is not a character`, `characters.${i}`);
+    });
+    if (!vs.data.characters.includes(vs.data.pov)) err("pov", vs.file, "pov must be one of the characters", "pov");
+  }
+  const kinds = new Set(samples.map((s) => s.data.kind));
+  for (const kind of VOICE_KINDS) {
+    if (!kinds.has(kind)) err("voice-kinds", "voice/", `there is no '${kind}' voice sample (voice/${kind}.md)`);
+  }
+  if (!samples.some((s) => /^(```|~~~)/m.test(s.body))) err("no-status-window", "voice/", "no voice sample shows a status window in a fenced code block");
+  if (samples.some((s) => s.data.status === "approved") && !project.bible?.data.window_template) {
+    err("no-window-template", "bible.md", "a voice sample is approved, but bible.md has no window_template", "window_template");
   }
 }

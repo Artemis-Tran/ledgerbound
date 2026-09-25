@@ -174,7 +174,32 @@ describe("targets", () => {
   });
 });
 
-describe("voice sample", () => {
+describe("voice samples", () => {
+  test("a missing kind", () => {
+    const dir = fixtureCopy();
+    rmSync(join(dir, "voice/quiet.md"));
+    expect(check(dir)).toContainEqual(expect.objectContaining({ code: "voice-kinds", message: expect.stringContaining("'quiet'") }));
+  });
+
+  test("no status window in any sample", () => {
+    const dir = fixtureCopy();
+    edit(dir, "voice/dialogue.md", /```[\s\S]*?```\n/, "");
+    edit(dir, "voice/action.md", /```[\s\S]*?```\n/, "");
+    expect(errorCodes(check(dir))).toContain("no-status-window");
+  });
+
+  test("a dialogue sample with one character", () => {
+    const dir = fixtureCopy();
+    edit(dir, "voice/dialogue.md", "characters: [ivo, sabine]", "characters: [ivo]");
+    expect(check(dir)).toContainEqual(expect.objectContaining({ code: "format", file: "voice/dialogue.md", path: "characters" }));
+  });
+
+  test("a file name that does not match its kind", () => {
+    const dir = fixtureCopy();
+    edit(dir, "voice/quiet.md", "kind: quiet", "kind: action");
+    expect(errorCodes(check(dir))).toEqual(expect.arrayContaining(["file-name", "voice-kinds"]));
+  });
+
   test("approved with no window template", () => {
     const dir = fixtureCopy();
     edit(dir, "bible.md", /window_template: \|\n(  .*\n)+/, "");

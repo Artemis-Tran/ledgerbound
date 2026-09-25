@@ -20,7 +20,7 @@ describe("lb", () => {
 
   test("gate and approve", () => {
     const dir = fixtureCopy();
-    edit(dir, "voice-sample.md", "status: approved", "status: draft");
+    edit(dir, "voice/action.md", "status: approved", "status: draft");
     expect(lb(["gate", "voice-sample"], dir).status).toBe(1);
     expect(lb(["approve", "voice-sample"], dir).status).toBe(0);
     expect(lb(["gate", "voice-sample"], dir).status).toBe(0);
@@ -37,6 +37,13 @@ describe("lb", () => {
 
     writeFileSync(join(chapters, "04.md"), "It was cold. It was dark. It was late.\n\nThe roof came down between Ivo and the shaft.\n");
     expect(lb(["lint", join(chapters, "04.md")], dir).status).toBe(1);
+  });
+
+  test("lint compares a voice sample with the other two", () => {
+    const dir = fixtureCopy();
+    edit(dir, "voice/quiet.md", "blew out the lamp.", "blew out the lamp. The slate held him on both sides like a closing hand.");
+    const r = JSON.parse(lb(["lint", "--json", join(dir, "voice/quiet.md")]).stdout);
+    expect(r.results[0].findings).toContainEqual(expect.objectContaining({ rule: "repetition.simile", seeAlso: [expect.objectContaining({ file: "voice/action.md" })] }));
   });
 
   test("init makes a novel repo that asks for start-project", () => {

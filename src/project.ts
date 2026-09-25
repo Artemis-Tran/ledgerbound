@@ -39,7 +39,8 @@ export interface Project {
   /** book number → chapter plans, sorted by chapter */
   chapters: Map<number, Loaded<ChapterPlan>[]>;
   characters: Loaded<Character>[];
-  voiceSample?: Loaded<VoiceSample>;
+  /** voice/*.md, one per kind. */
+  voiceSamples: Loaded<VoiceSample>[];
 }
 
 export const pad2 = (n: number) => String(n).padStart(2, "0");
@@ -117,7 +118,7 @@ export function loadProject(root: string): { project?: Project; issues: Issue[] 
     books: new Map(),
     chapters: new Map(),
     characters: mdFiles("characters").flatMap((p) => readMd(Character, p) ?? []),
-    voiceSample: opt(VoiceSample, "voice-sample.md"),
+    voiceSamples: mdFiles("voice").flatMap((p) => readMd(VoiceSample, p) ?? []),
   };
 
   const booksRoot = join(root, "books");

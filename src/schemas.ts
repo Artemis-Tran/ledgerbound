@@ -79,7 +79,7 @@ export const Bible = z.strictObject({
   status: Status,
   title: Text,
   decisions: z.array(Decision).min(1),
-  /** Set by voice-sample when the user approves the first status window. */
+  /** Set by the voice-sample skill from the status window of the approved voice samples. */
   window_template: z.string().optional(),
 });
 export type Bible = z.infer<typeof Bible>;
@@ -243,11 +243,23 @@ export const ChapterPlan = z.strictObject({
 });
 export type ChapterPlan = z.infer<typeof ChapterPlan>;
 
-// ---------- voice-sample.md ----------
+// ---------- voice/<kind>.md ----------
 
-export const VoiceSample = z.strictObject({
-  status: Status,
-  pov: Slug,
-  characters: z.array(Slug).min(2, "the sample needs the protagonist and one other main character"),
-});
+/** The three voice samples: one scene of each kind. */
+export const VOICE_KINDS = ["dialogue", "action", "quiet"] as const;
+
+export const VoiceSample = z
+  .strictObject({
+    status: Status,
+    kind: z.enum(VOICE_KINDS),
+    pov: Slug,
+    characters: z.array(Slug).min(1),
+    /** Where the scene comes from, for example "1.01, scene 2". */
+    source: z.string().optional(),
+  })
+  .superRefine((v, ctx) => {
+    if (v.kind === "dialogue" && v.characters.length < 2) {
+      ctx.addIssue({ code: "custom", path: ["characters"], message: "the dialogue sample needs the protagonist and one other main character" });
+    }
+  });
 export type VoiceSample = z.infer<typeof VoiceSample>;

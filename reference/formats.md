@@ -30,7 +30,7 @@ The complete worked example is `${CLAUDE_PLUGIN_ROOT}/examples/tiny-standalone/`
 | `characters/<id>.md` | `role`, `want`, `need`, `lie`, `voice` card, `arc_beats: [{id, book, act, beat}]` | `character-arcs` |
 | `books/NN/plan/MM.md` | one chapter: `pov`, `job: {value, from, to}`, `arc_beats`, `threads: {plants, advances, pays_off}`, `ending: {type, hook}`, `anchors`, `exceptions`, `day`, `scenes: [{goal, conflict, outcome}]` | `chapter-plans` |
 | `threads.yaml` | list of `{id, kind, summary, plant, beats, payoff}` | `chapter-plans` |
-| `voice-sample.md` | `pov`, `characters`, then the prose | `voice-sample` |
+| `voice/<kind>.md` | three files: `dialogue`, `action`, `quiet`. Frontmatter `kind`, `pov`, `characters` (2 or more for `dialogue`), `source`; then the prose. At least one sample has a status window in a fenced code block. | `voice-sample` |
 
 ## Schema field kinds
 
