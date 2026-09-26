@@ -38,8 +38,12 @@ _Avoid_: Tier, layer
 What is true at the end of a level (ranks, items, relationships, what a character believes).
 _Avoid_: Outcome, end goal
 
+**Draw**:
+A concrete thing that a reader chooses the story for (kind `gives`: a time loop, a real academy), or that the story promises not to have (kind `excludes`: zero romance). The draws are for the whole story, and they are fixed in the story bible.
+_Avoid_: Tag, trope, hook, selling point
+
 **Promise**:
-What the reader expects from a level.
+What the reader expects from a level. The promises of the levels deliver the draws.
 
 **Question**:
 What a level raises for the reader, and which earlier questions it answers.
@@ -76,7 +80,7 @@ The rules for how one character speaks: vocabulary, sentence length, verbal habi
 One of three approved scenes of about 500 words (a `dialogue`, an `action` and a `quiet` scene) that together are the reference for all prose in a project.
 
 **Window template**:
-The approved format of a status window. Every status window in the project uses it.
+The approved format of a status window. Every status window in the project uses it. A project with windows `off` has no status windows and no window template; the prose shows progression, and the record still tracks it.
 _Avoid_: Stat block, sheet format
 
 **Checkpoint**:

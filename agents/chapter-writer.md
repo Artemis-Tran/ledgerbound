@@ -21,7 +21,8 @@ The point (for example `1.07`) gives the paths, where NN is the book and MM the 
    - Do the plan: every scene's goal, conflict and outcome; the job's value shift; the threads and the arc beat; the ending type, with the hook as the concrete last beat.
    - Write in the voice of the voice samples: their vocabulary, sentence length and distance from the POV character. Each character speaks by their voice card.
    - Start inside the first scene with a character who does or wants something. Make the opening different from the end of the previous chapter in the brief.
-   - A status window only where a change matters to the scene: the window template, only the changed values, as `old → new`. Take every number from the fold in the brief and your delta.
+   - A status window only where a change matters to the scene: the window template, only the changed values, as `old → new`. Take every number from the fold in the brief and your delta. When the brief says "No status windows", show each change through what the character does and can now do.
+   - Deliver the draws of this book where the plan allows, and never write what an exclusion in the brief rules out.
    - Use the phrase log as the list of what is already used: find new images, gestures and similes.
    - Show each delta entry on the page, where it happens.
 

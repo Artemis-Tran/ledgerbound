@@ -19,18 +19,18 @@ The complete worked example is `${CLAUDE_PLUGIN_ROOT}/examples/tiny-standalone/`
 
 | File | Holds | Checkpoint |
 |---|---|---|
-| `pitch.md` | optional, from develop-idea: frontmatter `working_title`, `format`, `premise`; sections per bible decision; each bullet marked `(yours)`, `(chosen)` or `(filled)`. Not validated. | – |
-| `project.yaml` | title, `format` (series/standalone), `chapter_words`, `mode`, `checkpoints`, `lint` overrides | – |
-| `bible.md` | `decisions:` list of `{id, topic, value, status: locked\|open, options_considered, reason}`. Required IDs: `plot`, `prose-style`, `pov-tense`, `characters`, `setting`, `stat-system`, `themes`, `tone`. `window_template:` after the voice sample. | `bible` |
+| `pitch.md` | optional, from develop-idea: frontmatter `working_title`, `format`, `premise`; a `## Draws` section (`- gives: …` / `- excludes: …`), then sections per bible decision; each bullet marked `(yours)`, `(chosen)` or `(filled)`. Not validated. | – |
+| `project.yaml` | title, `format` (series/standalone), `chapter_words`, `mode`, `windows` (`on`/`off`, default `on`: `off` means no status windows and no window template), `brief_chars`, `checkpoints`, `lint` overrides | – |
+| `bible.md` | `decisions:` list of `{id, topic, value, status: locked\|open, options_considered, reason}`. Required IDs: `plot`, `prose-style`, `pov-tense`, `characters`, `setting`, `stat-system`, `themes`, `tone`. `draws:` list of `{id, kind: gives\|excludes, text, status: locked\|open}`, at least 3 with at least 1 `excludes` (missing: a warning). `window_template:` after the voice sample (only with windows `on`). | `bible` |
 | `schema.yaml` | `types:` (each with `kind: character` or not, and `fields:`), `entities:` (each with `type`, `name`, `start` values; a character can also have `beliefs: {fact: belief}` in `start`) | `bible` |
 | `facts.yaml` | list of `{id, truth}`: things a character can know, not know, or believe falsely | `bible` |
 | `series.md` | `books`, `ending_state`, `promise`, `question: {raises, answers}`, `handoff` | `series-plan` |
-| `books/NN/plan.md` | the same four level fields, plus `acts:` (each with `id` and the four fields) and custom `anchors:` | `book-plan` |
+| `books/NN/plan.md` | the same four level fields, plus `acts:` (each with `id` and the four fields), `draws:` (the IDs of the `gives` draws this book delivers; together the book plans deliver every one) and custom `anchors:` | `book-plan` |
 | `targets.yaml` | list of `{anchor, expect, knowledge, day, reset}` | `series-plan` (series), `book-plan` (standalone) |
 | `characters/<id>.md` | `role`, `want`, `need`, `lie`, `voice` card, `arc_beats: [{id, book, act, beat}]` | `character-arcs` |
 | `books/NN/plan/MM.md` | one chapter: `pov`, `job: {value, from, to}`, `arc_beats`, `threads: {plants, advances, pays_off}`, `ending: {type, hook}`, `anchors`, `exceptions`, `day`, `scenes: [{goal, conflict, outcome}]` | `chapter-plans` |
 | `threads.yaml` | list of `{id, kind, summary, plant, beats, payoff}` | `chapter-plans` |
-| `voice/<kind>.md` | three files: `dialogue`, `action`, `quiet`. Frontmatter `kind`, `pov`, `characters` (2 or more for `dialogue`), `source`; then the prose. At least one sample has a status window in a fenced code block. | `voice-sample` |
+| `voice/<kind>.md` | three files: `dialogue`, `action`, `quiet`. Frontmatter `kind`, `pov`, `characters` (2 or more for `dialogue`), `source`; then the prose. With windows `on`, at least one sample has a status window in a fenced code block. | `voice-sample` |
 | `books/NN/deltas/MM.jsonl` | the staged delta of a chapter: one delta entry per line (see below), in the order of the prose. No `point`. | – |
 | `books/NN/chapters/MM.md` | frontmatter `status`, `book`, `chapter`, `title`; then the prose. `status: approved` only through `lb commit` or `lb approve chapter-1`. | `chapter-1` (1.01 only) |
 | `books/NN/memory/MM.md` | rolling memory: `book`, `chapter`, `summary`, `changed`, `open_questions`, `ending_type`, `phrase_log: {similes, images, gestures: {character: [...]}}`. No body. | – |

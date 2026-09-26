@@ -95,6 +95,8 @@ AI dialogue is too complete, too articulate and too self-aware. Everyone sounds 
 ## 7. LitRPG specifics
 - **Status windows** only where a change matters to the scene. Do not show the full sheet each
   chapter. Show the delta, and use the project's window template in the same format each time.
+  When `project.yaml` has `windows: off`, there are no status windows: show each gain through
+  what the character can now do, and what it cost.
 - **Stats must match the fold.** Never write a number from memory.
 - **Notifications**: vary how the hero reacts to them. No "Ding!" spam, and no stream of 10
   notifications in a row unless it is a planned moment.

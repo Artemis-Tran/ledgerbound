@@ -39,6 +39,23 @@ decisions:
     topic: Tone
     value: Tense and grounded, with dry humour from Sabine. No epic register.
     status: open
+draws:
+  - id: cost-of-power
+    kind: gives
+    text: Every level has a visible price that someone pays.
+    status: locked
+  - id: small-town-conspiracy
+    kind: gives
+    text: A local conspiracy that the protagonist solves from ledgers and clues, not from fights.
+    status: open
+  - id: underdog-climb
+    kind: gives
+    text: A low-rank protagonist who climbs rank by rank on the page.
+    status: open
+  - id: no-romance
+    kind: excludes
+    text: No romance and no romantic subplot.
+    status: locked
 window_template: |
   [TITHE PAID]
   Level ........ 2 → 3

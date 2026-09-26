@@ -27,6 +27,7 @@ The **voice samples** are three scenes of about 500 words each, in the chosen st
    - uses a different ending type from the other two samples.
 
    The status window goes in a fenced code block (```), with only the values that changed, as `old → new`. Put it in the action sample; the dialogue sample can have one too. Use the same format in each window: that format becomes the template.
+   When `project.yaml` has `windows: off`, there is no status window and no template: the action sample shows its change through the prose (what the character can now do, and what it cost).
 
    The three samples are one voice. Keep the narration's vocabulary, sentence length and POV distance the same across them; let the scene change the pace.
 
@@ -34,6 +35,6 @@ The **voice samples** are three scenes of about 500 words each, in the chosen st
    Done when `check-prose` returns `pass` for all three samples, or 3 rounds are used.
 
 6. **Checkpoint.** Show the user the three samples and the check results. When they approve (or when `lb gate voice-sample` says the checkpoint is off, and all three checks passed):
-   - copy the status window of the action sample, without the fences, into `window_template: |` in the `bible.md` frontmatter;
+   - with windows on, copy the status window of the action sample, without the fences, into `window_template: |` in the `bible.md` frontmatter;
    - run the checkpoint loop in `${CLAUDE_PLUGIN_ROOT}/reference/checkpoint-loop.md` for `voice-sample`.
    When they ask for changes, change only what they point at, and go back to step 5 for the changed samples.

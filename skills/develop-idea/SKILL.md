@@ -9,7 +9,7 @@ The user's short idea is the **seed**. You offer three **premises**, each a comp
 
 ## Steps
 
-1. **Seed.** Copy the user's idea word for word. List what it fixes (for example: "debt collector", "dungeon city", "the System takes a cut"). Every premise keeps all of these.
+1. **Seed.** Copy the user's idea word for word. List what it fixes (for example: "debt collector", "dungeon city", "the System takes a cut"). Also list the draws that it names, `gives` or `excludes` (for example "time loop", "zero romance"). Every premise keeps all of these.
 
 2. **Three premises.** Write three premises of 150–250 words each, in chat. Each one covers:
    - the protagonist: what they want, and the lie they believe;
@@ -20,7 +20,9 @@ The user's short idea is the **seed**. You offer three **premises**, each a comp
    - the series shape in one line (for example "3 books: rank-up, betrayal, war").
 
    Make the three differ on the big axes: the protagonist's relation to the System, the kind of cost, the scale of the setting, and the tone. A premise that only changes names or details is the same premise. Each premise needs an **engine**: a pressure that makes the protagonist act again in every book. End each premise with one line: `Gets: … / Costs: …`.
-   Done when each premise has every item above and a reader could tell the three apart from their first sentence.
+
+   Then give each premise its **draws**: 4–7 lines, each `gives:` or `excludes:`, at least one `excludes`, in the words that a reader uses in a blurb or a tag. `${CLAUDE_PLUGIN_ROOT}/reference/draws.md` lists common ones. The draws from the seed are in all three premises; the three premises differ in at least 2 `gives` draws.
+   Done when each premise has every item above and its draws, and a reader could tell the three apart from their first sentence.
 
 3. **Choose.** Ask the user to pick one, mix them ("A, but with the cost from C"), change any part, or say "you decide". For "you decide", pick the premise with the strongest engine and say why in one line.
 
@@ -35,6 +37,10 @@ The user's short idea is the **seed**. You offer three **premises**, each a comp
 
    ## Seed
    > the user's words, unchanged
+
+   ## Draws
+   - gives: Time loop with significant variation (yours)
+   - excludes: Zero romance (yours)
 
    ## Plot
    - The Guild sells…  (chosen)
@@ -51,7 +57,7 @@ The user's short idea is the **seed**. You offer three **premises**, each a comp
    One line each for the premises not chosen.
    ```
 
-   The sections match the story-bible decisions. Each bullet ends with its origin mark:
+   `## Draws` holds the draws of the result, each with its kind. The other sections match the story-bible decisions. Each bullet ends with its origin mark:
    - `(yours)`: from the seed or from a change the user asked for;
    - `(chosen)`: part of the premise the user picked;
    - `(filled)`: a detail you added while you developed it.

@@ -4,6 +4,7 @@
  *
  * check: `lint` = lb lint checks it; `judge` = check-prose judges it; `plan` = lb validate checks it;
  * `record` = lb delta checks it (not in guidelines/writing.md: the record's own limits).
+ * Section `bible`: the rule comes from the story bible, not from guidelines/writing.md.
  */
 export interface Rule {
   id: string;
@@ -50,6 +51,8 @@ export const RULES: Rule[] = [
   { id: "emotion.generic", section: "6", check: ["judge"], summary: "Specific, setting-owned nouns, not generic ones." },
   { id: "emotion.tidy", section: "6", check: ["judge"], summary: "No tidy resolution." },
   { id: "litrpg.status-windows", section: "7", check: ["judge"], summary: "Status windows only where a change matters; show the delta; use the window template." },
+  { id: "windows.off", section: "7", check: ["lint"], summary: "With `windows: off` in project.yaml, no status window: the prose shows progression." },
+  { id: "draws.excluded", section: "bible", check: ["judge"], summary: "Nothing that an `excludes` draw in bible.md rules out. No chapter-plan exception waives it." },
   { id: "litrpg.fold-match", section: "7", check: ["judge"], summary: "Stats match the fold." },
   { id: "litrpg.notifications", section: "7", check: ["judge"], summary: "Vary reactions to notifications; no notification streams." },
   { id: "litrpg.cost", section: "7", check: ["judge"], summary: "Gains come from effort, risk or sacrifice shown on the page." },

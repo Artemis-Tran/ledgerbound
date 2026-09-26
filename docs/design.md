@@ -25,6 +25,13 @@ This is the approved design for phase 1 (planning) and phase 2 (generation). The
 - Only `lb approve` sets `status: approved`. It refuses when the validator finds errors.
 - A skill starts with `lb gate <upstream checkpoint>`. The gate passes when the upstream files are valid and approved, or valid and the checkpoint is off.
 
+## Draws and windows
+
+- The **draws** are in the `bible.md` frontmatter: at least 3, with at least 1 `excludes`. `develop-idea` gives 4–7 draws to each premise, and `start-project` writes them. A bible with no draws (a repo made before 0.5.0) gives only the warning `no-draws`.
+- Each book plan lists the `gives` draws that it delivers. When every book plan exists, each `gives` draw must be in one of them (`draw-undelivered`), at the `book-plan` gate.
+- The brief has every `excludes` draw and the `gives` draws of its book. `prose-checker` judges `draws.excluded` as an error, and no chapter-plan exception can waive it.
+- `windows` in `project.yaml` is `on` by default. With `off`, the voice samples need no status window and `bible.md` no window template, `lb lint` gives the error `windows.off` for each fenced block, and the brief tells the writer to show progression through the prose. The record does not change.
+
 ## The record
 
 - The validator reads only YAML frontmatter and YAML files. Markdown bodies are notes for the model.

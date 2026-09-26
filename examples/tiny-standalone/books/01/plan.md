@@ -24,6 +24,7 @@ acts:
     promise: The price gets paid by someone.
     question: { raises: [], answers: [Why did Sabine change an entry?, Where do the held levels go?] }
     handoff: [What the Duke does with two hundred stolen levels]
+draws: [cost-of-power, small-town-conspiracy, underdog-climb]
 anchors:
   - { id: b1/midpoint, act: act2, note: Ivo learns about the debt. }
 ---

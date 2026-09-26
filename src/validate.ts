@@ -17,9 +17,10 @@ export function validateProject(project: Project): Issue[] {
 
   const index = buildPlanIndex(project, issues);
   const characterIds = checkSchema(project, err);
-  checkBible(project, err);
+  checkBible(project, err, warn);
   checkFacts(project, err);
   const totalBooks = checkLevels(project, err, warn);
+  checkDraws(project, totalBooks, err);
   checkCharacters(project, index, characterIds, totalBooks, err, warn);
   checkChapters(project, index, characterIds, err, warn);
   checkThreads(project, index, err);
@@ -40,7 +41,7 @@ function duplicates<T>(items: T[], key: (t: T) => string): string[] {
 
 // ---------- bible, schema, facts ----------
 
-function checkBible(project: Project, err: Report) {
+function checkBible(project: Project, err: Report, warn: Report) {
   const bible = project.bible;
   if (!bible) return;
   const ids = new Set(bible.data.decisions.map((d) => d.id));
@@ -48,6 +49,35 @@ function checkBible(project: Project, err: Report) {
     if (!ids.has(id)) err("decision-missing", bible.file, `the bible has no '${id}' decision`, "decisions");
   }
   for (const d of duplicates(bible.data.decisions, (d) => d.id)) err("duplicate-id", bible.file, `decision '${d}' is defined twice`, "decisions");
+
+  const draws = bible.data.draws;
+  if (!draws) {
+    warn("no-draws", bible.file, "the bible has no draws, so nothing checks the exclusions or their delivery", "draws");
+    return;
+  }
+  for (const d of duplicates(draws, (d) => d.id)) err("duplicate-id", bible.file, `draw '${d}' is defined twice`, "draws");
+  if (!draws.some((d) => d.kind === "excludes")) err("no-exclusion", bible.file, "at least one draw must have kind: excludes", "draws");
+}
+
+/** Each book plan lists only `gives` draws, and each `gives` draw is in at least one book plan. */
+function checkDraws(project: Project, totalBooks: number, err: Report) {
+  const draws = project.bible?.data.draws;
+  if (!draws || project.books.size === 0) return;
+  const kind = new Map(draws.map((d) => [d.id, d.kind]));
+  const delivered = new Set<string>();
+  for (const plan of project.books.values()) {
+    plan.data.draws.forEach((id, i) => {
+      if (!kind.has(id)) err("unknown-draw", plan.file, `draw '${id}' is not in bible.md`, `draws.${i}`);
+      else if (kind.get(id) === "excludes") err("excluded-draw", plan.file, `draw '${id}' is an exclusion: a book does not deliver it`, `draws.${i}`);
+      delivered.add(id);
+    });
+  }
+  // Only when every book plan exists: before that, a later book can still deliver the draw.
+  for (let b = 1; b <= totalBooks; b++) if (!project.books.has(b)) return;
+  const first = project.books.get(Math.min(...project.books.keys()))!;
+  for (const d of draws) {
+    if (d.kind === "gives" && !delivered.has(d.id)) err("draw-undelivered", first.file, `no book plan delivers the draw '${d.id}' (${d.text})`, "draws");
+  }
 }
 
 /** Returns the IDs of all entities whose type has kind `character`. */
@@ -181,6 +211,7 @@ function checkChapters(project: Project, index: PlanIndex, characterIds: Set<str
       const waived = new Set(d.exceptions.map((e) => e.rule));
       d.exceptions.forEach((e, k) => {
         if (!RULE_IDS.has(e.rule)) err("unknown-rule", c.file, `'${e.rule}' is not a rule ID (see \`lb rules\`)`, `exceptions.${k}.rule`);
+        else if (e.rule === "draws.excluded") err("unwaivable", c.file, "an exclusion cannot be waived: change the draws in bible.md", `exceptions.${k}.rule`);
       });
       if (!knownPov.has(d.pov)) err("unknown-character", c.file, `pov '${d.pov}' is not a character`, "pov");
       if (d.job.from.trim().toLowerCase() === d.job.to.trim().toLowerCase()) err("no-value-shift", c.file, "job.from and job.to are the same: the chapter has no job", "job");
@@ -392,6 +423,7 @@ function checkVoiceSamples(project: Project, characterIds: Set<string>, err: Rep
   for (const kind of VOICE_KINDS) {
     if (!kinds.has(kind)) err("voice-kinds", "voice/", `there is no '${kind}' voice sample (voice/${kind}.md)`);
   }
+  if (!project.config.windows) return;
   if (!samples.some((s) => /^(```|~~~)/m.test(s.body))) err("no-status-window", "voice/", "no voice sample shows a status window in a fenced code block");
   if (samples.some((s) => s.data.status === "approved") && !project.bible?.data.window_template) {
     err("no-window-template", "bible.md", "a voice sample is approved, but bible.md has no window_template", "window_template");

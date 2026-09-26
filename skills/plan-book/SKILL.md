@@ -11,7 +11,7 @@ Only the next book to write gets chapter plans: for phase 1 that is book 1. File
 
 1. Run `lb gate character-arcs`. If it is BLOCKED, stop and tell the user why.
 
-2. Read `bible.md`, `books/NN/plan.md` for this book, `targets.yaml`, `facts.yaml` and every `characters/*.md`.
+2. Read `bible.md` (with its `draws`), `books/NN/plan.md` for this book (with the draws it delivers), `targets.yaml`, `facts.yaml` and every `characters/*.md`.
 
 3. **Chapter count and act ranges.** From `chapter_words` in `project.yaml` and the scope of the book plan, decide the number of chapters and which chapters each act gets. Write down the act ranges before any chapter.
 
@@ -27,6 +27,8 @@ Only the next book to write gets chapter plans: for phase 1 that is book 1. File
    - `day`: the in-story day;
    - `exceptions`: only when the chapter breaks a guideline on purpose, once, for a clear effect, with the `reason`.
 
-6. **Targets against the plan.** For each target at an anchor in this book, check that the chapters up to it show what produces it. The guidelines ask that power has a cost the reader saw: name the chapter where each rank or big gain is paid for. If a target cannot be earned in the chapters you have, change the plan or tell the user that the target must move.
+6. **Draws.** Each draw in the book plan's `draws` gets chapters where the reader gets it, on the page: name them in the summary. No scene, thread or job touches an `excludes` draw.
 
-7. Run **the checkpoint loop** in `${CLAUDE_PLUGIN_ROOT}/reference/checkpoint-loop.md` for `chapter-plans`. In the summary, give a one-line table: chapter, job (from → to), ending type.
+7. **Targets against the plan.** For each target at an anchor in this book, check that the chapters up to it show what produces it. The guidelines ask that power has a cost the reader saw: name the chapter where each rank or big gain is paid for. If a target cannot be earned in the chapters you have, change the plan or tell the user that the target must move.
+
+8. Run **the checkpoint loop** in `${CLAUDE_PLUGIN_ROOT}/reference/checkpoint-loop.md` for `chapter-plans`. In the summary, give a one-line table: chapter, job (from → to), ending type.

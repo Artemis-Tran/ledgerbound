@@ -272,6 +272,18 @@ describe("lb brief", () => {
     expect(text).toMatch(/sabine:\n\s+name: Sabine Rook/);
     expect(text).toContain("**cracked-lamp** (setup; this chapter plants it)");
     expect(r.dropped).toEqual([]);
+    expect(text).toContain("## Draws");
+    expect(text).toContain("- No romance and no romantic subplot.");
+    expect(text).toContain("Window template");
+  });
+
+  test("with windows: off, the brief has no window template", () => {
+    const dir = fixtureCopy();
+    edit(dir, "project.yaml", "mode: normal", "mode: normal\nwindows: off");
+    const r = buildBrief(load(dir), loadRecord(dir), 1, 2);
+    const text = readFileSync(join(dir, r.file), "utf8");
+    expect(text).not.toContain("Window template");
+    expect(text).toContain("No status windows");
   });
 
   test("drops the next plans first when it is over brief_chars", () => {

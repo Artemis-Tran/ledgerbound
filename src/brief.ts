@@ -69,10 +69,26 @@ export function buildBrief(project: Project, rec: RecordFiles, book: number, cha
 
   // 1. The prose decisions.
   const decisions = (project.bible?.data.decisions ?? []).filter((d) => ["prose-style", "pov-tense", "tone"].includes(d.id));
-  sections.push({
-    title: "Prose decisions",
-    text: `${decisions.map((d) => `- **${d.topic}**: ${d.value}`).join("\n")}\n\nWindow template (use it for every status window; show only the values that changed):\n\n\`\`\`\n${project.bible?.data.window_template?.trimEnd() ?? "(none)"}\n\`\`\``,
-  });
+  const windows = project.config.windows
+    ? `Window template (use it for every status window; show only the values that changed):\n\n\`\`\`\n${project.bible?.data.window_template?.trimEnd() ?? "(none)"}\n\`\`\``
+    : "No status windows (project.yaml: `windows: off`). Show each change of the record through the prose only: what the character does, feels in the body, or can now do.";
+  sections.push({ title: "Prose decisions", text: `${decisions.map((d) => `- **${d.topic}**: ${d.value}`).join("\n")}\n\n${windows}` });
+
+  // 1b. The draws: every exclusion, and the draws that this book delivers.
+  const draws = project.bible?.data.draws;
+  if (draws) {
+    const delivers = new Set(project.books.get(book)?.data.draws ?? []);
+    const excludes = draws.filter((d) => d.kind === "excludes");
+    const gives = draws.filter((d) => d.kind === "gives" && delivers.has(d.id));
+    sections.push({
+      title: "Draws (what the reader came for)",
+      text: [
+        "The story never contains these (a break is an error, rule `draws.excluded`):",
+        ...excludes.map((d) => `- ${d.text}`),
+        ...(gives.length > 0 ? ["", `Book ${book} delivers these; serve them where the plan allows:`, ...gives.map((d) => `- ${d.text}`)] : []),
+      ].join("\n"),
+    });
+  }
 
   // 2. The chapter plan, and the next 2.
   sections.push({ title: `This chapter: ${book}.${pad2(chapter)} (about ${project.config.chapter_words} words)`, text: `\`\`\`yaml\n${rawFrontmatter(join(root, plan.file))}\n\`\`\`` });

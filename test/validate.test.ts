@@ -206,3 +206,49 @@ describe("voice samples", () => {
     expect(errorCodes(check(dir))).toContain("no-window-template");
   });
 });
+
+describe("draws", () => {
+  test("a bible with no draws is only a warning", () => {
+    const dir = fixtureCopy();
+    edit(dir, "bible.md", /draws:\n(  .*\n)+/, "");
+    edit(dir, "books/01/plan.md", "draws: [cost-of-power, small-town-conspiracy, underdog-climb]\n", "");
+    const issues = check(dir);
+    expect(errorCodes(issues)).toEqual([]);
+    expect(issues).toContainEqual(expect.objectContaining({ code: "no-draws", severity: "warn" }));
+  });
+
+  test("the draws need at least one exclusion", () => {
+    const dir = fixtureCopy();
+    edit(dir, "bible.md", "kind: excludes", "kind: gives");
+    expect(errorCodes(check(dir))).toContain("no-exclusion");
+  });
+
+  test("a gives draw that no book plan delivers", () => {
+    const dir = fixtureCopy();
+    edit(dir, "books/01/plan.md", "draws: [cost-of-power, small-town-conspiracy, underdog-climb]", "draws: [cost-of-power, small-town-conspiracy]");
+    expect(check(dir)).toContainEqual(expect.objectContaining({ code: "draw-undelivered", file: "books/01/plan.md", message: expect.stringContaining("'underdog-climb'") }));
+  });
+
+  test("a book plan names an unknown draw or an exclusion", () => {
+    const dir = fixtureCopy();
+    edit(dir, "books/01/plan.md", "underdog-climb]", "underdog-climb, no-romance, dragons]");
+    expect(errorCodes(check(dir))).toEqual(expect.arrayContaining(["excluded-draw", "unknown-draw"]));
+  });
+
+  test("a chapter plan cannot waive an exclusion", () => {
+    const dir = fixtureCopy();
+    edit(dir, "books/01/plan/05.md", "exceptions:\n", "exceptions:\n  - { rule: draws.excluded, reason: a kiss }\n");
+    expect(errorCodes(check(dir))).toContain("unwaivable");
+  });
+});
+
+describe("windows: off", () => {
+  test("needs no status window and no window template", () => {
+    const dir = fixtureCopy();
+    edit(dir, "project.yaml", "mode: normal", "mode: normal\nwindows: off");
+    edit(dir, "voice/dialogue.md", /```[\s\S]*?```\n/, "");
+    edit(dir, "voice/action.md", /```[\s\S]*?```\n/, "");
+    edit(dir, "bible.md", /window_template: \|\n(  .*\n)+/, "");
+    expect(errorCodes(check(dir))).toEqual([]);
+  });
+});

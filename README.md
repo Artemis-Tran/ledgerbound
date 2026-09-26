@@ -49,11 +49,15 @@ The workflow has two phases. **Planning** makes the plan and the voice, and you 
 | Step | Skill | What it does | Files | Checkpoint |
 |---|---|---|---|---|
 | 0 (optional) | `develop-idea <idea>` | Offers 3 premises from a short idea. You choose or mix. | `pitch.md` | – |
-| 1 | `start-project` | Asks only what is missing, offers options, and records each decision as `locked` (you chose) or `open` (the system chose). | `bible.md`, `schema.yaml`, `facts.yaml`, `project.yaml` | `bible` |
+| 1 | `start-project` | Asks only what is missing, offers options, and records each decision as `locked` (you chose) or `open` (the system chose). Writes the draws, and sets `windows`. | `bible.md`, `schema.yaml`, `facts.yaml`, `project.yaml` | `bible` |
 | 2 | `plan-series` | Plans from the end: the series, then each book, with ending states, promises, questions, handoffs, and targets for the record. | `series.md`, `books/NN/plan.md`, `targets.yaml` | `series-plan`, `book-plan` |
 | 3 | `plan-arcs` | Want, need, lie, voice card and arc beats for each main character. | `characters/*.md` | `character-arcs` |
 | 4 | `plan-book` | A job, threads, arc beats, an ending type and scenes for each chapter of the next book. | `books/NN/plan/MM.md`, `threads.yaml` | `chapter-plans` |
 | 5 | `voice-sample` | Three ~500-word scenes (dialogue, action, quiet), checked by `check-prose`. They become the reference for all prose. | `voice/*.md`, the window template in `bible.md` | `voice-sample` |
+
+**Draws.** The draws are what a reader chooses the story for (`gives`: "time loop with significant variation", "a magic academy with real focus on the academy") and what the story promises not to have (`excludes`: "zero romance"). They are in `bible.md`. `develop-idea` gives each premise its draws, and `reference/draws.md` lists common ones. Each book plan names the `gives` draws that it delivers. The writer gets every exclusion in the brief, and the prose checker gives an error when a chapter breaks one.
+
+**Windows.** `windows: off` in `project.yaml` is for progression fantasy with no visible System. There are then no status windows: the prose shows each gain, and the record still tracks the numbers. `start-project` sets it from the draws and the stat system.
 
 At each checkpoint, the skill shows you a summary and asks you to approve it or to change it. Only your approval runs `lb approve <checkpoint>`.
 
@@ -117,6 +121,14 @@ Each checkpoint is `on` by default. Switch a checkpoint off in `project.yaml` (`
 | `lb delta 1.07` | The staged delta of chapter 7, with its errors. |
 | `lb lint books/01/chapters/07.md` | The deterministic prose checks. |
 | `lb validate` | Every file and reference, and the ledger. |
+
+### A novel repo made before version 0.5.0
+
+The workflow continues without draws: `lb validate` gives only the warning `no-draws`. To add them:
+
+1. Add `draws:` to the `bible.md` frontmatter (see `reference/formats.md` and `examples/tiny-standalone/bible.md`): at least 3, with at least 1 `excludes`.
+2. Add `draws: [ids]` to each `books/NN/plan.md`, so that each `gives` draw is in a book plan.
+3. Run `lb validate`, and fix each error. The files stay approved.
 
 ### A novel repo made before version 0.4.0
 

@@ -3,7 +3,7 @@ import { basename, dirname, join, relative, resolve } from "node:path";
 import { parse as parseYaml } from "yaml";
 import { splitFrontmatter } from "../frontmatter.ts";
 import { ChapterPlan, ProjectConfig } from "../schemas.ts";
-import { type CorpusFile, type LintResult, lintProse } from "./lint.ts";
+import { type CorpusFile, type Finding, type LintResult, lintProse } from "./lint.ts";
 
 export function findProjectRoot(from: string): string | undefined {
   let dir = resolve(from);
@@ -52,5 +52,25 @@ export function lintFile(path: string, opts: FileLintOptions = {}): LintResult &
   }
 
   const { body, firstLine } = readBody(abs);
-  return { file, ...lintProse(body, firstLine, file, { config: config?.success ? config.data.lint : undefined, corpus, waive, lines: opts.lines }) };
+  const result = lintProse(body, firstLine, file, { config: config?.success ? config.data.lint : undefined, corpus, waive, lines: opts.lines });
+  if (config?.success && !config.data.windows) {
+    result.findings.push(...windowsOff(body, firstLine, opts.lines));
+    result.findings.sort((a, b) => a.line - b.line);
+  }
+  return { file, ...result };
+}
+
+/** With `windows: off`, each fenced block (a status window) is an error. */
+function windowsOff(body: string, firstLine: number, lines?: [number, number]): Finding[] {
+  const out: Finding[] = [];
+  let open = false;
+  body.split("\n").forEach((l, i) => {
+    if (!/^\s*(```|~~~)/.test(l)) return;
+    open = !open;
+    const line = firstLine + i;
+    if (open && (!lines || (line >= lines[0] && line <= lines[1]))) {
+      out.push({ rule: "windows.off", severity: "error", line, text: l.trim(), message: "project.yaml has windows: off, so show this change in the prose, not in a status window" });
+    }
+  });
+  return out;
 }

@@ -43,6 +43,8 @@ export const ProjectConfig = z.strictObject({
   mode: z.enum(["normal", "just-write-it"]).default("normal"),
   /** The size limit of a context brief, in characters. */
   brief_chars: z.number().int().positive().default(60000),
+  /** Status windows in the prose. `off`: the prose shows progression, and the record still tracks it. */
+  windows: OnOff.default(true),
   checkpoints: z.partialRecord(z.enum(CHECKPOINTS), OnOff).default({}),
   lint: z
     .strictObject({
@@ -77,10 +79,22 @@ export const Decision = z.strictObject({
   reason: z.string().optional(),
 });
 
+export const DRAW_KINDS = ["gives", "excludes"] as const;
+
+export const Draw = z.strictObject({
+  id: Slug,
+  kind: z.enum(DRAW_KINDS),
+  text: Text,
+  status: z.enum(["locked", "open"]),
+});
+export type Draw = z.infer<typeof Draw>;
+
 export const Bible = z.strictObject({
   status: Status,
   title: Text,
   decisions: z.array(Decision).min(1),
+  /** What a reader chooses the story for, and what it promises not to have. Missing in repos made before 0.5.0. */
+  draws: z.array(Draw).min(3, "at least 3 draws").optional(),
   /** Set by the voice-sample skill from the status window of the approved voice samples. */
   window_template: z.string().optional(),
 });
@@ -186,6 +200,8 @@ export const BookPlan = z.strictObject({
   title: Text,
   ...levelFields,
   acts: z.array(Act).min(1),
+  /** The IDs of the `gives` draws that this book delivers. */
+  draws: z.array(Slug).default([]),
   /** Custom plan anchors (`b1/<slug>`), each inside one act. */
   anchors: z.array(z.strictObject({ id: z.string().regex(AnchorRe), act: Slug, note: z.string().optional() })).default([]),
 });

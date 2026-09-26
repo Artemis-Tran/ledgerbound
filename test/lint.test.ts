@@ -3,7 +3,7 @@ import { describe, expect, test } from "vitest";
 import { lintFile } from "../src/lint/index.ts";
 import { lintProse, type LintOptions } from "../src/lint/lint.ts";
 import { parseProse } from "../src/lint/text.ts";
-import { FIXTURE } from "./helpers.ts";
+import { edit, FIXTURE, fixtureCopy } from "./helpers.ts";
 
 const lint = (text: string, opts: LintOptions = {}) => lintProse(text, 1, "ch.md", opts).findings;
 const rules = (text: string, opts?: LintOptions) => lint(text, opts).map((f) => f.rule);
@@ -159,5 +159,15 @@ describe("waivers and line ranges", () => {
   test("--lines keeps only findings in the range", () => {
     const text = `His jaw tightened.\n\n${FILLER}\n\nHer eyes widened.`;
     expect(lint(text, { lines: [5, 5] }).map((f) => f.line)).toEqual([5]);
+  });
+});
+
+describe("windows: off", () => {
+  test("each status window is an error", () => {
+    const dir = fixtureCopy();
+    edit(dir, "project.yaml", "mode: normal", "mode: normal\nwindows: off");
+    const findings = lintFile(join(dir, "voice", "action.md")).findings;
+    expect(findings.map((f) => f.rule)).toEqual(["windows.off"]);
+    expect(findings[0].severity).toBe("error");
   });
 });
