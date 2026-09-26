@@ -41,6 +41,14 @@ describe("gate", () => {
     expect(gate(project, issues, "replan").on).toBe(true);
   });
 
+  test("autopilot switches every checkpoint off, replan included", () => {
+    const dir = fixtureCopy();
+    edit(dir, "project.yaml", "mode: normal", "mode: autopilot");
+    const { project, issues } = load(dir);
+    expect(gate(project, issues, "replan").on).toBe(false);
+    expect(gate(project, issues, "chapter-1").on).toBe(false);
+  });
+
   test("an error upstream blocks a downstream gate", () => {
     const dir = fixtureCopy();
     edit(dir, "bible.md", "id: tone", "id: mood");

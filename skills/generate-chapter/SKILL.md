@@ -16,4 +16,4 @@ A chapter goes through fixed stages, and `lb run` works out the stage of each on
 3. Do the step in `chapter-steps.md` for the chapter's stage. Run `lb run` again after each step, and do the next one.
    Done when the chapter is `done`, or a step says stop.
 
-4. Tell the user in a few lines: the chapter, its word count, the number of verify rounds, the open warnings (from `runs/verify/NN-MM.json`), and any replan. Offer the next chapter, or `generate-book` for the rest of the book.
+4. Tell the user in a few lines: the chapter, its word count, the number of verify rounds, the open warnings (from `runs/verify/NN-MM.json`), any replan, and in autopilot any accepted errors. Offer the next chapter, or `generate-book` for the rest of the book.

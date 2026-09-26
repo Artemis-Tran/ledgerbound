@@ -40,7 +40,8 @@ export const ProjectConfig = z.strictObject({
   title: Text,
   format: z.enum(["series", "standalone"]).default("series"),
   chapter_words: z.number().int().positive().default(3000),
-  mode: z.enum(["normal", "just-write-it"]).default("normal"),
+  /** `just-write-it`: every checkpoint off except `replan`. `autopilot`: every checkpoint off; the run does not stop, and logs its decisions in runs/autopilot.md. */
+  mode: z.enum(["normal", "just-write-it", "autopilot"]).default("normal"),
   /** The size limit of a context brief, in characters. */
   brief_chars: z.number().int().positive().default(60000),
   /** Status windows in the prose. `off`: the prose shows progression, and the record still tracks it. */

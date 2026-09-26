@@ -20,7 +20,7 @@ The complete worked example is `${CLAUDE_PLUGIN_ROOT}/examples/tiny-standalone/`
 | File | Holds | Checkpoint |
 |---|---|---|
 | `pitch.md` | optional, from develop-idea: frontmatter `working_title`, `format`, `premise`; a `## Draws` section (`- gives: …` / `- excludes: …`), then sections per bible decision; each bullet marked `(yours)`, `(chosen)` or `(filled)`. Not validated. | – |
-| `project.yaml` | title, `format` (series/standalone), `chapter_words`, `mode`, `windows` (`on`/`off`, default `on`: `off` means no status windows and no window template), `brief_chars`, `checkpoints`, `lint` overrides | – |
+| `project.yaml` | title, `format` (series/standalone), `chapter_words`, `mode` (`normal`, `just-write-it`, or `autopilot`: no checkpoint, decisions logged in `runs/autopilot.md`), `windows` (`on`/`off`, default `on`: `off` means no status windows and no window template), `brief_chars`, `checkpoints`, `lint` overrides | – |
 | `bible.md` | `decisions:` list of `{id, topic, value, status: locked\|open, options_considered, reason}`. Required IDs: `plot`, `prose-style`, `pov-tense`, `characters`, `setting`, `stat-system`, `themes`, `tone`. `draws:` list of `{id, kind: gives\|excludes, text, status: locked\|open}`, at least 3 with at least 1 `excludes` (missing: a warning). `window_template:` after the voice sample (only with windows `on`). | `bible` |
 | `schema.yaml` | `types:` (each with `kind: character` or not, and `fields:`), `entities:` (each with `type`, `name`, `start` values; a character can also have `beliefs: {fact: belief}` in `start`) | `bible` |
 | `facts.yaml` | list of `{id, truth}`: things a character can know, not know, or believe falsely | `bible` |
@@ -35,7 +35,7 @@ The complete worked example is `${CLAUDE_PLUGIN_ROOT}/examples/tiny-standalone/`
 | `books/NN/chapters/MM.md` | frontmatter `status`, `book`, `chapter`, `title`; then the prose. `status: approved` only through `lb commit` or `lb approve chapter-1`. | `chapter-1` (1.01 only) |
 | `books/NN/memory/MM.md` | rolling memory: `book`, `chapter`, `summary`, `changed`, `open_questions`, `ending_type`, `phrase_log: {similes, images, gestures: {character: [...]}}`. No body. | – |
 | `ledger.jsonl` | the committed delta entries, each with its `point`. Only `lb commit` writes it. | – |
-| `runs/` | `briefs/NN-MM.md` (from `lb brief`), `verify/NN-MM.json` (`{round, verdict, open}` from verify-chapter), `book-NN.json` (from `lb run`). | – |
+| `runs/` | `briefs/NN-MM.md` (from `lb brief`), `verify/NN-MM.json` (`{round, verdict, open, extra_round?, accepted?}` from verify-chapter; `accepted: true` lets `lb commit` commit the chapter with its open errors), `autopilot.md` (the decisions of an autopilot run), `book-NN.json` (from `lb run`). | – |
 
 ## Schema field kinds
 

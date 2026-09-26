@@ -21,11 +21,12 @@ Two checkers that did not write the chapter find the problems, and a reviser fix
    { "round": 1, "verdict": "pass | fail", "open": [{ "severity": "error", "rule": "plan.ending", "line": 88, "problem": "..." }] }
    ```
 
-   `verdict` is `pass` when no finding is an `error`. `open` holds every finding, with its severity.
+   `verdict` is `pass` when no finding is an `error`. `open` holds every finding, with its severity. Keep `extra_round` when the old record has it.
 
 4. **Decide.**
    - `pass`: return `pass`. The open warnings stay in the record for the report at the end of the book.
-   - `fail` in round 1 or 2: start the `ledgerbound:reviser` agent with the point, the brief path and the findings path. When it returns a `not_fixed` item with `"replan": true`, return `replan` with its reason. Else go back to step 1.
-   - `fail` in round 3: return `blocked` with the open errors.
+   The last round is 3, or 4 when the record has `"extra_round": true`.
+   - `fail` before the last round: start the `ledgerbound:reviser` agent with the point, the brief path and the findings path. When it returns a `not_fixed` item with `"replan": true`, return `replan` with its reason. Else go back to step 1.
+   - `fail` in the last round: return `blocked` with the open errors.
 
    Done when the result is `pass`, `blocked` or `replan`.

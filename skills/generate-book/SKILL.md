@@ -14,12 +14,13 @@ Keep this session small: give the agents paths, and read their JSON results, nev
 1. Run `lb gate voice-sample`. If it is BLOCKED, stop and tell the user why.
 
 2. Run `lb run --json`. Do the step in `chapter-steps.md` for the stage of its `next.chapter`. Then run `lb run --json` again, and continue with the next step, chapter after chapter.
-   Done when `lb run` says the book is complete, or a step says stop: a checkpoint that waits for the user (`chapter-1`, `replan`), a replan, or a chapter that is `blocked`.
+   Done when `lb run` says the book is complete, or a step says stop: a checkpoint that waits for the user (`chapter-1`, `replan`), a replan, or a chapter that is `blocked`. In `mode: autopilot` only the hard stops in `chapter-steps.md` stop the run.
 
 3. When the run stops before the end, tell the user why, what they must do, and that `generate-book` continues from this point.
 
 4. When the book is complete, report:
    - the chapters, with the word count of each (`wc -w books/NN/chapters/*.md`);
    - the open warnings of `lb run --json`, grouped by rule;
+   - in autopilot: the chapters in `accepted` of `lb run --json` with their open errors (the user reads these first), and each replan from `runs/autopilot.md` in one line;
    - the `open_questions` of the last memory file: the handoff to the next book;
    - for a series, the next step: the `plan-book` skill for the next book.

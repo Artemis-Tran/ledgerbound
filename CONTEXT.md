@@ -84,7 +84,7 @@ The approved format of a status window. Every status window in the project uses 
 _Avoid_: Stat block, sheet format
 
 **Checkpoint**:
-A step where the user must approve an output before the workflow continues. Each checkpoint can be switched on or off, except `replan`, which "just write it" mode does not switch off.
+A step where the user must approve an output before the workflow continues. Each checkpoint can be switched on or off. "Just write it" mode switches off every checkpoint except `replan`. Autopilot mode switches off all of them: the run makes the user's decisions itself and records each one in the autopilot log.
 _Avoid_: Gate, approval step
 
 ### Record

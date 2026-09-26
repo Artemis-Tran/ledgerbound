@@ -317,6 +317,31 @@ describe("lb run", () => {
     expect(existsSync(join(dir, "runs/book-01.json"))).toBe(true);
   });
 
+  test("autopilot: a blocked chapter gets an extra round, or is committed with its open errors", () => {
+    const dir = fixtureCopy();
+    edit(dir, "project.yaml", "mode: normal", "mode: autopilot");
+    stage(dir, GOOD_DELTA);
+    writeChapter2(dir, CHAPTER_2.replace("Ivo waited", "Ivo waited by the tapestry"));
+    mkdirSync(join(dir, "runs/verify"), { recursive: true });
+    const record = (extra: object) =>
+      writeFileSync(join(dir, "runs/verify/01-02.json"), JSON.stringify({ round: 3, verdict: "fail", open: [{ severity: "error", rule: "words.banned", line: 9, problem: "x" }], ...extra }));
+
+    record({});
+    let r = runReport(load(dir), 1);
+    expect(r.chapters[1]).toMatchObject({ stage: "blocked" });
+    expect(r.next.step).toContain("Blocked in autopilot");
+
+    record({ extra_round: true });
+    expect(runReport(load(dir), 1).chapters[1]).toMatchObject({ stage: "drafted" });
+
+    expect(lb(["commit", "1.02"], dir).status).toBe(1);
+    record({ accepted: true });
+    r = runReport(load(dir), 1);
+    expect(r.chapters[1]).toMatchObject({ stage: "verified" });
+    expect(r.accepted).toEqual([{ chapter: 2, errors: [{ rule: "words.banned", line: 9, problem: "x" }] }]);
+    expect(lb(["commit", "1.02"], dir).status).toBe(0);
+  });
+
   test("chapter 1.01 waits for the user when the checkpoint is on", () => {
     const dir = fixtureCopy();
     edit(dir, "books/01/chapters/01.md", "status: approved", "status: draft");

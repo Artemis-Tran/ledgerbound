@@ -13,7 +13,7 @@ import { findProjectRoot, lintFile } from "./lint/index.ts";
 import { loadProject, type Project } from "./project.ts";
 import { chapterPath, checkDelta, commitChapter, fold, loadRecord, parsePoint, type Where } from "./record.ts";
 import { RULES } from "./rules.ts";
-import { runReport } from "./run.ts";
+import { readVerify, runReport } from "./run.ts";
 import { type Checkpoint, CHECKPOINTS } from "./schemas.ts";
 import { validateProject } from "./validate.ts";
 
@@ -90,10 +90,12 @@ function chapterArg(i = 0): { book: number; chapter: number } {
   return { book: w.book, chapter: w.chapter };
 }
 
-/** Commits a chapter: its lint must pass, then its delta goes to the ledger. */
+/** Commits a chapter: its lint must pass (unless its verify record accepts the open errors), then its delta goes to the ledger. */
 function commit(project: Project, book: number, chapter: number) {
   const lint = lintFile(join(project.root, chapterPath(book, chapter)));
+  const accepted = readVerify(project.root, book, chapter)?.accepted === true;
   const blocking: Issue[] = lint.findings
+    .filter(() => !accepted)
     .filter((f) => f.severity === "error" && !f.waived)
     .map((f) => ({ code: `lint.${f.rule}`, severity: "error", file: lint.file, path: `line ${f.line}`, message: f.message }));
   const r = commitChapter(project, loadRecord(project.root), book, chapter, blocking);
@@ -187,7 +189,8 @@ switch (command) {
     const { project } = load();
     const r = runReport(project, bookArg(project));
     const rows = r.chapters.map((c) => `  ${String(c.chapter).padStart(2, "0")} ${c.stage.padEnd(10)} ${c.note ?? ""}`);
-    out(`Book ${r.book}:\n${rows.join("\n")}\n\nNext: ${r.next.step}`, r);
+    const acc = r.accepted.map((a) => `${String(a.chapter).padStart(2, "0")} (${a.errors.length})`).join(", ");
+    out(`Book ${r.book}:\n${rows.join("\n")}${acc ? `\n\nAccepted open errors: ${acc}` : ""}\n\nNext: ${r.next.step}`, r);
     break;
   }
 

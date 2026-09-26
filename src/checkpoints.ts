@@ -23,6 +23,7 @@ export const WORKFLOW: { checkpoint: Checkpoint; skill: string }[] = [
 ];
 
 export function isOn(project: Project, cp: Checkpoint): boolean {
+  if (project.config.mode === "autopilot") return false;
   if (project.config.mode === "just-write-it" && cp !== "replan") return false;
   return project.config.checkpoints[cp] ?? true;
 }

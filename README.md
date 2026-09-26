@@ -102,7 +102,7 @@ After a stop, or after a usage limit or a closed session, run `/ledgerbound:gene
 
 ### Replan
 
-`/ledgerbound:replan` changes the part of the plan that is not written yet: chapter plans, `threads.yaml`, `targets.yaml`, anchors and open decisions. It changes a locked decision only when you say so. It never changes an approved chapter or the ledger. When the record is wrong about a written chapter, the replan adds a `Correction:` entry at the start of the next chapter's delta. A replan always waits for your approval, also in `just-write-it` mode. You can also run it when you want to change the direction of the story.
+`/ledgerbound:replan` changes the part of the plan that is not written yet: chapter plans, `threads.yaml`, `targets.yaml`, anchors and open decisions. It changes a locked decision only when you say so. It never changes an approved chapter or the ledger. When the record is wrong about a written chapter, the replan adds a `Correction:` entry at the start of the next chapter's delta. A replan waits for your approval, also in `just-write-it` mode. Only `autopilot` mode lets it decide alone. You can also run it when you want to change the direction of the story.
 
 ### A series
 
@@ -110,7 +110,21 @@ After a stop, or after a usage limit or a closed session, run `/ledgerbound:gene
 
 ### Checkpoints and modes
 
-Each checkpoint is `on` by default. Switch a checkpoint off in `project.yaml` (`checkpoints: { chapter-1: off }`), or set `mode: just-write-it`, which switches all of them off except `replan`. A checkpoint that is off does not stop the workflow, but the validator still must pass.
+Each checkpoint is `on` by default. Switch a checkpoint off in `project.yaml` (`checkpoints: { chapter-1: off }`), or set a mode:
+
+| `mode` | Stops for you at |
+|---|---|
+| `normal` | each checkpoint that is on, each replan, each `blocked` chapter |
+| `just-write-it` | each replan, each `blocked` chapter |
+| `autopilot` | only a change to a `locked` decision or a draw, and a record error that the reviser cannot fix |
+
+A checkpoint that is off does not stop the workflow, but the validator still must pass.
+
+**Autopilot** makes your decisions for you, and writes each one in `runs/autopilot.md`:
+- A replan selects the option that keeps the most of the approved plan, changes only `open` decisions, and approves itself.
+- A chapter that is `blocked` after 3 rounds: when an error is about the plan, an automatic replan and one extra verify round. Otherwise the chapter is committed with its open errors.
+
+At the end of the book, the report lists the chapters that were committed with open errors (read these first) and each replan. Use autopilot after the first chapters show that the voice and the plan work.
 
 ### Useful commands during generation
 

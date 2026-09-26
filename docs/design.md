@@ -21,7 +21,7 @@ This is the approved design for phase 1 (planning) and phase 2 (generation). The
 | any time | `replan` | chapter plans not written yet, `threads.yaml`, `targets.yaml`, open decisions | `replan` (always on) |
 
 - A series plans the series level and every book at book level. Only the next book to write gets act, chapter and scene plans.
-- Each checkpoint is `on` by default. `mode: just-write-it` switches all of them off except `replan`.
+- Each checkpoint is `on` by default. `mode: just-write-it` switches all of them off except `replan`. `mode: autopilot` switches all of them off: a replan picks its own option (within the `open` decisions) and approves itself, and a chapter blocked after 3 rounds gets an automatic replan and one extra round when a plan error is open, or else is committed with its open errors. Each decision goes into `runs/autopilot.md`. The run still stops for a change to a `locked` decision or a draw, and for a record error.
 - Only `lb approve` sets `status: approved`. It refuses when the validator finds errors.
 - A skill starts with `lb gate <upstream checkpoint>`. The gate passes when the upstream files are valid and approved, or valid and the checkpoint is off.
 
@@ -85,4 +85,4 @@ The `continuity-checker` agent reads the chapter and the schema, **not the fold*
 
 ### Runs
 
-`generate-book` repeats the chapter steps. `lb run` works out the stage of each chapter from the files (`planned → briefed → drafted → verified → approved → remembered → done`), writes `runs/book-NN.json`, and names the next step. After a usage-limit stop, the next run continues from there. The run stops at a checkpoint that is on, at a replan, and when a chapter still has an open error after 3 rounds. Open warnings go into the report at the end. `runs/` is committed with the novel.
+`generate-book` repeats the chapter steps. `lb run` works out the stage of each chapter from the files (`planned → briefed → drafted → verified → approved → remembered → done`), writes `runs/book-NN.json`, and names the next step. After a usage-limit stop, the next run continues from there. The run stops at a checkpoint that is on, at a replan, and when a chapter still has an open error after 3 rounds (in autopilot, see "Workflow and checkpoints"). Open warnings go into the report at the end. `runs/` is committed with the novel.
