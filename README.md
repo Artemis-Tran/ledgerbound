@@ -85,7 +85,7 @@ Both skills do the same steps for each chapter. `lb run` finds the stage of each
 
 - **The delta comes before the prose.** The writer first decides what changes in the record in this chapter: levels, ranks, items, locations, beliefs, the day. `lb delta` rejects an illegal change before any prose depends on it. Illegal changes include a gain larger than `max_step`, a rank that goes down, an item that is not there, and a day that goes back. `lb delta` also rejects a delta that does not meet the targets of this chapter. Then the prose must show each change.
 - **The context brief** gives the writer everything it needs, and nothing more. It contains the prose decisions and the window template, this chapter's plan and the next 2 plans, and the record (the fold) at the chapter start. It also contains this chapter's targets, the voice cards, the three voice samples, the rolling memory, the phrase log of used images and gestures, the open threads, and the last ~300 words of the previous chapter. The writer never reads the old chapters.
-- **The two checkers did not write the chapter.** `prose-checker` runs `lb lint` and judges the writing guidelines. `continuity-checker` reads every claim from the prose (a number, an item, a place, the day, what a character knows) *without* the record. Then `lb claims` compares each claim with the fold at that line. It also checks the plan: the job, the scenes, the threads, the arc beat and the ending.
+- **The two checkers did not write the chapter.** `prose-checker` runs `lb lint` and judges the writing guidelines. It also compares each scene with the voice sample of its kind (`voice.match`), and `lb lint` finds a phrase copied from a sample. `continuity-checker` reads every claim from the prose (a number, an item, a place, the day, what a character knows) *without* the record. Then `lb claims` compares each claim with the fold at that line. It also checks the plan: the job, the scenes, the threads, the arc beat and the ending.
 - **The reviser changes only the flagged spans.** A full rewrite brings in new tics. When the record is what is wrong, the reviser changes the staged delta instead.
 - **Commit.** Until the commit, the delta is *staged* and can change. After the commit it is in `ledger.jsonl` and never changes. Chapters are committed in sequence.
 - **Rolling memory** is written by an agent that did not write the chapter, from the chapter as it is on the page. Later chapters read these files, never the old prose.
@@ -144,6 +144,12 @@ Use autopilot after the first chapters show that the voice and the plan work. Fo
 | `lb delta 1.07` | The staged delta of chapter 7, with its errors. |
 | `lb lint books/01/chapters/07.md` | The deterministic prose checks. |
 | `lb validate` | Every file and reference, and the ledger. |
+
+### A novel repo made before version 0.8.0
+
+`guidelines/writing.md` in the novel repo is a copy from `lb init`, so it has no section "9. Voice". The prose checker still judges `voice.match` from `lb rules`, but it checks better with the full text. When you did not change your copy, copy the new `guidelines/writing.md` over it. When you did, add section 9 by hand.
+
+`lb lint` now also compares each chapter with the voice samples. An approved chapter can get new `repetition.*` findings. They do not change the ledger or a commit that is done.
 
 ### A novel repo made before version 0.5.0
 

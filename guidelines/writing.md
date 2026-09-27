@@ -107,10 +107,22 @@ AI dialogue is too complete, too articulate and too self-aware. Everyone sounds 
 
 ## 8. Repetition across the book [lint + review]
 - Keep a phrase log in memory: similes, notable images, character gestures, ending types.
-- The same distinctive phrase must not occur twice in a book.
+- The same distinctive phrase must not occur twice in a book. A phrase or simile from a voice
+  sample counts too: copy the voice of the samples, not their words.
 - A character's verbal habit is shown, but at most once every few chapters. It is a spice, not the meal.
 
-## 9. Revision rules
+## 9. Voice [review]
+The three voice samples are the reference for the narration. Each chapter sounds like the same
+writer wrote it. Compare each scene with the sample of its kind (dialogue, action or quiet) on:
+- **Vocabulary and register**: the same kind of words, from the same world. No sudden literary,
+  modern or formal words that the samples never use.
+- **Sentence rhythm**: sentence length and variety like the sample of that kind of scene.
+- **POV distance**: as close to the POV character's thoughts as the samples, and never closer
+  or further (no slip into another head, no narrator who knows more than the samples allow).
+- **How much the narration explains**: as much interior thought and explanation as the samples,
+  and no more.
+
+## 10. Revision rules
 - Fix only the flagged spans. A full rewrite brings in new tics.
 - After a fix, run the lint again on the changed paragraph.
 - When two rules conflict, the story bible and the voice samples win over these guidelines.

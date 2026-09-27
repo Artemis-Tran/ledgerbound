@@ -196,3 +196,14 @@ describe("length.target", () => {
     expect(length(dir, [1, 1000])).toEqual([]);
   });
 });
+
+describe("the voice samples in a chapter's corpus", () => {
+  test("a phrase copied from a voice sample is a finding", () => {
+    const dir = fixtureCopy();
+    edit(dir, "books/01/chapters/01.md", "when the weight went out of the rope.", "when the rope went slack in his hands.");
+    const f = lintFile(join(dir, "books", "01", "chapters", "01.md")).findings.filter((x) => x.rule === "repetition.phrase");
+    expect(f).toHaveLength(1);
+    expect(f[0].message).toContain("copied from a voice sample");
+    expect(f[0].seeAlso).toContainEqual(expect.objectContaining({ file: "voice/dialogue.md" }));
+  });
+});

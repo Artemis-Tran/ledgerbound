@@ -157,7 +157,9 @@ function repeats(own: Occurrence[], others: Occurrence[], rule: string, severity
       severity,
       line: o.line,
       text: o.key,
-      message: `${label} "${o.key}" is used more than once in the book`,
+      message: others.some((x) => x.file.startsWith("voice/")) && !o.file.startsWith("voice/")
+        ? `${label} "${o.key}" is copied from a voice sample: copy the voice, not the words`
+        : `${label} "${o.key}" is used more than once in the book`,
       seeAlso: others.map((x) => ({ file: x.file, line: x.line })),
     });
   }

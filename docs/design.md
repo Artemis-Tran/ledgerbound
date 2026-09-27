@@ -42,6 +42,7 @@ This is the approved design for phase 1 (planning) and phase 2 (generation). The
 
 - `lb lint` is deterministic. It returns JSON findings with a rule ID, a severity and a line. It exits 1 on any error that the chapter plan does not waive.
 - `check-prose` runs in the `prose-checker` agent, which did not write the text. It runs `lb lint`, then judges the rules that a script cannot check.
+- The voice samples are the fixed reference for the voice. `lb lint` compares a chapter with the other chapters of its book and with the voice samples, so a phrase copied from a sample is a `repetition.*` finding. `prose-checker` judges `voice.match`: each scene against the sample of its kind, never against the previous chapter, so drift cannot add up over a book.
 - `lb rules` lists the rule IDs, their guideline section and which check owns each one.
 
 ## Phase 2: generation

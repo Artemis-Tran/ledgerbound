@@ -22,7 +22,7 @@ function readBody(path: string) {
 
 export interface FileLintOptions {
   lines?: [number, number];
-  /** Folder of other files to compare with. Default: the other chapters in books/NN/chapters/, or the other voice samples in voice/. */
+  /** Folder of other files to compare with. Default: for a chapter, the other chapters in books/NN/chapters/ and the voice samples in voice/; for a voice sample, the other two. */
   corpusDir?: string;
 }
 
@@ -34,13 +34,21 @@ export function lintFile(path: string, opts: FileLintOptions = {}): LintResult &
 
   const chapterMatch = /(?:^|\/)books\/(\d+)\/chapters\/(\d+)\.md$/.exec(abs);
   // Chapters of one book, and the voice samples, are checked against each other for repeats.
-  const voiceSample = root !== undefined && dirname(abs) === join(root, "voice");
-  const corpusDir = opts.corpusDir ?? (chapterMatch || voiceSample ? dirname(abs) : undefined);
-  const corpus: CorpusFile[] = corpusDir
-    ? readdirSync(corpusDir)
-        .filter((f) => f.endsWith(".md") && join(resolve(corpusDir), f) !== abs)
-        .map((f) => ({ file: root ? relative(root, join(resolve(corpusDir), f)) : f, ...readBody(join(corpusDir, f)) }))
-    : [];
+  // A chapter is also checked against the voice samples: the writer reads them in every brief.
+  const voiceDir = root !== undefined ? join(root, "voice") : undefined;
+  const voiceSample = voiceDir !== undefined && dirname(abs) === voiceDir;
+  const corpusDirs = opts.corpusDir
+    ? [opts.corpusDir]
+    : chapterMatch
+      ? [dirname(abs), ...(voiceDir && existsSync(voiceDir) ? [voiceDir] : [])]
+      : voiceSample
+        ? [dirname(abs)]
+        : [];
+  const corpus: CorpusFile[] = corpusDirs.flatMap((dir) =>
+    readdirSync(dir)
+      .filter((f) => f.endsWith(".md") && join(resolve(dir), f) !== abs)
+      .map((f) => ({ file: root ? relative(root, join(resolve(dir), f)) : f, ...readBody(join(dir, f)) })),
+  );
 
   let waive: string[] = [];
   let planWords: number | undefined;

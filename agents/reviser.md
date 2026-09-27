@@ -14,6 +14,7 @@ The point (for example `1.07`) gives the paths, where NN is the book and MM the 
 
 2. For each finding, in line order:
    - Fix the span so that the rule is kept. Use the `fix_hint` as a direction, not as the words.
+   - For `voice.match`, move the span toward the voice of the sample that the `fix_hint` names: its register, rhythm and distance, in new words.
    - When the `fix_hint` starts with `delta:`, or the record is what is wrong, change the staged delta entry and run `lb delta <point>`.
    - When a changed sentence holds a delta entry's `quote`, update the quote.
    - A plan finding can need new material: add at most one paragraph for it. When it needs more (a new scene, a different outcome), leave it and mark it `replan`.
