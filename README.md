@@ -52,8 +52,8 @@ The workflow has three phases. **Planning** makes the plan and the voice, and yo
 | 1 | `start-project` | Asks only what is missing, offers options, and records each decision as `locked` (you chose) or `open` (the system chose). Writes the draws, and sets `windows`. | `bible.md`, `schema.yaml`, `facts.yaml`, `project.yaml` | `bible` |
 | 2 | `plan-world` | Plans the world with you, one area at a time: places, factions, history, customs, laws, creatures, and how the System works in the world. One lore entry per thing. The writer gets the entries that each chapter needs, and the continuity checker finds prose that contradicts one. | `lore/*.md` | `world` |
 | 3 | `plan-series` | Plans from the end: the series, then each book, with ending states, promises, questions, handoffs, and targets for the record. | `series.md`, `books/NN/plan.md`, `targets.yaml` | `series-plan`, `book-plan` |
-| 4 | `plan-arcs` | Want, need, lie, voice card and arc beats for each main character. | `characters/*.md` | `character-arcs` |
-| 5 | `plan-book` | A job, threads, arc beats, an ending type and scenes for each chapter of the next book. | `books/NN/plan/MM.md`, `threads.yaml` | `chapter-plans` |
+| 4 | `plan-arcs` | Want, need, lie and arc beats for each main character, and for each character a voice card and who they are at the start of the story. A relationship that changes goes into the record. | `characters/*.md` | `character-arcs` |
+| 5 | `plan-book` | A job, threads, arc beats, an ending type, the cast and scenes for each chapter of the next book. A new character who comes back gets a character file. | `books/NN/plan/MM.md`, `threads.yaml` | `chapter-plans` |
 | 6 | `voice-sample` | Three ~500-word scenes (dialogue, action, quiet), checked by `check-prose`. They become the reference for all prose. | `voice/*.md`, the window template in `bible.md` | `voice-sample` |
 
 **Draws.** The draws are what a reader chooses the story for (`gives`: "time loop with significant variation", "a magic academy with real focus on the academy") and what the story promises not to have (`excludes`: "zero romance"). They are in `bible.md`. `develop-idea` gives each premise its draws, and `reference/draws.md` lists common ones. Each book plan names the `gives` draws that it delivers. The writer gets every exclusion in the brief, and the prose checker gives an error when a chapter breaks one.
@@ -77,7 +77,7 @@ Both skills do the same steps for each chapter. `lb run` finds the stage of each
 | `briefed` | **Write** | `chapter-writer` agent | First the delta `books/01/deltas/07.jsonl`, which `lb delta` must accept. Then the prose `books/01/chapters/07.md`. Then a quote from the prose on each delta entry. Then `lb lint` until clean. |
 | `drafted` | **Verify** | `verify-chapter`: `prose-checker` and `continuity-checker` agents at the same time, then the `reviser` agent | Findings in `runs/verify/01-07.json`. The reviser changes only the flagged spans. A maximum of 3 rounds. |
 | `verified` | **Approve** | `lb commit 1.07` (for chapter 1.01: you, then `lb approve chapter-1`) | The delta goes into `ledger.jsonl`, and the chapter gets `status: approved` |
-| `approved` | **Remember** | `memory-writer` agent | `books/01/memory/07.md`: summary, changes, open questions, ending type, phrase log. New setting details go into the lore entries. |
+| `approved` | **Remember** | `memory-writer` agent | `books/01/memory/07.md`: summary, changes, open questions, ending type, the characters on the page, phrase log. New setting details go into the lore entries, and new details about a character into its file. A character who speaks or comes back gets a file. |
 | `remembered` | **Git** | the skill | One commit: `Book 1, chapter 7: <title>` |
 | `done` | – | – | The next chapter starts |
 | `blocked` | **Stop** (in autopilot: see "Autopilot" below) | the skill | The chapter still has an open error after its last verify round |
