@@ -18,8 +18,8 @@ The point (for example `1.07`) gives the paths, where NN is the book and MM the 
    When no legal delta can meet a target (`max_step`, `direction`, or a belief the plan needs), stop here and return `"status": "replan"` with the reason.
 
 3. **Prose.** Write the chapter file: frontmatter `status: draft`, `book`, `chapter`, `title` (from the plan), then the prose, at about the length the brief gives.
-   - Do the plan: every scene's goal, conflict and outcome; the job's value shift; the threads and the arc beat; the ending type, with the hook as the concrete last beat.
-   - Write in the voice of the voice samples: their vocabulary, sentence length and distance from the POV character. Each character speaks by their voice card.
+   - Do the plan: every scene's goal, conflict, outcome and `tone`: a reader can name the tone by the third exchange; the job's value shift; the threads and the arc beat; the ending type, with the hook as the concrete last beat.
+   - Write in the voice of the voice samples: their vocabulary, sentence length and distance from the POV character. Each character speaks by their voice card, and their `humour` shows when the scene allows it.
    - Start inside the first scene with a character who does or wants something. Make the opening different from the end of the previous chapter in the brief.
    - A status window only where a change matters to the scene: the window template, only the changed values, as `old → new`. Take every number from the fold in the brief and your delta. When the brief says "No status windows", show each change through what the character does and can now do.
    - Deliver the draws of this book where the plan allows, and never write what an exclusion in the brief rules out.

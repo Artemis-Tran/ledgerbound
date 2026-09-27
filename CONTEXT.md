@@ -82,7 +82,7 @@ _Avoid_: Update, revision, event The record holds what changes; a lore entry hol
 _Avoid_: Wiki page, codex, glossary
 
 **Voice card**:
-The rules for how one character speaks: vocabulary, sentence length, verbal habits.
+The rules for how one character speaks: vocabulary, sentence length, verbal habits, what they never say, and how they joke (humour).
 
 **Character file**:
 `characters/<id>.md`: who one character is at the start of the story (the body), its voice card, its aliases and its character changes, and for a main character its arc. The record holds its state; the character file holds what stays true. A chapter's brief includes the file of each character in its cast. The memory writer makes the file of a character who speaks, or who is on the page in a second chapter.

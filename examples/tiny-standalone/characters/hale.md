@@ -9,6 +9,7 @@ voice:
   sentence_length: Long, warm, and full of small promises.
   verbal_habits: [Calls every digger "lad"]
   never_says: [The Duke's name]
+  humour: Warm teasing that makes a digger feel like family, and makes a refusal hard.
 ---
 
 The keeper of the Lenholt well: a big, warm man who gives the diggers bread at harvest and remembers their fathers' names. He decides which crew goes into which gallery. The diggers like him.

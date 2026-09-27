@@ -180,7 +180,7 @@ export function lintProse(body: string, firstLine: number, file: string, opts: L
     ["words.banned", bannedList(opts.config), "banned phrase"],
     ["names.ai-default", NAMES, "a name that AI fiction overuses; give the character a name from the setting"],
     ["emotion.hedges", HEDGES, "hedge"],
-    ["dialogue.therapy", THERAPY, "therapy language in dialogue"],
+    ["dialogue.therapy", THERAPY, "therapy language in dialogue; correct only when the speaker's voice card uses it"],
     ["dialogue.tags", TAGS, "dialogue tag"],
   ];
   for (const [rule, patterns, label] of phraseChecks) {

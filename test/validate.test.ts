@@ -191,6 +191,15 @@ describe("book levels", () => {
 });
 
 describe("chapter plans", () => {
+  test("a scene tone and a voice card humour are optional, and not empty", () => {
+    const dir = fixtureCopy();
+    edit(dir, "books/01/plan/01.md", 'tone: "dry sparring, then cold"', 'tone: ""');
+    edit(dir, "characters/ivo.md", "humour: Almost none. Takes a joke literally, and answers it with a number.", 'humour: ""');
+    const issues = check(dir);
+    expect(issues).toContainEqual(expect.objectContaining({ code: "format", file: "books/01/plan/01.md", path: "scenes.1.tone" }));
+    expect(issues).toContainEqual(expect.objectContaining({ code: "format", file: "characters/ivo.md", path: "voice.humour" }));
+  });
+
   test("two consecutive chapters with the same ending type", () => {
     const dir = fixtureCopy();
     edit(dir, "books/01/plan/02.md", "type: reveal", "type: decision");

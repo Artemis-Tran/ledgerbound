@@ -11,6 +11,7 @@ voice:
   sentence_length: Clipped. Answers a question with a procedure.
   verbal_habits: [Corrects other people's numbers]
   never_says: [What she feels, her father's name]
+  humour: "Bone dry. States a fact that makes the other person look foolish, and does not smile: 'Warden says a lot of things at the Drowned Goat.'"
 arc_beats:
   - { id: keeps-silence, book: 1, act: act1, beat: She copies the warden's rate and says nothing about the red pages. }
   - { id: cooks-books, book: 1, act: act2, beat: "She changes one entry to save Ivo, and hides it from him." }

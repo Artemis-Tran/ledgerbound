@@ -11,6 +11,7 @@ voice:
   sentence_length: Short and literal. Longer only when he counts something.
   verbal_habits: [Repeats a number back to check it]
   never_says: [Thank you to the warden, anything about his father]
+  humour: Almost none. Takes a joke literally, and answers it with a number.
 arc_beats:
   - { id: pays-without-asking, book: 1, act: act1, beat: He pays the tithe on his copper level and thanks the well for holding it. }
   - { id: lie-challenged, book: 1, act: act2, beat: He sees his father's name in the red pages and still tells himself the debt is fair. }

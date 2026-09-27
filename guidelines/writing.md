@@ -69,22 +69,42 @@ eyebrow) at most twice per chapter. The same simile never twice in a book.
 
 ## 5. Dialogue
 
-AI dialogue is too complete, too articulate and too self-aware. Everyone sounds the same.
+AI dialogue fails in two directions. It is too complete, too articulate and too self-aware, and
+everyone sounds the same. Or it is so quiet and indirect that the reader cannot see who the
+characters are, or if the scene is a joke, a fight or a threat. Good dialogue has subtext **and**
+text: some things are said at an angle, and some are said plainly.
 
-- **No stated feelings.** Characters do not explain their emotions. Bad: "I'm angry because you
-  lied to me." Real people deflect, accuse, change the subject or go quiet.
-- **No therapy language**: "I hear you", "that's valid", "boundaries", "process this", "I need you
-  to understand", "space", "trauma" (in casual speech).
-- **Subtext**: the important thing is often not said. A character answers a different question,
-  gives a non-answer, interrupts or lies.
-- **Not every question gets a direct answer.**
-- **Distinct voices**: each line must sound like its speaker's voice card. Test: remove the tags.
+- **The tone is clear; the reason can stay hidden.** Subtext hides *why* a character says a line.
+  It does not hide *how* they say it. By the third exchange, a reader can name the tone of the
+  scene: a joke, sarcasm, an argument, a threat, tenderness. When the scene has a `tone` in the
+  chapter plan, that is the target.
+- **Subtext and text.** In most exchanges, the important thing is said at an angle: a character
+  answers a different question, gives a non-answer, interrupts or lies. But the turn of a scene
+  (a confession, a threat, a refusal, a decision) is often said plainly, and it hits harder after
+  the indirect lines. A scene where every line is indirect is flat.
+- **Not every question gets a direct answer**, and not every question avoids one.
+- **Feelings are said when the character would say them.** A blunt character, a breaking point
+  or a confession can put a feeling in words: short, in the speaker's own voice, and it costs them
+  something or changes the scene. The fault is the explained feeling that no person says ("I'm
+  angry because you lied to me"), and a feeling that the scene already showed.
+- **Therapy language belongs to the characters who would use it**: a healer, a counselor, a
+  character from our world. Put those words in their voice card's `vocabulary`. From anyone else,
+  in casual speech, it is out of place: "I hear you", "that's valid", "boundaries", "process
+  this", "I need you to understand", "space", "trauma".
+- **Distinct voices**: each line sounds like its speaker's voice card. Test: remove the tags.
   If you cannot tell who speaks, rewrite it.
+- **Personality is on the page.** Each speaker wants something in the scene and goes after it in
+  their own way. The card's `humour` shows when the scene allows it: a dry character is dry on the
+  page, and the reader sees it.
+- **Sarcasm needs a truth that the reader knows** and that the line contradicts. Give the reader
+  that truth before the line, or in the answer to it.
+- **Banter comes from character.** Each speaker jokes in their own way, from their voice card, not
+  in one shared register. In a back-and-forth, each quip answers the previous line and raises the
+  stakes, and the exchange ends when one character wins, loses or leaves. A scene that the plan
+  marks as funny has jokes that land. A scene with no reason for a joke has none.
 - **No "As you know"**: characters do not tell each other things they both know.
 - **No speeches**: in normal conversation, a turn is 1–3 sentences. Monologues need a reason in the
   plan (a villain monologue needs a very good reason).
-- **No quippy banter in one register**: jokes come from character, not from a joke machine. Not
-  every scene needs a joke.
 - **No wise aphorisms** from mentors ("Strength isn't in the blade, it's in the heart").
 - **Tags**: mostly "said" and "asked", or no tag. No adverbs on tags ("she said softly"). No fancy
   verbs (hissed, growled, breathed) unless the sound is literal.
@@ -93,7 +113,6 @@ AI dialogue is too complete, too articulate and too self-aware. Everyone sounds 
 - **Conflict is not resolved by one honest talk.** Agreement costs something or comes slowly.
 
 ## 6. Emotion and narration
-- **Do not name an emotion that was already shown.** Bad: "Her hands shook. She was afraid."
 - **Do not explain the meaning of a scene** after it happens. Trust the reader.
 - **No hedges**: somehow, seemed to, almost as if, a sort of.
 - **Specific, not generic**: "a chipped enamel mug", not "a cup". Use the setting's own words and objects.

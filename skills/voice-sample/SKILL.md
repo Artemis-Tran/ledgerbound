@@ -9,7 +9,7 @@ The **voice samples** are three scenes of about 500 words each, in the chosen st
 
 | File | Kind | What it must show |
 |---|---|---|
-| `voice/dialogue.md` | `dialogue` | The protagonist and one other main character talking: voice cards, subtext, questions that get no direct answer. |
+| `voice/dialogue.md` | `dialogue` | The protagonist and one other main character talking: voice cards and their `humour`, subtext and plain text, and a tone that a reader can name by the third exchange. |
 | `voice/action.md` | `action` | A fight or physical danger: clear geography, a changing situation, a cost, and a status window with the change it caused. |
 | `voice/quiet.md` | `quiet` | A scene with little or no dialogue: the setting's own objects, emotion shown and never named, an ending in motion. |
 
@@ -19,7 +19,7 @@ The **voice samples** are three scenes of about 500 words each, in the chosen st
 
 2. Read `guidelines/writing.md` in full, the `prose-style`, `pov-tense` and `tone` decisions in `bible.md`, the voice cards of every character in the samples, and the chapter plans the scenes come from.
 
-3. **Choose three scenes** from the chapter plans, one for each kind, from different chapters where possible. The dialogue scene has the protagonist and one other main character who talks. The action scene has a stat change. Record each scene in `source` (for example `1.05, scene 1`).
+3. **Choose three scenes** from the chapter plans, one for each kind, from different chapters where possible. The dialogue scene has the protagonist and one other main character who talks, and a `tone` in its plan; select a scene where the tone is humour, sarcasm or a quarrel when the plans have one. The action scene has a stat change. Record each scene in `source` (for example `1.05, scene 1`).
 
 4. **Write** the three files. Frontmatter: `status: draft`, `kind`, `pov`, `characters` (the protagonist first), `source`. In every sample the prose:
    - starts inside the scene, with a character who does or wants something;

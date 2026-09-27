@@ -235,6 +235,8 @@ export const Character = z
       sentence_length: Text,
       verbal_habits: TextList,
       never_says: TextList,
+      /** How the character jokes or mocks, or that they do not. The writer shows it when the scene allows. */
+      humour: Text.optional(),
     }),
     arc_beats: z.array(ArcBeat).default([]),
     /** How the character changes in the story (a lost eye, a new post). The markdown body is who the character is. */
@@ -251,7 +253,8 @@ export type Character = z.infer<typeof Character>;
 
 // ---------- books/NN/plan/MM.md ----------
 
-export const Scene = z.strictObject({ goal: Text, conflict: Text, outcome: Text });
+/** `tone`: how the scene must read (funny, sarcastic, hostile, tender). The writer makes it clear on the page. */
+export const Scene = z.strictObject({ goal: Text, conflict: Text, outcome: Text, tone: Text.optional() });
 
 export const ChapterPlan = z.strictObject({
   status: Status,
