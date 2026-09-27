@@ -36,7 +36,10 @@ type. A book uses `cliffhanger` for no more than one chapter in three.
   Bad: "It was cold. It was dark. Dark was good."
 - **[lint] Repeated openings**: no 3 consecutive sentences that start with the same word or
   structure ("It was…", "He…", "The…").
-- **Anadiplosis**: do not start a sentence with the last word of the one before ("…dark. Dark was good.").
+- **Anadiplosis**: do not start a sentence with the last word of the one before for effect
+  ("…dark. Dark was good."): the echo that makes a beat sound deep. A chain of reasoning, where
+  each step takes up the last term of the step before because the character thinks in links
+  ("…from Body Writs. Body Writs were signed by working people, so…"), is permitted.
 - **Triplets**: no automatic lists of three ("cold, dark, and silent"). Use one precise item, two,
   or four. If you use three, the third must add something.
 - **Contrast framing**: no "It wasn't X. It was Y." / "not X, but Y" / "Not because X, but because
