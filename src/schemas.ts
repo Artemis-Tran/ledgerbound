@@ -334,6 +334,43 @@ export const Chapter = z.strictObject({
 });
 export type Chapter = z.infer<typeof Chapter>;
 
+// ---------- books/NN/publish.yaml and books/NN/pages/<id>.md ----------
+
+/** Front and back pages that `lb export` makes itself; every other page ID is a file in books/NN/pages/. */
+export const BUILT_IN_PAGES = ["title-page", "contents"] as const;
+
+/** The publish file of one book: the metadata of its export, and the order of its front and back pages. */
+export const Publish = z.strictObject({
+  /** Default: the title of the book plan. */
+  title: Text.optional(),
+  subtitle: Text.optional(),
+  /** The name on the cover: the author or the pen name. */
+  author: Text,
+  language: z.string().regex(/^[a-z]{2,3}(-[A-Za-z0-9]+)*$/, "use a language tag like en or en-GB").default("en"),
+  /** ISBN-10 or ISBN-13, hyphens allowed. Without it, the export gets a stable urn:uuid. */
+  isbn: z.string().optional(),
+  publisher: Text.optional(),
+  /** The publication date, YYYY-MM-DD. Quote it in YAML. */
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "use YYYY-MM-DD").optional(),
+  /** The blurb: the store description. */
+  description: Text.optional(),
+  keywords: TextList,
+  /** `number` default: the book number. */
+  series: z.strictObject({ name: Text, number: z.number().int().min(1).optional() }).optional(),
+  /** A JPEG or PNG, relative to the novel repo root. */
+  cover: z.string().regex(/\.(jpe?g|png)$/i, "the cover is a .jpg, .jpeg or .png file").optional(),
+  /** Page IDs in reading order: `title-page`, `contents`, or a file books/NN/pages/<id>.md. */
+  front: z.array(Slug).default(["title-page", "copyright", "contents"]),
+  back: z.array(Slug).default([]),
+});
+export type Publish = z.infer<typeof Publish>;
+
+export const Page = z.strictObject({
+  /** The heading of the page, and its line in the contents. A page with no title is not in the contents. */
+  title: Text.optional(),
+});
+export type Page = z.infer<typeof Page>;
+
 // ---------- books/NN/memory/MM.md ----------
 
 export const RollingMemory = z.strictObject({

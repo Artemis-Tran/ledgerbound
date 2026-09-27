@@ -159,3 +159,24 @@ The part of rolling memory that lists similes, notable images, character gesture
 **Context brief**:
 The one input that a chapter-writing subagent gets: the prose decisions, the chapter plan and the next plans, the fold at the chapter start, the targets, the voice cards, the voice samples, the relevant rolling memory, the phrase log, the open threads and the last words of the previous chapter.
 _Avoid_: Prompt, context pack
+
+### Publishing
+
+**Publish file**:
+`books/NN/publish.yaml`: the metadata of one book (author, blurb, keywords, ISBN, cover, series) and the order of its front pages and back pages.
+
+**Front page** / **Back page**:
+A page of the published book before the first chapter (title page, copyright, dedication, contents, previously page) or after the last one (about the author, also by). `title-page` and `contents` are built in; each other page is a file `books/NN/pages/<id>.md`.
+_Avoid_: Front matter, back matter (in this repo, "frontmatter" is the YAML header of a `.md` file)
+
+**Previously page**:
+The front page of book 2 or later that tells the reader what happened in the earlier books, made from their rolling memory and the fold.
+_Avoid_: Recap (that word is for nothing in this repo), story so far
+
+**Blurb**:
+The store description of one book: 150–250 words that sell it, from the bible, the draws and the book plan. `description` in the publish file.
+_Avoid_: Synopsis, summary (a summary is part of rolling memory)
+
+**Export**:
+The EPUB file of one book, from `lb export`. A **draft export** (`--draft`) has the chapters that exist, in any status; it is for reading, not for a store.
+

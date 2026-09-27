@@ -10,6 +10,8 @@ import {
   Chapter,
   ChapterPlan,
   Character,
+  Page,
+  Publish,
   Facts,
   ProjectConfig,
   RollingMemory,
@@ -47,6 +49,10 @@ export interface Project {
   prose: Map<number, Loaded<Chapter>[]>;
   /** book number → rolling memory files (books/NN/memory/MM.md), sorted by chapter */
   memory: Map<number, Loaded<RollingMemory>[]>;
+  /** book number → books/NN/publish.yaml */
+  publish: Map<number, Loaded<Publish>>;
+  /** book number → page ID → books/NN/pages/<id>.md */
+  pages: Map<number, Map<string, Loaded<Page>>>;
 }
 
 export const pad2 = (n: number) => String(n).padStart(2, "0");
@@ -127,6 +133,8 @@ export function loadProject(root: string): { project?: Project; issues: Issue[] 
     voiceSamples: mdFiles("voice").flatMap((p) => readMd(VoiceSample, p) ?? []),
     prose: new Map(),
     memory: new Map(),
+    publish: new Map(),
+    pages: new Map(),
   };
 
   /** Files whose name is the chapter number: the frontmatter must agree with the path. */
@@ -159,6 +167,15 @@ export function loadProject(root: string): { project?: Project; issues: Issue[] 
     perChapter(ChapterPlan, n, join("books", d, "plan"), project.chapters);
     perChapter(Chapter, n, join("books", d, "chapters"), project.prose);
     perChapter(RollingMemory, n, join("books", d, "memory"), project.memory);
+    const publish = readYaml(Publish, join("books", d, "publish.yaml"));
+    if (publish) project.publish.set(n, publish);
+    // A page can have no frontmatter: a dedication often has no title.
+    const pages = mdFiles(join("books", d, "pages")).flatMap((p) => {
+      const text = readFileSync(p, "utf8");
+      const page = /^---\r?\n/.test(text) ? readMd(Page, p) : parseWith(Page, rel(p), {}, text);
+      return page ? [[/([^/]+)\.md$/.exec(p)![1], page] as const] : [];
+    });
+    if (pages.length > 0) project.pages.set(n, new Map(pages));
   }
 
   return { project, issues };

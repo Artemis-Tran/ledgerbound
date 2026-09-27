@@ -18,7 +18,8 @@ This is the approved design for phase 1 (planning) and phase 2 (generation). The
 | 4 | `plan-book` | `books/NN/plan/MM.md`, `threads.yaml`, anchors | `chapter-plans` |
 | 5 | `voice-sample` | `voice/dialogue.md`, `voice/action.md`, `voice/quiet.md`, window template in `bible.md` | `voice-sample` |
 | 6 | `generate-chapter`, `verify-chapter` (or `generate-book` for all of them) | `books/NN/deltas/MM.jsonl`, `books/NN/chapters/MM.md`, `books/NN/memory/MM.md`, `ledger.jsonl` | `chapter-1` |
-| any time | `replan` | chapter plans not written yet, `threads.yaml`, `targets.yaml`, open decisions | `replan` (always on) |
+| 7 | `publish-book` | `books/NN/publish.yaml`, `books/NN/pages/*.md`, then `exports/NN-<title>.epub` through `lb export` | – (the user approves the pages in the skill) |
+| any time | `replan` | chapter plans not written yet, `threads.yaml`, `targets.yaml`, open decisions | `replan` (on in every mode except `autopilot`) |
 
 - A series plans the series level and every book at book level. Only the next book to write gets act, chapter and scene plans.
 - Each checkpoint is `on` by default. `mode: just-write-it` switches all of them off except `replan`. `mode: autopilot` switches all of them off: a replan picks its own option (within the `open` decisions) and approves itself, and a chapter blocked after 3 rounds gets an automatic replan and one extra round when a plan error is open, or else is committed with its open errors. Each decision goes into `runs/autopilot.md`. The run still stops for a change to a `locked` decision or a draw, and for a record error.
@@ -44,6 +45,12 @@ This is the approved design for phase 1 (planning) and phase 2 (generation). The
 - `check-prose` runs in the `prose-checker` agent, which did not write the text. It runs `lb lint`, then judges the rules that a script cannot check.
 - The voice samples are the fixed reference for the voice. `lb lint` compares a chapter with the other chapters of its book and with the voice samples, so a phrase copied from a sample is a `repetition.*` finding. `prose-checker` judges `voice.match`: each scene against the sample of its kind, never against the previous chapter, so drift cannot add up over a book.
 - `lb rules` lists the rule IDs, their guideline section and which check owns each one.
+
+## Phase 3: publishing
+
+- The `publish-book` skill writes the publish file `books/NN/publish.yaml` and the front and back pages in `books/NN/pages/`, then runs `lb export`. It asks the user for what only they know (author, ISBN, cover, personal pages), drafts the blurb and the keywords for their approval, and writes personal pages only from the user's words.
+- `lb export` builds EPUB 3 with no dependency: `node:zlib` gives deflate and CRC-32 for the zip, and the Markdown subset of the prose becomes XHTML (curly quotes; status windows as monospace boxes). It adds an EPUB 2 `toc.ncx` and a stable identifier (`urn:isbn:` or a UUID from the author, title and book). The same input gives the same XHTML; only `dcterms:modified` changes (`SOURCE_DATE_EPOCH` fixes it).
+- A publishable export needs every planned chapter `approved`. `--draft` exports the chapters that exist, for reading. `lb validate` checks the publish file: each listed page exists, the cover exists, the ISBN check digit.
 
 ## Phase 2: generation
 

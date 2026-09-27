@@ -42,7 +42,7 @@ Each skill tells you the next skill when it ends. When you are not sure, run `lb
 
 ## Workflow
 
-The workflow has two phases. **Planning** makes the plan and the voice, and you approve each part. **Generation** writes the chapters from that plan, one at a time and in sequence, and checks each one.
+The workflow has three phases. **Planning** makes the plan and the voice, and you approve each part. **Generation** writes the chapters from that plan, one at a time and in sequence, and checks each one. **Publishing** makes a complete book into an EPUB for the stores.
 
 ### Phase 1: planning
 
@@ -109,6 +109,19 @@ After a stop, or after a usage limit or a closed session, run `/ledgerbound:gene
 ### A series
 
 `plan-book` plans the chapters of one book at a time. When `generate-book` completes book 1, it reports the open questions (the handoff). Then run `plan-book` for book 2, and generate book 2 in the same way. The ledger continues across the books.
+
+### Phase 3: publishing
+
+When a book is complete, run `/ledgerbound:publish-book`. It makes the book ready for a store:
+
+1. It asks for what only you know: the author name, the ISBN (optional), the cover image, and your words for the personal pages (dedication, about the author, other books, newsletter).
+2. It drafts the **blurb** (the store description) and up to 7 **keywords** from the bible, the draws and the book plan. You approve them.
+3. It writes the **publish file** `books/NN/publish.yaml` and the **front and back pages** in `books/NN/pages/`: the copyright page, your pages, and for book 2 or later a **previously page** made from the rolling memory and the fold.
+4. It runs `lb export`, which writes `exports/NN-<title>.epub`. When `epubcheck` is installed, it runs it too: the stores use the same check.
+
+`lb export` needs every planned chapter approved. For an EPUB to read or share before the book is done, ask for a draft: `lb export --draft` exports the chapters that exist, and marks the title `(draft)`.
+
+The EPUB is EPUB 3, with an EPUB 2 table of contents for older readers. It has curly quotes, the status windows as boxes in a monospace font, the series metadata, and a stable identifier (from the ISBN, or else from the author and title). You still upload the cover and fill in the store form yourself. See `reference/publishing.md` for what the stores need.
 
 ### Checkpoints and modes
 
@@ -185,6 +198,7 @@ Restart Claude Code after the update.
 lb init [dir] --title T [--format series|standalone]
 lb status | validate | gate <cp> | approve <cp> | lint <file...> | rules | where
 lb run | brief <point> | delta <point> | fold [point] | claims <point> <file> | commit <point>
+lb export [--book N] [--draft] [--out FILE]
 ```
 
 A point is `book.chapter`, for example `1.07`. `lb --help` has the details. Every check exits non-zero on failure, so the skills use it as a gate.

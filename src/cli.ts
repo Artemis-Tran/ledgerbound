@@ -1,12 +1,13 @@
 /**
  * `lb`: the deterministic CLI of Ledgerbound. It exits 1 when a check fails, so a skill can use it as a gate.
  */
-import { readFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
 import { buildBrief } from "./brief.ts";
 import { parseArgs } from "node:util";
 import { approve, currentBook, gate, isOn, status } from "./checkpoints.ts";
 import { Claims, compareClaims } from "./claims.ts";
+import { buildEpub } from "./export/epub.ts";
 import { initProject } from "./init.ts";
 import { formatIssues, hasErrors, type Issue } from "./issues.ts";
 import { findProjectRoot, lintFile } from "./lint/index.ts";
@@ -39,6 +40,11 @@ Generation (a point is 1.07 = book 1, chapter 7):
                                          compare the prose's claims with the fold (exit 1 on a mismatch)
   lb commit <point> [--json]             append a verified chapter's delta to the ledger and approve it
 
+Publishing:
+  lb export [--book N] [--draft] [--out FILE] [--json]
+                                         the book as an EPUB file (default exports/NN-<title>.epub);
+                                         needs books/NN/publish.yaml and every chapter approved, or --draft
+
 Checkpoints: ${CHECKPOINTS.join(", ")}`;
 
 const { values, positionals } = parseArgs({
@@ -53,6 +59,8 @@ const { values, positionals } = parseArgs({
     corpus: { type: "string" },
     entity: { type: "string" },
     committed: { type: "boolean", default: false },
+    draft: { type: "boolean", default: false },
+    out: { type: "string" },
     help: { type: "boolean", short: "h", default: false },
   },
 });
@@ -243,6 +251,26 @@ switch (command) {
     if (book === 1 && chapter === 1 && isOn(project, "chapter-1")) fail("chapter 1.01 needs the user's approval: run `lb approve chapter-1` after they approve");
     commit(project, book, chapter);
     break;
+  }
+
+  case "export": {
+    const { project } = load();
+    const book = bookArg(project);
+    const r = buildEpub(project, book, { draft: values.draft });
+    const { epub, ...report } = r;
+    if (epub) {
+      const target = values.out ? resolve(values.out) : join(project.root, r.file);
+      mkdirSync(dirname(target), { recursive: true });
+      writeFileSync(target, epub);
+      report.file = values.out ? target : r.file;
+    }
+    const human = r.ok
+      ? `Wrote ${report.file} (${Math.round(epub!.length / 1024)} KB): ${r.chapters.length} chapter(s), ${r.words} words.` +
+        `${r.missing.length ? `\nNot in this draft: chapter(s) ${r.missing.join(", ")}.` : ""}` +
+        `${r.issues.length ? `\n${formatIssues(r.issues)}` : ""}`
+      : `NOT exported:\n${formatIssues(r.issues)}`;
+    out(human, report);
+    process.exit(r.ok ? 0 : 1);
   }
 
   default:

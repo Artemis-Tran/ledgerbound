@@ -8,6 +8,7 @@ import { bookDir, pad2, type Project } from "./project.ts";
 import { chapterKey, fold, loadRecord, stagedPath } from "./record.ts";
 import { RULE_IDS } from "./rules.ts";
 import { checkValue, fieldDef, type Kind, numericRange } from "./fields.ts";
+import { checkPublish } from "./export/epub.ts";
 import { BELIEFS, REQUIRED_DECISIONS, VOICE_KINDS, type Target } from "./schemas.ts";
 
 export function validateProject(project: Project): Issue[] {
@@ -27,6 +28,7 @@ export function validateProject(project: Project): Issue[] {
   checkTargets(project, index, characterIds, err, warn);
   checkVoiceSamples(project, characterIds, err);
   checkGeneration(project, issues, err, warn);
+  for (const book of project.publish.keys()) issues.push(...checkPublish(project, book));
   return issues;
 }
 

@@ -1,0 +1,15 @@
+# The publish file of book 1: the metadata of its export, and the order of its front and back pages.
+author: Mara Quell
+language: en
+date: "2026-11-02"
+description: >-
+  Ivo digs tithe tokens out of a well that keeps a third of every level he earns. One level short
+  of copper, he hears the tithe bell ring for a bucket that nobody dropped, and the reeve's clerk
+  stops her pen at his name.
+keywords:
+  - LitRPG
+  - progression fantasy
+  - slow progression
+  - no romance
+front: [title-page, copyright, dedication, contents]
+back: [about-author]
