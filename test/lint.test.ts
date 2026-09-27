@@ -171,3 +171,28 @@ describe("windows: off", () => {
     expect(findings[0].severity).toBe("error");
   });
 });
+
+describe("length.target", () => {
+  const chapter = (dir: string) => join(dir, "books", "01", "chapters", "01.md");
+  const length = (dir: string, lines?: [number, number]) => lintFile(chapter(dir), { lines }).findings.filter((f) => f.rule === "length.target");
+
+  test("a chapter near the plan's `words` has no finding", () => {
+    expect(length(fixtureCopy())).toEqual([]);
+  });
+
+  test("without `words`, the target is chapter_words, and a far chapter is a warning", () => {
+    const dir = fixtureCopy();
+    edit(dir, "books/01/plan/01.md", "words: 450\n", "");
+    const f = length(dir);
+    expect(f).toHaveLength(1);
+    expect(f[0].severity).toBe("warn");
+    expect(f[0].message).toContain("the target is 2500");
+  });
+
+  test("a plan exception waives it, and a line range skips it", () => {
+    const dir = fixtureCopy();
+    edit(dir, "books/01/plan/01.md", "words: 450", "words: 5000\nexceptions: [{ rule: length.target, reason: a test }]");
+    expect(length(dir)[0]?.waived).toBe(true);
+    expect(length(dir, [1, 1000])).toEqual([]);
+  });
+});

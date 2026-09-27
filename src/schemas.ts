@@ -247,6 +247,8 @@ export const ChapterPlan = z.strictObject({
   book: z.number().int().min(1),
   chapter: z.number().int().min(1),
   title: z.string().optional(),
+  /** The target length of this chapter, in words. Default: `chapter_words` in project.yaml. */
+  words: z.number().int().positive().optional(),
   pov: Slug,
   job: z.strictObject({ value: Text, from: Text, to: Text }),
   /** `character-id/beat-id` */

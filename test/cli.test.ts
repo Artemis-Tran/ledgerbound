@@ -33,7 +33,7 @@ describe("lb", () => {
     writeFileSync(join(chapters, "05.md"), "It was cold. It was dark. It was late.\n\nThe cart went up the manor road under the Duke's seal.\n");
     const five = lb(["lint", "--json", join(chapters, "05.md")], dir);
     expect(five.status).toBe(0);
-    expect(JSON.parse(five.stdout).results[0].findings[0]).toMatchObject({ rule: "rhythm.staccato", waived: true });
+    expect(JSON.parse(five.stdout).results[0].findings.find((f: { rule: string }) => f.rule === "rhythm.staccato")).toMatchObject({ rule: "rhythm.staccato", waived: true });
 
     writeFileSync(join(chapters, "04.md"), "It was cold. It was dark. It was late.\n\nThe roof came down between Ivo and the shaft.\n");
     expect(lb(["lint", join(chapters, "04.md")], dir).status).toBe(1);

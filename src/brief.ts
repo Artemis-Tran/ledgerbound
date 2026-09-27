@@ -91,7 +91,7 @@ export function buildBrief(project: Project, rec: RecordFiles, book: number, cha
   }
 
   // 2. The chapter plan, and the next 2.
-  sections.push({ title: `This chapter: ${book}.${pad2(chapter)} (about ${project.config.chapter_words} words)`, text: `\`\`\`yaml\n${rawFrontmatter(join(root, plan.file))}\n\`\`\`` });
+  sections.push({ title: `This chapter: ${book}.${pad2(chapter)} (about ${plan.data.words ?? project.config.chapter_words} words)`, text: `\`\`\`yaml\n${rawFrontmatter(join(root, plan.file))}\n\`\`\`` });
   plans
     .filter((p) => p.data.chapter > chapter && p.data.chapter <= chapter + 2)
     .forEach((p, i) => {

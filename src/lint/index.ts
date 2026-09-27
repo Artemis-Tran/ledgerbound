@@ -43,11 +43,15 @@ export function lintFile(path: string, opts: FileLintOptions = {}): LintResult &
     : [];
 
   let waive: string[] = [];
+  let planWords: number | undefined;
   if (chapterMatch && root) {
     const planPath = join(root, "books", chapterMatch[1], "plan", basename(abs));
     if (existsSync(planPath)) {
       const plan = ChapterPlan.safeParse(splitFrontmatter(readFileSync(planPath, "utf8")).data);
-      if (plan.success) waive = plan.data.exceptions.map((e) => e.rule);
+      if (plan.success) {
+        waive = plan.data.exceptions.map((e) => e.rule);
+        planWords = plan.data.words;
+      }
     }
   }
 
@@ -57,7 +61,28 @@ export function lintFile(path: string, opts: FileLintOptions = {}): LintResult &
     result.findings.push(...windowsOff(body, firstLine, opts.lines));
     result.findings.sort((a, b) => a.line - b.line);
   }
+  // A re-check of a line range does not judge the length of the whole chapter.
+  if (chapterMatch && config?.success && !opts.lines) {
+    const length = lengthFinding(result.words, planWords ?? config.data.chapter_words, firstLine);
+    if (length) result.findings.unshift(waive.includes(length.rule) ? { ...length, waived: true } : length);
+  }
   return { file, ...result };
+}
+
+/** How far a chapter can be from its target length before a warning. */
+export const LENGTH_TOLERANCE = 0.25;
+
+/** A warning when a chapter is more than LENGTH_TOLERANCE shorter or longer than its target. */
+function lengthFinding(words: number, target: number, firstLine: number): Finding | undefined {
+  if (Math.abs(words - target) <= target * LENGTH_TOLERANCE) return undefined;
+  const pct = Math.round(LENGTH_TOLERANCE * 100);
+  return {
+    rule: "length.target",
+    severity: "warn",
+    line: firstLine,
+    text: `${words} words`,
+    message: `the chapter has ${words} words; the target is ${target} (plan \`words\`, else chapter_words), so ${Math.round(target * (1 - LENGTH_TOLERANCE))}–${Math.round(target * (1 + LENGTH_TOLERANCE))} (±${pct}%)`,
+  };
 }
 
 /** With `windows: off`, each fenced block (a status window) is an error. */

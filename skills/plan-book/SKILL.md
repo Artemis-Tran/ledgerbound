@@ -14,6 +14,7 @@ Only the next book to write gets chapter plans: for phase 1 that is book 1. File
 2. Read `bible.md` (with its `draws`), `books/NN/plan.md` for this book (with the draws it delivers), `targets.yaml`, `facts.yaml` and every `characters/*.md`.
 
 3. **Chapter count and act ranges.** From `chapter_words` in `project.yaml` and the scope of the book plan, decide the number of chapters and which chapters each act gets. Write down the act ranges before any chapter.
+   Give a chapter its own `words` when its scenes need a different length: a set-piece fight longer, a quiet turn shorter. Keep the total of the book near the number of chapters × `chapter_words`.
 
 4. **Threads.** List every setup, mystery, subplot, promise and relationship that the book plan, the arcs and the facts need, in `threads.yaml`: each with a `plant`, the `beats` where it moves, and a `payoff` (a point in this book, or an anchor in a later book or `series/end` for a thread that the handoff carries on).
 
@@ -25,6 +26,7 @@ Only the next book to write gets chapter plans: for phase 1 that is book 1. File
    - `anchors`: the act ends and custom anchors that fall at the end of this chapter;
    - `scenes`: each with `goal` → `conflict` → `outcome`. Let some outcomes be worse than the goal;
    - `day`: the in-story day;
+   - `words`: only when this chapter's length differs from `chapter_words` (see step 3);
    - `exceptions`: only when the chapter breaks a guideline on purpose, once, for a clear effect, with the `reason`.
 
 6. **Draws.** Each draw in the book plan's `draws` gets chapters where the reader gets it, on the page: name them in the summary. No scene, thread or job touches an `excludes` draw.

@@ -25,16 +25,18 @@ The output is a **story bible**: the draws and every story decision, each marked
 5. **Draws.** Write `draws:` in the `bible.md` frontmatter: each `{id, kind: gives|excludes, text, status}`, in the words a reader uses. Take them from `pitch.md` or the user's material; a draw the user named is `locked`. Add draws that the bible makes clear (a detailed stat system, an academy setting), marked `open`, with `${CLAUDE_PLUGIN_ROOT}/reference/draws.md` as the list of common ones. Ask the user about exclusions in the same round as the gaps when the material names none: "Anything readers of this story must never get? For example, romance or a harem."
    Done when there are at least 3 draws and at least 1 is `excludes`, and every draw is concrete enough to test in a scene.
 
-6. **Windows.** Set `windows` in `project.yaml`: `off` when a draw or the `stat-system` decision says that progression shows without status windows (for example "non-LitRPG progression"); `on` when the story has a visible System. When neither makes it clear, ask the user in the same round as the gaps.
+6. **Chapter length.** Set `chapter_words` in `project.yaml`. Take it from the user's material or `pitch.md` when they give one. Otherwise ask in the same round as the gaps, with these options: 2,000 (short, fast serial updates), 3,000 (the default, common for web serials), 4,000–5,000 (fewer chapters, more room per scene).
 
-7. **Stat system → schema.** Turn the `stat-system` decision into `schema.yaml`:
+7. **Windows.** Set `windows` in `project.yaml`: `off` when a draw or the `stat-system` decision says that progression shows without status windows (for example "non-LitRPG progression"); `on` when the story has a visible System. When neither makes it clear, ask the user in the same round as the gaps.
+
+8. **Stat system → schema.** Turn the `stat-system` decision into `schema.yaml`:
    - one `kind: character` type for people, with the tracked fields: `ladder` for ranks and tiers, `counter` for levels and resources (set `min`, `max`, and a `max_step` per chapter that fits the planned pace), `collection` for skills and inventory;
    - other types only for things whose state changes on the page (a guild, a dungeon, a relic);
    - an entity for each main character, with `start` values for book 1.
    With `windows: off`, the schema still tracks the power: the prose shows it, and the record keeps it consistent.
 
-8. **Facts.** Put each secret or misunderstanding that the plot turns on in `facts.yaml`: one `truth` per fact. The plan will say who knows, who is unaware, and who believes something false.
+9. **Facts.** Put each secret or misunderstanding that the plot turns on in `facts.yaml`: one `truth` per fact. The plan will say who knows, who is unaware, and who believes something false.
 
-9. **Bible body.** Below the frontmatter, write setting notes that the planners and writers need: places, factions, the setting's own words for common things (they feed the "specific, not generic" rule). No plot outline: that is plan-series' job.
+10. **Bible body.** Below the frontmatter, write setting notes that the planners and writers need: places, factions, the setting's own words for common things (they feed the "specific, not generic" rule). No plot outline: that is plan-series' job.
 
 10. Run **the checkpoint loop** in `${CLAUDE_PLUGIN_ROOT}/reference/checkpoint-loop.md` for the checkpoint `bible`. In the summary, list the draws, and say whether windows are `on` or `off`.

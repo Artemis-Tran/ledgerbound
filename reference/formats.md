@@ -28,7 +28,7 @@ The complete worked example is `${CLAUDE_PLUGIN_ROOT}/examples/tiny-standalone/`
 | `books/NN/plan.md` | the same four level fields, plus `acts:` (each with `id` and the four fields), `draws:` (the IDs of the `gives` draws this book delivers; together the book plans deliver every one) and custom `anchors:` | `book-plan` |
 | `targets.yaml` | list of `{anchor, expect, knowledge, day, reset}` | `series-plan` (series), `book-plan` (standalone) |
 | `characters/<id>.md` | `role`, `want`, `need`, `lie`, `voice` card, `arc_beats: [{id, book, act, beat}]` | `character-arcs` |
-| `books/NN/plan/MM.md` | one chapter: `pov`, `job: {value, from, to}`, `arc_beats`, `threads: {plants, advances, pays_off}`, `ending: {type, hook}`, `anchors`, `exceptions`, `day`, `scenes: [{goal, conflict, outcome}]` | `chapter-plans` |
+| `books/NN/plan/MM.md` | one chapter: `words` (optional target length; default `chapter_words`), `pov`, `job: {value, from, to}`, `arc_beats`, `threads: {plants, advances, pays_off}`, `ending: {type, hook}`, `anchors`, `exceptions`, `day`, `scenes: [{goal, conflict, outcome}]` | `chapter-plans` |
 | `threads.yaml` | list of `{id, kind, summary, plant, beats, payoff}` | `chapter-plans` |
 | `voice/<kind>.md` | three files: `dialogue`, `action`, `quiet`. Frontmatter `kind`, `pov`, `characters` (2 or more for `dialogue`), `source`; then the prose. With windows `on`, at least one sample has a status window in a fenced code block. | `voice-sample` |
 | `books/NN/deltas/MM.jsonl` | the staged delta of a chapter: one delta entry per line (see below), in the order of the prose. No `point`. | – |
@@ -53,6 +53,7 @@ A target value for a counter or ladder is exact (`rank: iron`) or a range (`leve
 - `ending.type` is one of `action`, `dialogue`, `reveal`, `decision`, `image`, `cliffhanger`, `quiet-cut`; it differs from the chapter before; at most one `cliffhanger` in any three consecutive chapters.
 - `threads` agrees exactly with `threads.yaml`: a chapter lists a thread under `plants` when the thread's `plant` is that chapter, and the same for `advances` (`beats`) and `pays_off` (`payoff`).
 - `arc_beats` lists `character/beat` IDs. Each arc beat of the book is in exactly one chapter, inside its act.
+- `words` sets the target length of one chapter when it differs from `chapter_words` (a set-piece longer, a quiet chapter shorter). `lb lint` warns (`length.target`) when a chapter is more than 25% from its target.
 - `exceptions` lists `{rule, reason}` with rule IDs from `lb rules`. An exception waives the rule for this chapter only, and the reason says what effect it buys.
 
 ## Delta entries

@@ -1,8 +1,8 @@
 # Ledgerbound project config. Format: see reference/formats.md in the Ledgerbound plugin.
 title: {{TITLE}}
 format: {{FORMAT}}        # series | standalone
-chapter_words: 3000
-mode: normal              # normal | just-write-it (switches off every checkpoint except replan)
+chapter_words: 3000       # the target length of a chapter; a chapter plan can set its own `words`
+mode: normal              # normal | just-write-it (every checkpoint off except replan) | autopilot (every checkpoint off; decisions logged in runs/autopilot.md)
 
 # Each checkpoint is on unless you set it to off here.
 checkpoints:
