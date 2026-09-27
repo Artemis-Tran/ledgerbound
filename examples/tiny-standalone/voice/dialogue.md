@@ -10,15 +10,15 @@ Ivo had the bucket halfway up the shaft when the rope went slack in his hands an
 
 The token was warm. Tithe slates always were.
 
-Sabine was waiting at the counting table under the lean-to, the ledger open and her pen already wet. She did not look at the token. She looked at his hands.
+Sabine was at the counting table under the lean-to, the ledger open and her pen already wet. She looked at his hands before she looked at the token.
 
 "You've split the left one again."
 
 "It's rope."
 
-"It's blood on my page if you touch the ledger." She turned the book toward him anyway and tapped the margin with the dry end of the pen. "Level three. Warden's rate is a third. Mark here."
+"It's blood on my page if you touch the ledger." She turned the book toward him anyway. "Level three. Mark here."
 
-He pressed the token to the page. The slate went cold against his palm, and the ink under it moved on its own, the way it did for every digger in Lenholt, tallying what the well had taken.
+He pressed the token to the page. The slate went cold against his palm, and the ink under it moved on its own, tallying what the well had taken.
 
 ```
 [TITHE PAID]
@@ -27,23 +27,41 @@ Held by well . 1
 Stonesense ... 12% → 19%
 ```
 
-Nineteen percent. He did the sum he always did: seven points for a morning in the cold, and one level the well would keep until the season turned. Hale said the held levels came back to a digger at harvest, with interest, the way grain came back from a mill.
+"Nineteen," he said. "Seven points for one morning."
 
-"Warden says the rate drops at copper," he said.
+"Seven for you and a level for the well. Count both sides." She blotted the entry. "And don't let it go to your head. There isn't room."
 
-Sabine blotted the page. "Warden says a lot of things at the Drowned Goat."
+"Warden says the rate drops at copper."
 
-"You don't think it drops."
+"Warden says a lot of things at the Drowned Goat. Last week he said their ale was worth the money."
 
-"I think I copy what he tells me to copy." She closed the ledger on her thumb to keep the place. The cover had the reeve's brass corners, and one of them was bent where somebody had dropped the book on the flagstones and never paid to fix it. "Your father paid a third too. Twelve seasons."
+"It's a penny."
 
-Ivo waited for the rest of it. She wiped the pen on a rag that had been a shirt once and set it in the groove of the table, square with the edge.
+"That was my point."
 
-"And?"
+He did the sum anyway, because she had not given him anything else to count. A level from copper, and a third of every level held down the shaft until harvest. Hale said the held levels came back with interest, the way grain came back from a mill.
 
-"And the book goes up to the manor on Thursday. Go and eat something. You're shaking the table."
+"If it drops to a quarter, I'm clear of the tithe in four seasons," he said. "Three, if the new gallery opens."
 
-He was not shaking the table. He took his hand off it all the same, and the brass corner rattled once against the wood.
+"You're clear of the tithe when you're dead. Then they send the bill to your mother."
+
+She said it the way she read out a rate, and he waited for the dry end of it. There was no dry end. She closed the ledger on her thumb to keep the place.
+
+"Don't take copper this season."
+
+"Why not?"
+
+"Because I asked you."
+
+"You never ask for anything."
+
+"Then it should be easy to say yes." She wiped the pen on a rag that had been a shirt once and set it in the groove of the table, square with the edge.
+
+"Four seasons," he said. "That's the sum."
+
+"That's your sum. Go and eat something. You're shaking the table."
+
+He was not shaking the table. He took his hand off it all the same, and the brass corner of the ledger rattled once against the wood.
 
 Down in the shaft the bell struck again. Two strokes this time, and nobody else was on the rope.
 
