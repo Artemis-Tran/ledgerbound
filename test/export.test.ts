@@ -129,7 +129,7 @@ describe("lb export", () => {
     const dir = fixtureCopy();
     mkdirSync(join(dir, "art"));
     writeFileSync(join(dir, "art", "cover.png"), PNG);
-    edit(dir, "books/01/publish.yaml", "language: en", "language: en\nisbn: 978-0-306-40615-7\ncover: art/cover.png\nsubtitle: An Example\npublisher: Quell Press\nseries: { name: The Well Cycle }");
+    edit(dir, "books/01/publish.yaml", "language: en", "language: en\nisbn: 978-0-306-40615-7\ncover: art/cover.png\nsubtitle: An Example\npublisher: Rudd Press\nseries: { name: The Well Cycle }");
     const file = join(dir, "check.epub");
     writeFileSync(file, exportOf(dir).epub!);
     const r = spawnSync("epubcheck", [file], { encoding: "utf8" });

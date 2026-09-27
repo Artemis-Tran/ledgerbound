@@ -32,6 +32,7 @@ export const RULES: Rule[] = [
   { id: "rhythm.em-dash", section: "3", check: ["lint"], summary: "At most 3 em dashes per 1,000 words." },
   { id: "rhythm.variety", section: "3", check: ["judge"], summary: "Sentence length varies with the content, not with a pattern." },
   { id: "words.banned", section: "4", check: ["lint"], summary: "No banned word or phrase." },
+  { id: "names.ai-default", section: "4", check: ["lint"], summary: "No character, place or thing has one of the 20 names that AI fiction overuses (Elara, Kael, Lyra, Thorne, Voss...)." },
   { id: "words.body-tells", section: "4", check: ["lint"], summary: "The same body tell at most twice per chapter." },
   { id: "dialogue.stated-feelings", section: "5", check: ["judge"], summary: "Characters do not explain their emotions." },
   { id: "dialogue.therapy", section: "5", check: ["lint", "judge"], summary: "No therapy language in casual speech." },

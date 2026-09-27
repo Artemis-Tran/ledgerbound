@@ -12,7 +12,7 @@ The user's short idea is the **seed**. You offer three **premises**, each a comp
 1. **Seed.** Copy the user's idea word for word. List what it fixes (for example: "debt collector", "dungeon city", "the System takes a cut"). Also list the draws that it names, `gives` or `excludes` (for example "time loop", "zero romance"). Every premise keeps all of these.
 
 2. **Three premises.** Write three premises of 150–250 words each, in chat. Each one covers:
-   - the protagonist: what they want, and the lie they believe;
+   - the protagonist: a name from the setting (not one of the 20 names in §4, Names, of `${CLAUDE_PLUGIN_ROOT}/guidelines/writing.md`), what they want, and the lie they believe;
    - the central conflict, and why it can drive the planned length (a series or one book);
    - the setting, with two or three of its own nouns;
    - the stat system and **what power costs** on the page;

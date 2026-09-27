@@ -53,6 +53,26 @@ describe("§4 banned phrases", () => {
   });
 });
 
+describe("§4 names", () => {
+  test.each([
+    ["Elara held the rope.", "elara"],
+    ["The warden was Kaelen now.", "kael"],
+    ["\"Voss,\" Sabine said.", "voss"],
+    ["Hartley's cart was late.", "hartley"],
+  ])("%s", (text, id) => {
+    expect(lint(text)).toContainEqual(expect.objectContaining({ rule: "names.ai-default", severity: "error", message: expect.stringContaining(id) }));
+  });
+
+  test("a name only with its capital letter and as a whole word", () => {
+    expect(rules("The debt would vex him. Marcuson and Elaras came up the hill.")).not.toContain("names.ai-default");
+  });
+
+  test("the project cannot remove a name", () => {
+    const config = { banned_add: [], banned_remove: ["elara", "names.ai-default"], body_tells_add: {}, max_em_dash_per_1000: 3 };
+    expect(rules("Elara held the rope.", { config })).toContain("names.ai-default");
+  });
+});
+
 describe("§4 body tells", () => {
   test("the third nod in a chapter is an error", () => {
     const text = ["He nodded at the crew boss.", FILLER, "She nodded at the ledger.", FILLER, "They nodded at the well."].join("\n\n");

@@ -57,6 +57,13 @@ his being, smirk, padded (walking), orbs (eyes), steeled himself.
 
 The project can add or remove words in `project.yaml`.
 
+**[lint] Names**: every character, place and thing gets a name from the setting's own language,
+class and history: a digger's son in a slate town is Ivo or Pell. These 20 names are the ones that
+AI fiction overuses, and a reader who knows AI fiction knows them; they are never used, and the
+project cannot remove them: Elara, Kael (Kaelen, Kaelin, Kaelyn, Kaela), Lyra, Thorne, Voss, Kira,
+Vance, Vex, Eleanor, Elena, Marcus, Mara, Anya, Eira, Aldric, Zara, Althea, Elias, Arin, Hartley.
+`lb lint` checks the prose, and `lb validate` checks the planning files.
+
 **[lint] Gestures that repeat**: the same body tell (a nod, a sigh, a clenched fist, a raised
 eyebrow) at most twice per chapter. The same simile never twice in a book.
 

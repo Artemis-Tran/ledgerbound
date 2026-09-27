@@ -1,4 +1,4 @@
-Copyright © 2026 Mara Quell
+Copyright © 2026 Tamsin Rudd
 
 All rights reserved. No part of this book may be reproduced in any form without written permission from the author, except for brief quotations in a review.
 

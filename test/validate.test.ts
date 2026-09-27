@@ -69,6 +69,20 @@ describe("lore", () => {
   });
 });
 
+describe("names", () => {
+  test("a character, an entity, a lore entry or a plan with an AI default name is an error", () => {
+    const dir = fixtureCopy();
+    edit(dir, "characters/sabine.md", "name: Sabine Rook", "name: Elara Rook");
+    edit(dir, "schema.yaml", "name: Sabine Rook", "name: Elara Rook");
+    edit(dir, "lore/delving-crews.md", "aliases: [crew boss]", "aliases: [crew boss, Thorne's men]");
+    edit(dir, "books/01/plan/03.md", "pov: ivo", "pov: ivo\n# Lyra waits at the gate.");
+    const named = check(dir).filter((i) => i.code === "name-ai-default");
+    expect(named.map((i) => i.file).sort()).toEqual(["characters/sabine.md", "lore/delving-crews.md", "schema.yaml"]);
+    edit(dir, "books/01/plan/03.md", "outcome: He sees the red page", "outcome: Lyra sees the red page");
+    expect(check(dir)).toContainEqual(expect.objectContaining({ code: "name-ai-default", file: "books/01/plan/03.md" }));
+  });
+});
+
 describe("bible and schema", () => {
   test("a required decision is missing", () => {
     const dir = fixtureCopy();

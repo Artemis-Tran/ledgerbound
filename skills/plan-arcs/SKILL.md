@@ -13,7 +13,7 @@ One file per character in `characters/<id>.md`, where `<id>` is the entity ID in
 
 2. Read `bible.md`, `series.md` (if it exists), every `books/NN/plan.md` and `targets.yaml`. The arcs must end where the ending states and the knowledge targets say. The `draws` in `bible.md` shape the cast: a `gives` draw about people (a rival of equal skill, found family) needs characters and beats that deliver it, and no arc beat or want touches an `excludes` draw.
 
-3. **Main characters** (the protagonist, and each character who changes across the story): write `role`, `want` (what they chase on the page), `need` (what would actually fix them), and `lie` (the false belief that keeps them from the need, stated as they would think it).
+3. **Main characters** (the protagonist, and each character who changes across the story): give each new character a name from the setting, by §4, Names, in `${CLAUDE_PLUGIN_ROOT}/guidelines/writing.md`. Write `role`, `want` (what they chase on the page), `need` (what would actually fix them), and `lie` (the false belief that keeps them from the need, stated as they would think it).
 
 4. **Arc beats.** For each main character, map beats to acts: `{id, book, act, beat}`. The beats move the lie: it is held, tested, cracks, and is dropped or doubled down on. Give the protagonist a beat in every act of every book. Each beat is one event that a chapter can show, not a mood.
 

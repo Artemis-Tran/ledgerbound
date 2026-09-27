@@ -11,6 +11,7 @@ import {
   CONTRAST,
   escapeRe,
   HEDGES,
+  NAMES,
   type Pattern,
   STOPWORDS,
   TAGS,
@@ -177,6 +178,7 @@ export function lintProse(body: string, firstLine: number, file: string, opts: L
   // §4 banned words and phrases, §6 hedges, §5 therapy language and tags.
   const phraseChecks: [string, Pattern[], string][] = [
     ["words.banned", bannedList(opts.config), "banned phrase"],
+    ["names.ai-default", NAMES, "a name that AI fiction overuses; give the character a name from the setting"],
     ["emotion.hedges", HEDGES, "hedge"],
     ["dialogue.therapy", THERAPY, "therapy language in dialogue"],
     ["dialogue.tags", TAGS, "dialogue tag"],

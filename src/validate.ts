@@ -4,6 +4,7 @@
  */
 import { buildPlanIndex, comparePos, type PlanIndex, type Pos } from "./anchors.ts";
 import type { Issue } from "./issues.ts";
+import { aiNamesIn } from "./lint/patterns.ts";
 import { loreNames } from "./lore.ts";
 import { bookDir, pad2, type Project } from "./project.ts";
 import { chapterKey, fold, loadRecord, stagedPath } from "./record.ts";
@@ -29,6 +30,7 @@ export function validateProject(project: Project): Issue[] {
   checkTargets(project, index, characterIds, err, warn);
   checkVoiceSamples(project, characterIds, err);
   checkLore(project, index, err, warn);
+  checkNames(project, err);
   checkGeneration(project, issues, err, warn);
   for (const book of project.publish.keys()) issues.push(...checkPublish(project, book));
   return issues;
@@ -407,6 +409,22 @@ function checkTargets(project: Project, index: PlanIndex, characterIds: Set<stri
       }
     }
   }
+}
+
+// ---------- names ----------
+
+/** The planning files name the characters, places and things; the writer takes the names from them. */
+function checkNames(project: Project, err: Report) {
+  const found = (file: string, text: string, path?: string) => {
+    for (const name of aiNamesIn(text)) err("name-ai-default", file, `'${name}' is a name that AI fiction overuses: give a name from the setting (guidelines §4, Names)`, path);
+  };
+  for (const d of project.bible?.data.decisions ?? []) found(project.bible!.file, d.value, `decisions.${d.id}`);
+  for (const [id, e] of Object.entries(project.schema?.data.entities ?? {})) found(project.schema!.file, e.name, `entities.${id}.name`);
+  for (const c of project.characters) found(c.file, c.data.name, "name");
+  for (const e of project.lore.values()) found(e.file, [e.data.title, ...e.data.aliases, e.body].join("\n"));
+  if (project.series) found(project.series.file, JSON.stringify(project.series.data));
+  for (const b of project.books.values()) found(b.file, JSON.stringify(b.data));
+  for (const plans of project.chapters.values()) for (const p of plans) found(p.file, JSON.stringify(p.data));
 }
 
 // ---------- lore ----------

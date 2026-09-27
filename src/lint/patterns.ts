@@ -125,4 +125,41 @@ export const STOPWORDS = new Set(
   ),
 );
 
+/**
+ * guidelines §4 Names: the 20 names that language models give characters most often, from published
+ * counts of AI-generated stories. A name matches only with its capital letter, so the verb "vex" is no name.
+ * The project cannot remove them: a reader who knows AI fiction knows these names.
+ */
+export const AI_NAMES: { name: string; re: string }[] = [
+  { name: "Elara", re: "Elara" },
+  { name: "Kael", re: "Kael(?:en|in|yn|a)?" },
+  { name: "Lyra", re: "Lyra" },
+  { name: "Thorne", re: "Thorne" },
+  { name: "Voss", re: "Voss" },
+  { name: "Kira", re: "Kira" },
+  { name: "Vance", re: "Vance" },
+  { name: "Vex", re: "Vex" },
+  { name: "Eleanor", re: "Eleanor" },
+  { name: "Elena", re: "Elena" },
+  { name: "Marcus", re: "Marcus" },
+  { name: "Mara", re: "Mara" },
+  { name: "Anya", re: "Anya" },
+  { name: "Eira", re: "Eira" },
+  { name: "Aldric", re: "Aldric" },
+  { name: "Zara", re: "Zara" },
+  { name: "Althea", re: "Althea" },
+  { name: "Elias", re: "Elias" },
+  { name: "Arin", re: "Arin" },
+  { name: "Hartley", re: "Hartley" },
+];
+
+export const NAMES: Pattern[] = AI_NAMES.map((n) => ({
+  id: n.name.toLowerCase(),
+  re: new RegExp(`(?<![\\p{L}\\p{N}])${n.re}(?![\\p{L}\\p{N}])`, "gu"),
+  severity: "error" as const,
+}));
+
+/** The AI default names in a text, each once. */
+export const aiNamesIn = (text: string): string[] => AI_NAMES.filter((_, i) => new RegExp(NAMES[i].re.source, "u").test(text)).map((n) => n.name);
+
 export const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
