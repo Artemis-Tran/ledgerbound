@@ -12,7 +12,7 @@ The written chapters are the story now. A replan moves the plan to meet them, an
 - The chapter plans of chapters that are not approved, and the custom anchors in the book plan.
 - `threads.yaml`: the beats and payoffs in chapters that are not written. A plant in a written chapter stays.
 - `targets.yaml`: a target moves, changes, or gets `reset: true`.
-- The lore entries: a new entry, or a change that no approved chapter contradicts.
+- The lore entries: a new entry, a fact that no approved chapter contradicts, or a change in `changes` from a chapter that is not approved.
 - The `open` decisions of the bible. A `locked` decision changes only when the user says so.
 
 The approved chapters and `ledger.jsonl` stay as they are. When the committed record is wrong about an approved chapter, the correction goes first in the next chapter's staged delta, with a `cause` that starts with `Correction:` (see formats.md, "Delta entries").

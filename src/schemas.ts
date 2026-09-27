@@ -281,6 +281,11 @@ export const LoreEntry = z.strictObject({
   aliases: TextList,
   /** In every brief, not only when a chapter plan names it. For short rules that hold everywhere. */
   always: z.boolean().default(false),
+  /**
+   * How the thing changes in the story, in story order. `from` is a point or a plan anchor: the change is true
+   * after the chapter that holds it, so the brief of that chapter still has the old state.
+   */
+  changes: z.array(z.strictObject({ from: PosRef, text: Text })).default([]),
 });
 export type LoreEntry = z.infer<typeof LoreEntry>;
 
@@ -401,8 +406,11 @@ export const RollingMemory = z.strictObject({
   changed: TextList,
   open_questions: TextList,
   ending_type: z.enum(ENDING_TYPES),
-  /** Setting details that this chapter adds and no lore entry had. The memory writer also writes each one into its entry. */
-  lore_added: z.array(z.strictObject({ entry: Slug, fact: Text })).default([]),
+  /**
+   * Setting details that this chapter adds and no lore entry had. The memory writer also writes each one into its entry.
+   * `change`: the chapter changes the world (a law ends, a place burns), and the fact is a change of the entry from this chapter.
+   */
+  lore_added: z.array(z.strictObject({ entry: Slug, fact: Text, change: z.boolean().default(false) })).default([]),
   phrase_log: z
     .strictObject({
       similes: TextList,

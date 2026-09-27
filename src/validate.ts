@@ -4,6 +4,7 @@
  */
 import { buildPlanIndex, comparePos, type PlanIndex, type Pos } from "./anchors.ts";
 import type { Issue } from "./issues.ts";
+import { loreNames } from "./lore.ts";
 import { bookDir, pad2, type Project } from "./project.ts";
 import { chapterKey, fold, loadRecord, stagedPath } from "./record.ts";
 import { RULE_IDS } from "./rules.ts";
@@ -27,7 +28,7 @@ export function validateProject(project: Project): Issue[] {
   checkThreads(project, index, err);
   checkTargets(project, index, characterIds, err, warn);
   checkVoiceSamples(project, characterIds, err);
-  checkLore(project, err, warn);
+  checkLore(project, index, err, warn);
   checkGeneration(project, issues, err, warn);
   for (const book of project.publish.keys()) issues.push(...checkPublish(project, book));
   return issues;
@@ -410,15 +411,32 @@ function checkTargets(project: Project, index: PlanIndex, characterIds: Set<stri
 
 // ---------- lore ----------
 
-function checkLore(project: Project, err: Report, warn: Report) {
+const LORE_MAX_WORDS = 250;
+const LORE_MAX_ALWAYS = 3;
+
+function checkLore(project: Project, index: PlanIndex, err: Report, warn: Report) {
+  const always = [...project.lore.values()].filter((e) => e.data.always);
+  if (always.length > LORE_MAX_ALWAYS) {
+    for (const e of always) warn("lore-always", e.file, `${always.length} entries have \`always: true\` (more than ${LORE_MAX_ALWAYS}): each one is in every brief`, "always");
+  }
   for (const [id, entry] of project.lore) {
     if (!/^[a-z0-9][a-z0-9-]*$/.test(id)) err("file-name", entry.file, `the file name '${id}' is the entry ID: use lower-case letters, digits and '-'`);
     if (!entry.body.trim()) warn("lore-empty", entry.file, "the entry has no body: the brief gives the writer only the body");
+    // Each change resolves, and the changes are in story order.
+    let last: Pos | undefined;
+    entry.data.changes.forEach((c, i) => {
+      const r = index.resolve(c.from);
+      if ("error" in r) return err("bad-position", entry.file, r.error, `changes.${i}.from`);
+      if (last && comparePos(r.pos, last) < 0) err("lore-change-order", entry.file, `the change from ${c.from} comes before the change above it: keep the changes in story order`, `changes.${i}.from`);
+      last = r.pos;
+    });
+    const words = entry.body.split(/\s+/).filter(Boolean).length;
+    if (words > LORE_MAX_WORDS) warn("lore-long", entry.file, `the entry has ${words} words (more than ${LORE_MAX_WORDS}): keep the facts a writer needs, or split it into two entries`);
   }
   // A name finds the entry for a brief, so one name belongs to one entry.
   const names = new Map<string, string>();
   for (const [id, entry] of project.lore) {
-    for (const name of new Set([id.replace(/-/g, " "), entry.data.title, ...entry.data.aliases].map((n) => n.trim().toLowerCase()))) {
+    for (const name of loreNames(id, entry)) {
       const other = names.get(name);
       if (other) err("lore-duplicate-name", entry.file, `the name '${name}' is also a name of lore/${other}.md: give each entry its own names`);
       else names.set(name, id);
@@ -433,8 +451,15 @@ function checkLore(project: Project, err: Report, warn: Report) {
   }
   for (const files of project.memory.values()) {
     for (const m of files) {
-      m.data.lore_added.forEach(({ entry }, i) => {
-        if (!project.lore.has(entry)) err("lore-unknown", m.file, `there is no lore entry lore/${entry}.md: write the fact into it`, `lore_added.${i}.entry`);
+      m.data.lore_added.forEach(({ entry, change }, i) => {
+        const e = project.lore.get(entry);
+        if (!e) return err("lore-unknown", m.file, `there is no lore entry lore/${entry}.md: write the fact into it`, `lore_added.${i}.entry`);
+        const point = `${m.data.book}.${pad2(m.data.chapter)}`;
+        const here = e.data.changes.some((c) => {
+          const r = index.resolve(c.from);
+          return !("error" in r) && r.book === m.data.book && r.chapter === m.data.chapter;
+        });
+        if (change && !here) err("lore-change-missing", m.file, `lore/${entry}.md has no change from ${point}: add it to its \`changes\``, `lore_added.${i}`);
       });
     }
   }

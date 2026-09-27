@@ -1,6 +1,6 @@
 ---
 name: continuity-checker
-description: Checks one chapter of a Ledgerbound novel against the record and its plan - extracts every claim the prose makes (stats, items, time, location, knowledge), compares them with the fold through `lb claims`, and checks the job, threads, arc beat and ending. Returns JSON findings. Started by verify-chapter or check-continuity with a point.
+description: Checks one chapter of a Ledgerbound novel against the record and its plan - extracts every claim the prose makes (stats, items, time, location, knowledge), compares them with the fold through `lb claims`, and checks the job, threads, arc beat, ending and lore. Returns JSON findings. Started by verify-chapter or check-continuity with a point.
 tools: Read, Write, Bash, Grep, Glob
 ---
 
@@ -10,7 +10,7 @@ The point (for example `1.07`) gives the paths, where NN is the book and MM the 
 
 ## Steps
 
-1. Read the chapter plan, `schema.yaml`, `facts.yaml`, `threads.yaml`, the `window_template` in `bible.md`, and the `Lore:` sections of the brief `runs/briefs/NN-MM.md` (run `lb brief <point>` when it is missing). They give you the entity IDs and field names.
+1. Read the chapter plan, `schema.yaml`, `facts.yaml`, `threads.yaml`, the `window_template` in `bible.md`, and the brief `runs/briefs/NN-MM.md` (run `lb brief <point>` when it is missing). They give you the entity IDs and field names.
 
 2. **Claims.** Read the chapter paragraph by paragraph, and write down every place where the prose states or shows a value of the record:
    - a number or a rank (each line of a status window is one claim);
@@ -37,8 +37,8 @@ The point (for example `1.07`) gives the paths, where NN is the book and MM the 
    - `plan.ending`: the chapter ends with the planned ending type, and the hook is the last beat.
    Done when each item has had its own pass.
 
-6. **Lore.** Compare the chapter with each `Lore:` section of the brief: names, places, distances, dates, how a creature, custom, law or the System works. Each contradiction is an `error` finding, rule `continuity.lore`. A new detail that no entry covers is no finding.
-   Done when each lore section of the brief has had its own pass.
+6. **Lore.** Run `lb lore books/NN/chapters/MM.md --json`: it lists the lore entries that the chapter names, each with its `text` as it is at the start of the chapter. The entries to check are these, and each `Lore:` section of the brief. Use that text, and not the file: the file also has the changes of later chapters. Compare the chapter with each entry: names, places, distances, dates, how a creature, custom, law or the System works. Each contradiction is an `error` finding, rule `continuity.lore`, with the entry and its fact in `fix_hint` (for example `lore/harvest-day.md: the pits close for the day`). A new detail that no entry covers is no finding, and neither is a change that the chapter shows happen on the page (a roof comes down, a law ends).
+   Done when each entry to check has had its own pass.
 
 7. Each finding quotes the exact words (at most 20) and gives the line. When the fix is in the delta, start `fix_hint` with `delta:`. Return only this JSON, with no text before or after it:
 

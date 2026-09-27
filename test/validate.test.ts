@@ -36,6 +36,32 @@ describe("lore", () => {
     expect(check(dir)).toContainEqual(expect.objectContaining({ code: "lore-unknown", file: "books/01/memory/01.md", path: "lore_added.0.entry" }));
   });
 
+  test("a long entry and more than three `always` entries are warnings", () => {
+    const dir = fixtureCopy();
+    writeFileSync(join(dir, "lore/long.md"), `---\ntitle: Long\ncategory: other\n---\n\n${"word ".repeat(251)}\n`);
+    for (const id of ["a1", "a2", "a3", "a4"]) writeFileSync(join(dir, `lore/${id}.md`), `---\ntitle: Rule ${id}\ncategory: law\nalways: true\n---\n\nA rule.\n`);
+    const issues = check(dir);
+    expect(issues).toContainEqual(expect.objectContaining({ code: "lore-long", severity: "warn", file: "lore/long.md" }));
+    expect(issues.filter((i) => i.code === "lore-always")).toHaveLength(4);
+    expect(errorCodes(issues)).toEqual([]);
+  });
+
+  test("a lore change needs a known point or anchor, in story order", () => {
+    const dir = fixtureCopy();
+    edit(dir, "lore/old-gallery.md", "changes:\n", "changes:\n  - { from: 1.05, text: The vault is sealed. }\n  - { from: 1.09, text: Nothing. }\n");
+    const issues = check(dir);
+    expect(issues).toContainEqual(expect.objectContaining({ code: "bad-position", file: "lore/old-gallery.md", path: "changes.1.from" }));
+    expect(issues).toContainEqual(expect.objectContaining({ code: "lore-change-order", path: "changes.2.from" }));
+  });
+
+  test("a change in a memory file needs its change in the entry", () => {
+    const dir = fixtureCopy();
+    edit(dir, "books/01/memory/01.md", "fact: The bell in the shaft rings once for each level that the well pays out. }", "fact: The bell in the shaft rings once for each level that the well pays out., change: true }");
+    expect(check(dir)).toContainEqual(expect.objectContaining({ code: "lore-change-missing", file: "books/01/memory/01.md", path: "lore_added.0" }));
+    edit(dir, "lore/tithe-bell.md", "category: system\n", "category: system\nchanges:\n  - { from: 1.01, text: The bell rings twice for Ivo. }\n");
+    expect(errorCodes(check(dir))).toEqual([]);
+  });
+
   test("two entries with the same name are an error", () => {
     const dir = fixtureCopy();
     edit(dir, "lore/harvest-day.md", "aliases: [the harvest]", "aliases: [the harvest, Delving Crews]");

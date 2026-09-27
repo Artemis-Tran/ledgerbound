@@ -1,16 +1,19 @@
 /**
  * `lb`: the deterministic CLI of Ledgerbound. It exits 1 when a check fails, so a skill can use it as a gate.
  */
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { buildBrief } from "./brief.ts";
 import { parseArgs } from "node:util";
+import { buildPlanIndex } from "./anchors.ts";
 import { approve, currentBook, gate, isOn, status } from "./checkpoints.ts";
 import { Claims, compareClaims } from "./claims.ts";
 import { buildEpub } from "./export/epub.ts";
 import { initProject } from "./init.ts";
+import { splitFrontmatter } from "./frontmatter.ts";
 import { formatIssues, hasErrors, type Issue } from "./issues.ts";
 import { findProjectRoot, lintFile } from "./lint/index.ts";
+import { loreNamedIn, loreText } from "./lore.ts";
 import { loadProject, type Project } from "./project.ts";
 import { chapterPath, checkDelta, commitChapter, fold, loadRecord, parsePoint, type Where } from "./record.ts";
 import { RULES } from "./rules.ts";
@@ -28,6 +31,9 @@ const HELP = `lb: the Ledgerbound CLI. Run it inside a novel repo (or pass --dir
   lb lint <file...> [--lines A-B] [--corpus DIR] [--json]
                                          deterministic prose checks (exit 1 on an unwaived error)
   lb rules [--json]                      the rule IDs of guidelines/writing.md
+  lb lore <file> [--json]                the lore entries that a prose file names by ID, title or alias,
+                                         each as it is at the start of that chapter
+  lb lore <id> --at <point> [--json]     one lore entry as it is at the start of a chapter
   lb where                               the ledgerbound folder (reference/, examples/)
 
 Generation (a point is 1.07 = book 1, chapter 7):
@@ -61,6 +67,7 @@ const { values, positionals } = parseArgs({
     committed: { type: "boolean", default: false },
     draft: { type: "boolean", default: false },
     out: { type: "string" },
+    at: { type: "string" },
     help: { type: "boolean", short: "h", default: false },
   },
 });
@@ -181,6 +188,33 @@ switch (command) {
       .join("\n");
     out(human, { ok: blocking.length === 0, errors: blocking.length, results });
     process.exit(blocking.length ? 1 : 0);
+  }
+
+  case "lore": {
+    if (!args[0]) fail("give a prose file (lb lore books/01/chapters/07.md) or an entry ID (lb lore harvest-day --at 1.07)");
+    const { project } = load();
+    const index = buildPlanIndex(project, []);
+    const view = (id: string, book: number, chapter: number) => {
+      const e = project.lore.get(id)!;
+      return { id, title: e.data.title, file: e.file, text: loreText(index, e, book, chapter) };
+    };
+    if (project.lore.has(args[0])) {
+      const w = values.at ? parsePoint(values.at) : undefined;
+      if (!w || Number.isFinite(w.index)) fail("give the chapter with --at, as a point like 1.07");
+      const e = view(args[0], w.book, w.chapter);
+      out(`# ${e.title} (${e.file}, at the start of ${values.at})\n\n${e.text}`, e);
+      break;
+    }
+    if (!existsSync(args[0])) fail(`'${args[0]}' is not a file or a lore entry ID`);
+    const { data, body } = splitFrontmatter(readFileSync(args[0], "utf8"));
+    const { book, chapter } = (data ?? {}) as { book?: unknown; chapter?: unknown };
+    if (typeof book !== "number" || typeof chapter !== "number") fail(`${args[0]} has no book and chapter in its frontmatter`);
+    const entries = loreNamedIn(project, body).map((id) => view(id, book, chapter));
+    out(
+      `${args[0]} names ${entries.length} lore entr${entries.length === 1 ? "y" : "ies"}.${entries.map((e) => `\n\n## ${e.title} (${e.file})\n\n${e.text}`).join("")}`,
+      { file: args[0], entries },
+    );
+    break;
   }
 
   case "rules": {

@@ -35,11 +35,11 @@ The output is a set of **lore entries**, one per file in `lore/<id>.md`. A chapt
 
 5. **Entries.** Write `lore/<id>.md` for each entry, with `status: draft`:
    - `title`, and `category` from step 3;
-   - `aliases`: the other names that plans and characters use for it (a short form, slang, a title);
+   - `aliases`: the other names that plans and characters use for it (a short form, slang, a title). A brief and `lb lore` find an entry when a text uses one of its names: any case, with or without "the", singular or plural. So each name belongs to this thing only: "the harvest" is a good alias for harvest day, "the square" is not one for the counting house;
    - `always: true` only for a short rule that holds in every scene (for example, the one law every character lives under). Give it to at most three entries: each one is in every brief;
    - the body: one to three short paragraphs of concrete facts, in the setting's own words: names, numbers, distances, dates, who and how. Write what a writer must not contradict, in the present tense of the world.
 
-   Keep each entry to what stays true. When a thing changes on the page (a town that can fall, a faction whose favour moves), it is also an entity in `schema.yaml`, and the record tracks it. When the world hides a truth, the entry says what people believe, and the truth goes in `facts.yaml`.
+   Write each entry as it is at the start of the story. A later change goes in `changes: [{from, text}]`, with `from` the point or plan anchor after which it is true: plan-book, replan and the memory writer add them, and each brief gives only the changes before its chapter. When a thing has a value that moves often and that the prose counts (a faction's favour, a town's garrison), it is an entity in `schema.yaml` too, and the record tracks the value; the entry keeps what it is. When the world hides a truth, the entry says what people believe, and the truth goes in `facts.yaml`.
    Done when each entry on the list has a file.
 
 6. **Consistency.** Read all the entries together, with the bible. Each date, distance, rank and name has one value everywhere. Run `lb validate`: it gives an error when two entries share a name.

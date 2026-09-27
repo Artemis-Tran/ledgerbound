@@ -286,13 +286,15 @@ describe("lb brief", () => {
     expect(text).toContain("No status windows");
   });
 
-  test("drops the next plans first when it is over brief_chars", () => {
+  test("drops the next plans first, then shortens the lore index, then drops the lore that the plan only names", () => {
     const dir = fixtureCopy();
     edit(dir, "project.yaml", "mode: normal", "mode: normal\nbrief_chars: 1000");
     const r = buildBrief(load(dir), loadRecord(dir), 1, 2);
     expect(r.dropped).toEqual([
       "Next plan: 1.04 (for direction only; do not write it)",
       "Next plan: 1.03 (for direction only; do not write it)",
+      "Lore index: the other entries (run `lb lore <id> --at 1.02` before the chapter uses one): shortened",
+      "Lore: The old gallery (the prose never contradicts it)",
       "Lore: Delving crews (the prose never contradicts it)",
     ]);
     expect(r.over).toBe(true);
@@ -307,6 +309,30 @@ describe("lb brief", () => {
     expect(briefText(dir, 3)).not.toContain("## Lore:");
     edit(dir, "lore/delving-crews.md", "aliases: [crew boss]", "aliases: [Hale]");
     expect(briefText(dir, 3)).toContain("## Lore: Delving crews");
+  });
+
+  test("has a lore index with one line for each entry that is not in full", () => {
+    const text = briefText(fixtureCopy(), 2);
+    const index = text.split("## Lore index")[1].split("\n## ")[0];
+    expect(index).toContain("- **The counting house** (`counting-house`, place): A slate building on the square, across from the well.");
+    expect(index).toContain("(`harvest-day`, custom; also the harvest)");
+    expect(index).not.toContain("delving-crews");
+  });
+
+  test("a shortened lore index keeps each title and ID", () => {
+    const dir = fixtureCopy();
+    edit(dir, "project.yaml", "mode: normal", "mode: normal\nbrief_chars: 1000");
+    const text = briefText(dir, 2);
+    expect(text).toContain("The counting house (`counting-house`) · Harvest day (`harvest-day`) · The tithe bell (`tithe-bell`)");
+  });
+
+  test("gives a lore change only to the chapters after it", () => {
+    const dir = fixtureCopy();
+    expect(briefText(dir, 4)).toContain("## Lore: The old gallery");
+    expect(briefText(dir, 4)).not.toContain("The roof has come down");
+    expect(briefText(dir, 5)).toContain("- Since 1.04 (b1/act2/end): The roof has come down");
+    expect(briefText(dir, 6)).toMatch(/- \*\*The old gallery\*\* .*\(it has changed since\)/);
+    expect(briefText(dir, 3)).not.toMatch(/The old gallery.*changed/);
   });
 
   test("has a lore entry that the plan lists in `lore`, and an `always` entry in every chapter", () => {

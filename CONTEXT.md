@@ -74,7 +74,11 @@ The change of one character across the story: want, need, the lie they believe, 
 _Avoid_: Using "arc" for a thread or a plot line
 
 **Lore entry**:
-One piece of setting knowledge in `lore/<id>.md`: a place, a faction, an event of the history, a custom, a law, a creature, or how the System works in the world. World planning (`plan-world`, the `world` checkpoint) writes the entries after the story bible. A chapter's brief includes the entries that its plan lists or names, and the prose never contradicts them. A setting detail that an approved chapter adds goes into its entry through the rolling memory. The record holds what changes; a lore entry holds what stays true.
+One piece of setting knowledge in `lore/<id>.md`: a place, a faction, an event of the history, a custom, a law, a creature, or how the System works in the world. World planning (`plan-world`, the `world` checkpoint) writes the entries after the story bible. A chapter's brief includes the entries that its plan lists or names, and a one-line index of the others; the prose never contradicts an entry. A setting detail that an approved chapter adds goes into its entry through the rolling memory.
+
+**Lore change**:
+How a lore entry changes in the story (a law ends, a place burns), with the point or plan anchor after which it is true. A brief gives only the changes before its chapter, so the writer never sees a later state of the world.
+_Avoid_: Update, revision, event The record holds what changes; a lore entry holds what stays true.
 _Avoid_: Wiki page, codex, glossary
 
 **Voice card**:

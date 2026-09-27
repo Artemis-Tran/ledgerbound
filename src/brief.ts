@@ -7,6 +7,7 @@ import { dirname, join } from "node:path";
 import { stringify } from "yaml";
 import { buildPlanIndex, comparePos, type Pos } from "./anchors.ts";
 import { splitFrontmatter } from "./frontmatter.ts";
+import { changesBefore, firstSentence, loreNamedIn, loreText } from "./lore.ts";
 import { pad2, type Project } from "./project.ts";
 import { chapterPath, fold, type RecordFiles, type State } from "./record.ts";
 
@@ -27,15 +28,12 @@ function entitiesIn(state: State, text: string): string[] {
     .map(([id]) => id);
 }
 
-/** The lore entries of a chapter: the `always` ones, the ones the plan lists, then the ones the plan names by ID, title or alias (any case). */
+/** The lore entries of a chapter: the `always` ones, the ones the plan lists, then the ones the plan names (see lore.ts). */
 export function loreFor(project: Project, planText: string, listed: string[]): { id: string; listed: boolean }[] {
-  const named = (s: string) => new RegExp(`\\b${s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i").test(planText);
   const out = new Map<string, boolean>();
   for (const [id, e] of project.lore) if (e.data.always) out.set(id, true);
   for (const id of listed) if (project.lore.has(id)) out.set(id, true);
-  for (const [id, e] of project.lore) {
-    if (!out.has(id) && [id.replace(/-/g, " "), e.data.title, ...e.data.aliases].some(named)) out.set(id, false);
-  }
+  for (const id of loreNamedIn(project, planText)) if (!out.has(id)) out.set(id, false);
   return [...out].map(([id, listed]) => ({ id, listed }));
 }
 
@@ -61,6 +59,8 @@ interface Section {
   text: string;
   /** Sections that can go when the brief is too long, lowest `drop` first. */
   drop?: number;
+  /** A shorter text that takes the place of `text` at its `drop` turn, instead of the section going. */
+  short?: string;
 }
 
 export interface BriefResult {
@@ -148,10 +148,25 @@ export function buildBrief(project: Project, rec: RecordFiles, book: number, cha
 
   // 5b. Lore: the setting facts this chapter touches. The prose never contradicts them.
   // Entries found only by name can go when the brief is too long, after the next plans.
-  loreFor(project, rawFrontmatter(join(root, plan.file)), plan.data.lore).forEach(({ id, listed }, i) => {
+  const lore = loreFor(project, rawFrontmatter(join(root, plan.file)), plan.data.lore);
+  lore.forEach(({ id, listed }, i) => {
     const e = project.lore.get(id)!;
-    sections.push({ title: `Lore: ${e.data.title} (the prose never contradicts it)`, text: e.body.trim(), ...(listed ? {} : { drop: 200 - i }) });
+    sections.push({ title: `Lore: ${e.data.title} (the prose never contradicts it)`, text: loreText(index, e, book, chapter), ...(listed ? {} : { drop: 200 - i }) });
   });
+  // The other entries, one line each, so that the writer knows what the world already has. When the brief is
+  // too long, the index keeps only the titles and IDs.
+  const others = [...project.lore].filter(([id]) => !lore.some((l) => l.id === id));
+  if (others.length) {
+    const changed = (e: (typeof others)[number][1]) => (changesBefore(index, e, book, chapter).length ? " (it has changed since)" : "");
+    sections.push({
+      title: `Lore index: the other entries (run \`lb lore <id> --at ${book}.${pad2(chapter)}\` before the chapter uses one)`,
+      text: others
+        .map(([id, e]) => `- **${e.data.title}** (\`${id}\`, ${e.data.category}${e.data.aliases.length ? `; also ${e.data.aliases.join(", ")}` : ""}): ${firstSentence(e.body)}${changed(e)}`)
+        .join("\n"),
+      short: others.map(([id, e]) => `${e.data.title} (\`${id}\`)`).join(" · "),
+      drop: 150,
+    });
+  }
 
   // 6. Voice cards.
   const cards = project.characters.filter((c) => ids.includes(c.data.id) || c.data.id === plan.data.pov);
@@ -218,7 +233,8 @@ export function buildBrief(project: Project, rec: RecordFiles, book: number, cha
     sections.push({ title: `The end of the previous chapter (${prev.book}.${pad2(prev.chapter)}), for continuity of texture only`, text: tail(body, 300) });
   }
 
-  // Keep the brief under the limit: drop the oldest summaries first, then the farthest next plans.
+  // Keep the brief under the limit: drop the oldest summaries first, then the farthest next plans, then shorten
+  // the lore index, then drop the lore entries that the plan only names.
   const render = (ss: Section[]) => `# Context brief: book ${book}, chapter ${chapter}\n\n${ss.map((s) => `## ${s.title}\n\n${s.text}`).join("\n\n")}\n`;
   const limit = project.config.brief_chars;
   const kept = [...sections];
@@ -226,6 +242,11 @@ export function buildBrief(project: Project, rec: RecordFiles, book: number, cha
   const droppable = sections.filter((s) => s.drop !== undefined).sort((a, b) => a.drop! - b.drop!);
   while (render(kept).length > limit && droppable.length) {
     const s = droppable.shift()!;
+    if (s.short !== undefined) {
+      s.text = s.short;
+      dropped.push(`${s.title}: shortened`);
+      continue;
+    }
     kept.splice(kept.indexOf(s), 1);
     dropped.push(s.title);
   }

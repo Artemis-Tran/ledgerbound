@@ -26,7 +26,7 @@ Only the next book to write gets chapter plans: for phase 1 that is book 1. File
    - `anchors`: the act ends and custom anchors that fall at the end of this chapter;
    - `scenes`: each with `goal` → `conflict` → `outcome`. Let some outcomes be worse than the goal;
    - `day`: the in-story day;
-   - `lore`: the IDs of the lore entries this chapter needs that its text does not name by title or alias (for example, a custom that shapes a scene). When the chapter brings in a place, creature or custom that has no entry, write one by step 5 of `${CLAUDE_PLUGIN_ROOT}/skills/plan-world/SKILL.md`, with `status: draft`;
+   - `lore`: the IDs of the lore entries this chapter needs that its text does not name by title or alias (for example, a custom that shapes a scene). When the chapter brings in a place, creature or custom that has no entry, write one by step 5 of `${CLAUDE_PLUGIN_ROOT}/skills/plan-world/SKILL.md`, with `status: draft`. When the chapter changes the world (a place is destroyed, a law ends), add `{ from: <this chapter's point>, text: <how it is after> }` to the entry's `changes`;
    - `words`: only when this chapter's length differs from `chapter_words` (see step 3);
    - `exceptions`: only when the chapter breaks a guideline on purpose, once, for a clear effect, with the `reason`.
 
