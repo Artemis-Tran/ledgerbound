@@ -7,7 +7,7 @@ import { dirname, join } from "node:path";
 import { stringify } from "yaml";
 import { buildPlanIndex, comparePos, type Pos } from "./anchors.ts";
 import { splitFrontmatter } from "./frontmatter.ts";
-import { changesBefore, firstSentence, loreNamedIn, loreText } from "./lore.ts";
+import { changesBefore, characterEntry, charactersNamedIn, entryText, firstSentence, loreEntry, loreNamedIn, nameParts, lastSeen } from "./entries.ts";
 import { pad2, type Project } from "./project.ts";
 import { chapterPath, fold, type RecordFiles, type State } from "./record.ts";
 
@@ -15,20 +15,17 @@ export const briefPath = (book: number, chapter: number) => `runs/briefs/${pad2(
 
 const yaml = (v: unknown) => `\`\`\`yaml\n${stringify(v, { lineWidth: 0 }).trimEnd()}\n\`\`\``;
 const rawFrontmatter = (path: string) => /^---\r?\n([\s\S]*?)\r?\n---/.exec(readFileSync(path, "utf8"))?.[1] ?? "";
-const NAME_STOP = new Set(["The", "Of", "And", "Old", "Young", "Lady", "Lord", "Sir"]);
-
 /** The entities that a chapter plan names: by ID or full name (any case), or by a capitalized part of the name. */
 function entitiesIn(state: State, text: string): string[] {
   const hit = (name: string, flags: string) => new RegExp(`\\b${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, flags).test(text);
   return Object.entries(state.entities)
     .filter(([id, e]) => {
-      const parts = e.name.split(/\s+/).filter((w) => /^[A-Z][a-z]{2,}/.test(w) && !NAME_STOP.has(w));
-      return hit(id.replace(/-/g, " "), "i") || hit(e.name, "i") || parts.some((p) => hit(p, ""));
+      return hit(id.replace(/-/g, " "), "i") || hit(e.name, "i") || nameParts(e.name).some((p) => hit(p, ""));
     })
     .map(([id]) => id);
 }
 
-/** The lore entries of a chapter: the `always` ones, the ones the plan lists, then the ones the plan names (see lore.ts). */
+/** The lore entries of a chapter: the `always` ones, the ones the plan lists, then the ones the plan names (see entries.ts). */
 export function loreFor(project: Project, planText: string, listed: string[]): { id: string; listed: boolean }[] {
   const out = new Map<string, boolean>();
   for (const [id, e] of project.lore) if (e.data.always) out.set(id, true);
@@ -123,7 +120,12 @@ export function buildBrief(project: Project, rec: RecordFiles, book: number, cha
     return !("error" in r) && r.book === book && r.chapter === chapter;
   });
   const targetIds = targets.flatMap((t) => [...Object.keys(t.expect).map((k) => k.split(".")[0]), ...Object.keys(t.knowledge)]);
-  const ids = [...new Set([plan.data.pov, ...entitiesIn(start, JSON.stringify(plan.data)), ...targetIds])].filter((id) => start.entities[id]);
+  // The cast: the POV character, the characters that the plan lists, and the ones that a target names. Their
+  // sections stay in the brief. The characters that the plan only names come after them, and can go.
+  const planText = JSON.stringify(plan.data);
+  const listedCast = [...new Set([plan.data.pov, ...plan.data.characters, ...targetIds])];
+  const namedCast = [...new Set([...entitiesIn(start, planText), ...charactersNamedIn(project, planText)])].filter((id) => !listedCast.includes(id));
+  const ids = [...listedCast, ...namedCast].filter((id) => start.entities[id]);
   const beliefs = (id: string) => {
     const e = start.entities[id];
     const all = Object.fromEntries(project.facts.data.map((f) => [f.id, e.beliefs[f.id] ?? "unaware"]));
@@ -151,26 +153,52 @@ export function buildBrief(project: Project, rec: RecordFiles, book: number, cha
   const lore = loreFor(project, rawFrontmatter(join(root, plan.file)), plan.data.lore);
   lore.forEach(({ id, listed }, i) => {
     const e = project.lore.get(id)!;
-    sections.push({ title: `Lore: ${e.data.title} (the prose never contradicts it)`, text: loreText(index, e, book, chapter), ...(listed ? {} : { drop: 200 - i }) });
+    sections.push({ title: `Lore: ${e.data.title} (the prose never contradicts it)`, text: entryText(index, loreEntry(id, e), book, chapter), ...(listed ? {} : { drop: 200 - i }) });
   });
   // The other entries, one line each, so that the writer knows what the world already has. When the brief is
   // too long, the index keeps only the titles and IDs.
   const others = [...project.lore].filter(([id]) => !lore.some((l) => l.id === id));
   if (others.length) {
-    const changed = (e: (typeof others)[number][1]) => (changesBefore(index, e, book, chapter).length ? " (it has changed since)" : "");
+    const changed = ([id, e]: (typeof others)[number]) => (changesBefore(index, loreEntry(id, e), book, chapter).length ? " (it has changed since)" : "");
     sections.push({
       title: `Lore index: the other entries (run \`lb lore <id> --at ${book}.${pad2(chapter)}\` before the chapter uses one)`,
       text: others
-        .map(([id, e]) => `- **${e.data.title}** (\`${id}\`, ${e.data.category}${e.data.aliases.length ? `; also ${e.data.aliases.join(", ")}` : ""}): ${firstSentence(e.body)}${changed(e)}`)
+        .map(([id, e]) => `- **${e.data.title}** (\`${id}\`, ${e.data.category}${e.data.aliases.length ? `; also ${e.data.aliases.join(", ")}` : ""}): ${firstSentence(e.body)}${changed([id, e])}`)
         .join("\n"),
       short: others.map(([id, e]) => `${e.data.title} (\`${id}\`)`).join(" · "),
       drop: 150,
     });
   }
 
-  // 6. Voice cards.
-  const cards = project.characters.filter((c) => ids.includes(c.data.id) || c.data.id === plan.data.pov);
-  if (cards.length) sections.push({ title: "Voice cards", text: yaml(Object.fromEntries(cards.map((c) => [c.data.id, { name: c.data.name, role: c.data.role, voice: c.data.voice }]))) });
+  // 6. The cast: who each character is as the writer must know them at this chapter, and how they speak.
+  // A character that the plan only names can go when the brief is too long, after the lore it only names.
+  const cast = [...listedCast, ...namedCast].flatMap((id) => project.characters.find((c) => c.data.id === id) ?? []);
+  cast.forEach((c, i) => {
+    const who = entryText(index, characterEntry(c), book, chapter);
+    const seen = lastSeen(project, c.data.id, book, chapter);
+    sections.push({
+      title: `Cast: ${c.data.name} (${c.data.role}; the prose never contradicts it)`,
+      text: [who, seen ? `Last seen: ${seen}.` : "", `Voice card:\n\n${yaml(c.data.voice)}`].filter(Boolean).join("\n\n"),
+      ...(namedCast.includes(c.data.id) ? { drop: 300 - i } : {}),
+    });
+  });
+  // The other characters, one line each, so that the writer knows who the story already has. When the brief is
+  // too long, the index keeps only the names and IDs.
+  const offstage = project.characters.filter((c) => !cast.includes(c));
+  if (offstage.length) {
+    const line = (c: (typeof offstage)[number]) => {
+      const e = characterEntry(c);
+      const seen = lastSeen(project, c.data.id, book, chapter);
+      const about = [firstSentence(e.body), seen ? `Last seen ${seen}.` : "", changesBefore(index, e, book, chapter).length ? "(changed since)" : ""].filter(Boolean).join(" ");
+      return `- **${c.data.name}** (\`${c.data.id}\`, ${c.data.role}${c.data.aliases.length ? `; also ${c.data.aliases.join(", ")}` : ""})${about ? `: ${about}` : ""}`;
+    };
+    sections.push({
+      title: `Cast index: the other characters (run \`lb who <id> --at ${book}.${pad2(chapter)}\` before the chapter uses one)`,
+      text: offstage.map(line).join("\n"),
+      short: offstage.map((c) => `${c.data.name} (\`${c.data.id}\`)`).join(" · "),
+      drop: 160,
+    });
+  }
 
   // 7. The voice samples.
   for (const v of project.voiceSamples) sections.push({ title: `Voice sample: ${v.data.kind}`, text: v.body.trim() });
@@ -234,7 +262,7 @@ export function buildBrief(project: Project, rec: RecordFiles, book: number, cha
   }
 
   // Keep the brief under the limit: drop the oldest summaries first, then the farthest next plans, then shorten
-  // the lore index, then drop the lore entries that the plan only names.
+  // the lore index and the cast index, then drop the lore entries and the characters that the plan only names.
   const render = (ss: Section[]) => `# Context brief: book ${book}, chapter ${chapter}\n\n${ss.map((s) => `## ${s.title}\n\n${s.text}`).join("\n\n")}\n`;
   const limit = project.config.brief_chars;
   const kept = [...sections];

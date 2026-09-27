@@ -13,7 +13,7 @@ import { initProject } from "./init.ts";
 import { splitFrontmatter } from "./frontmatter.ts";
 import { formatIssues, hasErrors, type Issue } from "./issues.ts";
 import { findProjectRoot, lintFile } from "./lint/index.ts";
-import { loreNamedIn, loreText } from "./lore.ts";
+import { characterEntry, charactersNamedIn, entryText, lastSeen, loreEntry, loreNamedIn } from "./entries.ts";
 import { loadProject, type Project } from "./project.ts";
 import { chapterPath, checkDelta, commitChapter, fold, loadRecord, parsePoint, type Where } from "./record.ts";
 import { RULES } from "./rules.ts";
@@ -34,6 +34,10 @@ const HELP = `lb: the Ledgerbound CLI. Run it inside a novel repo (or pass --dir
   lb lore <file> [--json]                the lore entries that a prose file names by ID, title or alias,
                                          each as it is at the start of that chapter
   lb lore <id> --at <point> [--json]     one lore entry as it is at the start of a chapter
+  lb who <file> [--json]                 the characters that a prose file names by ID, name, alias or a
+                                         part of the name, each as it is at the start of that chapter
+  lb who <id> --at <point> [--json]      one character as it is at the start of a chapter: who it is,
+                                         its voice card, its record state and the chapter it was last seen
   lb where                               the ledgerbound folder (reference/, examples/)
 
 Generation (a point is 1.07 = book 1, chapter 7):
@@ -196,7 +200,7 @@ switch (command) {
     const index = buildPlanIndex(project, []);
     const view = (id: string, book: number, chapter: number) => {
       const e = project.lore.get(id)!;
-      return { id, title: e.data.title, file: e.file, text: loreText(index, e, book, chapter) };
+      return { id, title: e.data.title, file: e.file, text: entryText(index, loreEntry(id, e), book, chapter) };
     };
     if (project.lore.has(args[0])) {
       const w = values.at ? parsePoint(values.at) : undefined;
@@ -214,6 +218,45 @@ switch (command) {
       `${args[0]} names ${entries.length} lore entr${entries.length === 1 ? "y" : "ies"}.${entries.map((e) => `\n\n## ${e.title} (${e.file})\n\n${e.text}`).join("")}`,
       { file: args[0], entries },
     );
+    break;
+  }
+
+  case "who": {
+    if (!args[0]) fail("give a prose file (lb who books/01/chapters/07.md) or a character ID (lb who sabine --at 1.07)");
+    const { project } = load();
+    const index = buildPlanIndex(project, []);
+    const rec = loadRecord(project.root);
+    const view = (id: string, book: number, chapter: number) => {
+      const c = project.characters.find((x) => x.data.id === id);
+      const state = fold(project, rec, { book, chapter, index: 0 }).state.entities[id];
+      if (!c && !state) return undefined;
+      const record = state ? { name: state.name, ...state.fields, beliefs: state.beliefs } : null;
+      const text = c ? entryText(index, characterEntry(c), book, chapter) : "";
+      return { id, name: c?.data.name ?? state!.name, role: c?.data.role ?? null, file: c?.file ?? null, text, voice: c?.data.voice ?? null, last_seen: lastSeen(project, id, book, chapter) ?? null, record };
+    };
+    const human = (v: NonNullable<ReturnType<typeof view>>, at: string) =>
+      [
+        `# ${v.name} (${v.file ?? "no character file"}, at the start of ${at})`,
+        v.text,
+        `Last seen: ${v.last_seen ?? "not yet"}.`,
+        v.voice ? `Voice card:\n${JSON.stringify(v.voice, null, 2)}` : "",
+        `Record:\n${v.record ? JSON.stringify(v.record, null, 2) : "(no entity yet)"}`,
+      ]
+        .filter(Boolean)
+        .join("\n\n");
+    if (!existsSync(args[0])) {
+      const w = values.at ? parsePoint(values.at) : undefined;
+      if (!w || Number.isFinite(w.index)) fail("give the chapter with --at, as a point like 1.07");
+      const v = view(args[0], w.book, w.chapter) ?? fail(`'${args[0]}' is not a file, a character file or an entity at the start of ${values.at}`);
+      out(human(v, values.at!), v);
+      break;
+    }
+    const { data, body } = splitFrontmatter(readFileSync(args[0], "utf8"));
+    const { book, chapter } = (data ?? {}) as { book?: unknown; chapter?: unknown };
+    if (typeof book !== "number" || typeof chapter !== "number") fail(`${args[0]} has no book and chapter in its frontmatter`);
+    const characters = charactersNamedIn(project, body).flatMap((id) => view(id, book, chapter) ?? []);
+    const at = `${book}.${String(chapter).padStart(2, "0")}`;
+    out(`${args[0]} names ${characters.length} character(s).${characters.map((v) => `\n\n${human(v, at)}`).join("")}`, { file: args[0], characters });
     break;
   }
 

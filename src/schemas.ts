@@ -33,6 +33,12 @@ export const PosRef = z
   .transform((v) => (typeof v === "number" ? v.toFixed(2) : v))
   .refine((v) => PointRe.test(v) || AnchorRe.test(v), "must be a point like 1.07 or a plan anchor like b1/act1/end");
 
+/**
+ * How a lore entry or a character changes in the story, in story order. `from` is a point or a plan anchor: the change
+ * is true after the chapter that holds it, so the brief of that chapter still has the old state.
+ */
+export const Changes = z.array(z.strictObject({ from: PosRef, text: Text })).default([]);
+
 // ---------- project.yaml ----------
 
 const OnOff = z.union([z.boolean(), z.enum(["on", "off"])]).transform((v) => v === true || v === "on");
@@ -219,6 +225,8 @@ export const Character = z
     id: Slug,
     name: Text,
     role: z.enum(["protagonist", "main", "supporting"]),
+    /** Other names for the character (a nickname, a title). A chapter plan that uses one gets the character in its brief. */
+    aliases: TextList,
     want: z.string().optional(),
     need: z.string().optional(),
     lie: z.string().optional(),
@@ -229,6 +237,8 @@ export const Character = z
       never_says: TextList,
     }),
     arc_beats: z.array(ArcBeat).default([]),
+    /** How the character changes in the story (a lost eye, a new post). The markdown body is who the character is. */
+    changes: Changes,
   })
   .superRefine((c, ctx) => {
     if (c.role === "supporting") return;
@@ -261,6 +271,8 @@ export const ChapterPlan = z.strictObject({
   anchors: z.array(z.string().regex(AnchorRe)).default([]),
   /** Lore entry IDs (`lore/<id>.md`) that the brief must include, beyond the ones the plan names by title or alias. */
   lore: z.array(Slug).default([]),
+  /** The characters with a part in a scene of this chapter. The brief includes each one, beyond the ones the plan names. */
+  characters: z.array(Slug).default([]),
   exceptions: z.array(z.strictObject({ rule: Text, reason: Text })).default([]),
   day: z.number().optional(),
   scenes: z.array(Scene).min(1),
@@ -281,11 +293,8 @@ export const LoreEntry = z.strictObject({
   aliases: TextList,
   /** In every brief, not only when a chapter plan names it. For short rules that hold everywhere. */
   always: z.boolean().default(false),
-  /**
-   * How the thing changes in the story, in story order. `from` is a point or a plan anchor: the change is true
-   * after the chapter that holds it, so the brief of that chapter still has the old state.
-   */
-  changes: z.array(z.strictObject({ from: PosRef, text: Text })).default([]),
+  /** How the thing changes in the story (a law ends, a place burns). */
+  changes: Changes,
 });
 export type LoreEntry = z.infer<typeof LoreEntry>;
 
@@ -411,6 +420,10 @@ export const RollingMemory = z.strictObject({
    * `change`: the chapter changes the world (a law ends, a place burns), and the fact is a change of the entry from this chapter.
    */
   lore_added: z.array(z.strictObject({ entry: Slug, fact: Text, change: z.boolean().default(false) })).default([]),
+  /** The characters on the page in this chapter: for "last seen" in later briefs. */
+  appeared: z.array(Slug).default([]),
+  /** Details about a character that this chapter adds, the same as `lore_added`. Each one is also in `characters/<character>.md`. */
+  character_added: z.array(z.strictObject({ character: Slug, fact: Text, change: z.boolean().default(false) })).default([]),
   phrase_log: z
     .strictObject({
       similes: TextList,

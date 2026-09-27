@@ -33,7 +33,7 @@ Done when the command exits 0. When its output says **REPLAN NEEDED**, run the `
 
 ## Remember
 
-Start the `ledgerbound:memory-writer` agent with the point. When its `warnings` name a lore contradiction, add each one to `open` in `runs/verify/NN-MM.json` as `{ "severity": "warn", "rule": "continuity.lore", "line": <line>, "problem": "<the warning>" }`: the report at the end of the book shows it, and the user can fix the chapter or the entry.
+Start the `ledgerbound:memory-writer` agent with the point. When its `warnings` name a contradiction of a lore entry or a character file, add each one to `open` in `runs/verify/NN-MM.json` as `{ "severity": "warn", "rule": "continuity.lore", "line": <line>, "problem": "<the warning>" }` (`continuity.character` for a character file): the report at the end of the book shows it, and the user can fix the chapter or the file.
 Done when `lb validate` reports no error for `books/NN/memory/MM.md`.
 
 ## Git

@@ -85,12 +85,13 @@ Both skills do the same steps for each chapter. `lb run` finds the stage of each
 **What each part does:**
 
 - **The delta comes before the prose.** The writer first decides what changes in the record in this chapter: levels, ranks, items, locations, beliefs, the day. `lb delta` rejects an illegal change before any prose depends on it. Illegal changes include a gain larger than `max_step`, a rank that goes down, an item that is not there, and a day that goes back. `lb delta` also rejects a delta that does not meet the targets of this chapter. Then the prose must show each change.
-- **The context brief** gives the writer everything it needs, and nothing more. It contains the prose decisions and the window template, this chapter's plan and the next 2 plans, and the record (the fold) at the chapter start. It also contains this chapter's targets, the voice cards, the three voice samples, the rolling memory, the phrase log of used images and gestures, the open threads, and the last ~300 words of the previous chapter. The writer never reads the old chapters.
-- **The two checkers did not write the chapter.** `prose-checker` runs `lb lint` and judges the writing guidelines. It also compares each scene with the voice sample of its kind (`voice.match`), and `lb lint` finds a phrase copied from a sample, or one of the 20 names that AI fiction overuses (`names.ai-default`). `continuity-checker` reads every claim from the prose (a number, an item, a place, the day, what a character knows) *without* the record. Then `lb claims` compares each claim with the fold at that line. It also checks the plan: the job, the scenes, the threads, the arc beat and the ending. And it compares the chapter with each lore entry that it names (`lb lore`) or that the brief has (`continuity.lore`).
+- **The context brief** gives the writer everything it needs, and nothing more. It contains the prose decisions and the window template, this chapter's plan and the next 2 plans, and the record (the fold) at the chapter start. It also contains this chapter's targets, the lore and the cast of the chapter (who each character is, what changed, when it was last seen, and its voice card), one line for each other lore entry and character, the three voice samples, the rolling memory, the phrase log of used images and gestures, the open threads, and the last ~300 words of the previous chapter. The writer never reads the old chapters.
+- **The two checkers did not write the chapter.** `prose-checker` runs `lb lint` and judges the writing guidelines. It also compares each scene with the voice sample of its kind (`voice.match`), and `lb lint` finds a phrase copied from a sample, or one of the 20 names that AI fiction overuses (`names.ai-default`). `continuity-checker` reads every claim from the prose (a number, an item, a place, the day, what a character knows) *without* the record. Then `lb claims` compares each claim with the fold at that line. It also checks the plan: the job, the scenes, the threads, the arc beat and the ending. And it compares the chapter with each lore entry and character that it names (`lb lore`, `lb who`) or that the brief has (`continuity.lore`, `continuity.character`).
 - **The reviser changes only the flagged spans.** A full rewrite brings in new tics. When the record is what is wrong, the reviser changes the staged delta instead.
 - **Commit.** Until the commit, the delta is *staged* and can change. After the commit it is in `ledger.jsonl` and never changes. Chapters are committed in sequence.
 - **Rolling memory** is written by an agent that did not write the chapter, from the chapter as it is on the page. Later chapters read these files, never the old prose.
 - **New lore.** When a chapter adds a setting detail that no lore entry has, the memory writer lists it in `lore_added` and writes it into its entry (a new entry when none fits). The entry stays approved: the approved chapter is the source. When the chapter changes the world (a roof comes down, a law ends), the fact goes into the entry's `changes`, from that chapter: the chapters before it still get the old world, and the chapters after it get the new one. Later briefs give the detail to the writer, and the continuity checker compares later chapters with it.
+- **Side characters.** Each chapter plan lists its cast in `characters`. The memory writer records who is on the page (`appeared`) and writes each new detail about a character into its file. When a new character speaks, or comes back in a second chapter, the memory writer makes its file from the page, with a voice card from its dialogue. The brief then gives the writer who the character is and when the reader last saw them.
 
 ### Where the run stops for you
 
@@ -160,7 +161,13 @@ Use autopilot after the first chapters show that the voice and the plan work. Fo
 | `lb lint books/01/chapters/07.md` | The deterministic prose checks. |
 | `lb lore books/01/chapters/07.md` | The lore entries that a chapter names, as they are at the start of the chapter. |
 | `lb lore old-gallery --at 1.07` | One lore entry as it is at the start of chapter 7: without the changes of later chapters. |
+| `lb who books/01/chapters/07.md` | The characters that a chapter names, as they are at the start of the chapter. |
+| `lb who hale --at 1.07` | One character at the start of chapter 7: who it is, its voice card, its record and when it was last seen. |
 | `lb validate` | Every file and reference, and the ledger. |
+
+### A novel repo made before version 0.13.0
+
+The character files can now have a body, `aliases` and `changes`, and the chapter plans a `characters` list. The workflow continues without them: `lb validate` gives only the warning `character-empty`. To add them, write 2–5 sentences of who each character is under the frontmatter of `characters/<id>.md`, and add `characters: [ids]` to each chapter plan that is not written yet. The brief also includes each character that a plan names. The duplicate-name error is now `duplicate-name` (it was `lore-duplicate-name`), and it also finds a lore entry and a character with the same name.
 
 ### A novel repo made before version 0.12.0
 
@@ -208,7 +215,7 @@ Restart Claude Code after the update.
 
 ```
 lb init [dir] --title T [--format series|standalone]
-lb status | validate | gate <cp> | approve <cp> | lint <file...> | lore <file>|<id> --at <point> | rules | where
+lb status | validate | gate <cp> | approve <cp> | lint <file...> | lore <file>|<id> --at <point> | who <file>|<id> --at <point> | rules | where
 lb run | brief <point> | delta <point> | fold [point] | claims <point> <file> | commit <point>
 lb export [--book N] [--draft] [--out FILE]
 ```

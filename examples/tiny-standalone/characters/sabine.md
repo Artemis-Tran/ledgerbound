@@ -16,3 +16,5 @@ arc_beats:
   - { id: cooks-books, book: 1, act: act2, beat: "She changes one entry to save Ivo, and hides it from him." }
   - { id: hands-over-ledger, book: 1, act: act3, beat: She gives Ivo the ledger instead of taking it to the manor. }
 ---
+
+The reeve's clerk, who enters every tithe token in the ledger at the counting table by the lean-to. She keeps the lamp lit when the sky is light enough to read by, and she does not look up when she takes a token. Her father owes the well, and she has told no one.

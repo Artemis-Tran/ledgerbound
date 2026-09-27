@@ -27,6 +27,7 @@ Only the next book to write gets chapter plans: for phase 1 that is book 1. File
    - `scenes`: each with `goal` → `conflict` → `outcome`. Let some outcomes be worse than the goal;
    - `day`: the in-story day;
    - `lore`: the IDs of the lore entries this chapter needs that its text does not name by title or alias (for example, a custom that shapes a scene). When the chapter brings in a place, creature or custom that has no entry, write one by step 5 of `${CLAUDE_PLUGIN_ROOT}/skills/plan-world/SKILL.md`, with `status: draft`. When the chapter changes the world (a place is destroyed, a law ends), add `{ from: <this chapter's point>, text: <how it is after> }` to the entry's `changes`;
+   - `characters`: the ID of each character with a part in a scene, the POV character included. When the chapter brings in a character who comes back later or speaks, write `characters/<id>.md` with `status: draft`, `role: supporting`, a name by §4, Names, in `${CLAUDE_PLUGIN_ROOT}/guidelines/writing.md`, a voice card and a body by steps 5 and 6 of `${CLAUDE_PLUGIN_ROOT}/skills/plan-arcs/SKILL.md`. The chapter's delta then creates the entity with that ID;
    - `words`: only when this chapter's length differs from `chapter_words` (see step 3);
    - `exceptions`: only when the chapter breaks a guideline on purpose, once, for a clear effect, with the `reason`.
 
@@ -34,4 +35,4 @@ Only the next book to write gets chapter plans: for phase 1 that is book 1. File
 
 7. **Targets against the plan.** For each target at an anchor in this book, check that the chapters up to it show what produces it. The guidelines ask that power has a cost the reader saw: name the chapter where each rank or big gain is paid for. If a target cannot be earned in the chapters you have, change the plan or tell the user that the target must move.
 
-8. Run **the checkpoint loop** in `${CLAUDE_PLUGIN_ROOT}/reference/checkpoint-loop.md` for `chapter-plans`. In the summary, give a one-line table: chapter, job (from → to), ending type. List each new lore entry too; when the user approves, also run `lb approve world`.
+8. Run **the checkpoint loop** in `${CLAUDE_PLUGIN_ROOT}/reference/checkpoint-loop.md` for `chapter-plans`. In the summary, give a one-line table: chapter, job (from → to), ending type. List each new lore entry and each new character too; when the user approves, also run `lb approve world` for the lore and `lb approve character-arcs` for the characters.

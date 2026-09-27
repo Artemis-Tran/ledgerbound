@@ -24,4 +24,7 @@ One file per character in `characters/<id>.md`, where `<id>` is the entity ID in
    - `never_says`: words or subjects they avoid. These carry subtext.
    Then do the **tag test** on the cards: write one line for each main character about the same subject (for example, a late payment), and remove the tags. If two lines could belong to either speaker, the cards are too close. Sharpen them before you continue.
 
-6. Run **the checkpoint loop** in `${CLAUDE_PLUGIN_ROOT}/reference/checkpoint-loop.md` for `character-arcs`. Show the tag-test lines to the user with the summary.
+6. **Who each character is**, for every character file: write the body, 2–5 sentences of what stays true at the start of the story: what they do, how they look, how they are related to the other characters. Add `aliases` for each other name that the story uses for them (a nickname, a title). Put each relationship that changes in the story (trust, a debt, a rivalry) into a record field in `schema.yaml` and its targets, so that the ledger tracks it. Put a planned change of the character (a lost eye, a new post) into `changes`, from its point or plan anchor.
+   Done when every character file has a body, and `lb validate` reports no `character-empty` warning.
+
+7. Run **the checkpoint loop** in `${CLAUDE_PLUGIN_ROOT}/reference/checkpoint-loop.md` for `character-arcs`. Show the tag-test lines to the user with the summary.

@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
-import { firstSentence, loreNamedIn, normalName } from "../src/lore.ts";
+import { charactersNamedIn, firstSentence, loreNamedIn, normalName } from "../src/entries.ts";
 import { loadProject, type Project } from "../src/project.ts";
 import { FIXTURE, edit, fixtureCopy } from "./helpers.ts";
 
@@ -31,6 +31,14 @@ describe("lore names", () => {
   test("a name inside a longer word is not a match", () => {
     const project = load();
     expect(loreNamedIn(project, "The harvester, the tithe bellows, a crew bossman.")).toEqual([]);
+  });
+
+  test("a text names a character by its name, an alias, or a capitalized part of its name", () => {
+    const project = load();
+    expect(charactersNamedIn(project, "Sabine Rook wrote.")).toEqual(["sabine"]);
+    expect(charactersNamedIn(project, "Rook said nothing.")).toEqual(["sabine"]);
+    expect(charactersNamedIn(project, "He went to find the warden.")).toEqual(["hale"]);
+    expect(charactersNamedIn(project, "A rook sat on the rope, and nobody watched.")).toEqual([]);
   });
 
   test("the first sentence of an entry, cut when it is long", () => {
@@ -67,5 +75,32 @@ describe("lb lore", () => {
     edit(dir, "books/01/chapters/01.md", "title: Level Three", "title: The Counting House");
     const r = spawnSync("node", [CLI, "lore", "books/01/chapters/01.md", "--json"], { cwd: dir, encoding: "utf8" });
     expect(JSON.parse(r.stdout).entries.map((e: { id: string }) => e.id)).not.toContain("counting-house");
+  });
+});
+
+describe("lb who", () => {
+  const who = (args: string[]) => spawnSync("node", [CLI, "who", ...args], { cwd: FIXTURE, encoding: "utf8" });
+
+  test("gives a character at the start of a chapter: who it is, its voice card, its record and when it was last seen", () => {
+    const r = JSON.parse(who(["sabine", "--at", "1.02", "--json"]).stdout);
+    expect(r).toMatchObject({ id: "sabine", name: "Sabine Rook", role: "main", file: "characters/sabine.md", last_seen: "1.01", record: { level: 4, rank: "copper" } });
+    expect(r.text).toContain("The reeve's clerk");
+    expect(r.voice.verbal_habits).toEqual(["Corrects other people's numbers"]);
+    expect(JSON.parse(who(["hale", "--at", "1.01", "--json"]).stdout).last_seen).toBeNull();
+  });
+
+  test("gives an entity with no character file, and fails on an unknown ID or with no --at", () => {
+    const dir = fixtureCopy();
+    edit(dir, "schema.yaml", "  tithe-well:", "  pell:\n    type: person\n    name: Oren Pell\n  tithe-well:");
+    const r = JSON.parse(spawnSync("node", [CLI, "who", "pell", "--at", "1.02", "--json"], { cwd: dir, encoding: "utf8" }).stdout);
+    expect(r).toMatchObject({ name: "Oren Pell", file: null, voice: null });
+    expect(who(["nobody", "--at", "1.02"]).status).toBe(2);
+    expect(who(["sabine"]).status).toBe(2);
+  });
+
+  test("lists the characters that a chapter names", () => {
+    const r = JSON.parse(who(["books/01/chapters/01.md", "--json"]).stdout);
+    expect(r.characters.map((c: { id: string }) => c.id)).toEqual(["ivo", "sabine"]);
+    expect(r.characters[0].last_seen).toBeNull();
   });
 });

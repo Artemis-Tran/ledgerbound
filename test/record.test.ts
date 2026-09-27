@@ -265,7 +265,7 @@ describe("lb brief", () => {
     const dir = fixtureCopy();
     const r = buildBrief(load(dir), loadRecord(dir), 1, 2);
     const text = readFileSync(join(dir, r.file), "utf8");
-    for (const h of ["Prose decisions", "This chapter: 1.02", "Next plan: 1.03", "The fold at the chapter start", "Targets at the end", "Voice cards", "Voice sample: quiet", "Memory 1.01", "Phrase log", "Threads", "The end of the previous chapter (1.01)"]) {
+    for (const h of ["Prose decisions", "This chapter: 1.02", "Next plan: 1.03", "The fold at the chapter start", "Targets at the end", "Cast: Ivo Marsh (protagonist", "Cast: Warden Hale (supporting", "Voice sample: quiet", "Memory 1.01", "Phrase log", "Threads", "The end of the previous chapter (1.01)"]) {
       expect(text).toContain(`## ${h}`);
     }
     expect(text).toContain("level: 3");
@@ -344,6 +344,42 @@ describe("lb brief", () => {
     expect(text).toContain("## Lore: Slate");
     const r = buildBrief(load(dir), loadRecord(dir), 1, 3);
     expect(r.dropped).not.toContain("Lore: Delving crews (the prose never contradicts it)");
+  });
+
+  const section = (text: string, title: string) => text.split(`## ${title}`)[1].split("\n## ")[0];
+
+  test("has each character of the cast: who it is, when it was last seen, and its voice card", () => {
+    const text = briefText(fixtureCopy(), 2);
+    const hale = section(text, "Cast: Warden Hale");
+    expect(hale).toContain("The keeper of the Lenholt well");
+    expect(hale).toContain("Calls every digger");
+    expect(hale).not.toContain("Last seen");
+    expect(section(text, "Cast: Ivo Marsh")).toContain("Last seen: 1.01.");
+  });
+
+  test("has a cast index with one line for each character that is not in the cast", () => {
+    const index = section(briefText(fixtureCopy(), 5), "Cast index");
+    expect(index).toContain("- **Sabine Rook** (`sabine`, main): The reeve's clerk, who enters every tithe token in the ledger at the counting table by the lean-to. Last seen 1.01.");
+    expect(index).toContain("(`hale`, supporting; also the warden)");
+    expect(index).not.toContain("`ivo`");
+  });
+
+  test("has a character that the plan names but does not list, and drops it last", () => {
+    const dir = fixtureCopy();
+    edit(dir, "books/01/plan/03.md", "characters: [ivo, sabine, hale]", "characters: [ivo]");
+    expect(briefText(dir, 3)).toContain("## Cast: Warden Hale");
+    edit(dir, "project.yaml", "mode: normal", "mode: normal\nbrief_chars: 1000");
+    const r = buildBrief(load(dir), loadRecord(dir), 1, 3);
+    expect(r.dropped.slice(-2)).toEqual(["Cast: Warden Hale (supporting; the prose never contradicts it)", "Cast: Sabine Rook (main; the prose never contradicts it)"]);
+    expect(briefText(dir, 5)).toContain("Warden Hale (`hale`) · Sabine Rook (`sabine`)");
+  });
+
+  test("gives a character change only to the chapters after it", () => {
+    const dir = fixtureCopy();
+    edit(dir, "characters/hale.md", "aliases: [the warden]", "aliases: [the warden]\nchanges:\n  - { from: 1.03, text: Hale has lost two fingers to the rope. }");
+    expect(briefText(dir, 3)).not.toContain("lost two fingers");
+    expect(section(briefText(dir, 4), "Cast: Warden Hale")).toContain("- Since 1.03: Hale has lost two fingers to the rope.");
+    expect(section(briefText(dir, 5), "Cast index")).toMatch(/`hale`.*\(changed since\)/);
   });
 });
 

@@ -84,6 +84,20 @@ _Avoid_: Wiki page, codex, glossary
 **Voice card**:
 The rules for how one character speaks: vocabulary, sentence length, verbal habits.
 
+**Character file**:
+`characters/<id>.md`: who one character is at the start of the story (the body), its voice card, its aliases and its character changes, and for a main character its arc. The record holds its state; the character file holds what stays true. A chapter's brief includes the file of each character in its cast. The memory writer makes the file of a character who speaks, or who is on the page in a second chapter.
+_Avoid_: Character sheet, profile
+
+**Character change**:
+How a character changes in the story (loses an eye, becomes crew boss), with the point or plan anchor after which it is true. It works the same as a lore change.
+
+**Cast**:
+The characters of one chapter: the POV character, the ones that the chapter plan lists in `characters` or names, and the ones that a target names. The brief gives each one in full.
+_Avoid_: Cast list (for all the characters of the story), side characters
+
+**Cast index**:
+The part of the brief with one line for each character that is not in the cast: who it is and the chapter where it was last seen.
+
 **Voice sample**:
 One of three approved scenes of about 500 words (a `dialogue`, an `action` and a `quiet` scene) that together are the reference for all prose in a project.
 
@@ -158,14 +172,14 @@ _Avoid_: Story clock, calendar
 Where an entity is at a point.
 
 **Rolling memory**:
-The per-chapter files (summary, what changed, open questions, ending type, new lore, phrase log) that later chapters read in place of the old prose. A reader that did not write the chapter makes each file from the approved chapter, and writes each new setting detail of the chapter into its lore entry.
+The per-chapter files (summary, what changed, open questions, ending type, new lore, the characters on the page and new details about them, phrase log) that later chapters read in place of the old prose. A reader that did not write the chapter makes each file from the approved chapter, and writes each new setting detail of the chapter into its lore entry.
 _Avoid_: Recap, summary
 
 **Phrase log**:
 The part of rolling memory that lists similes, notable images, character gestures and ending types, so that none repeats.
 
 **Context brief**:
-The one input that a chapter-writing subagent gets: the prose decisions, the chapter plan and the next plans, the fold at the chapter start, the targets, the voice cards, the voice samples, the relevant rolling memory, the phrase log, the open threads and the last words of the previous chapter.
+The one input that a chapter-writing subagent gets: the prose decisions, the chapter plan and the next plans, the fold at the chapter start, the targets, the lore, the cast and the cast index, the voice samples, the relevant rolling memory, the phrase log, the open threads and the last words of the previous chapter.
 _Avoid_: Prompt, context pack
 
 ### Publishing

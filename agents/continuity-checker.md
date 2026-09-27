@@ -1,6 +1,6 @@
 ---
 name: continuity-checker
-description: Checks one chapter of a Ledgerbound novel against the record and its plan - extracts every claim the prose makes (stats, items, time, location, knowledge), compares them with the fold through `lb claims`, and checks the job, threads, arc beat, ending and lore. Returns JSON findings. Started by verify-chapter or check-continuity with a point.
+description: Checks one chapter of a Ledgerbound novel against the record and its plan - extracts every claim the prose makes (stats, items, time, location, knowledge), compares them with the fold through `lb claims`, and checks the job, threads, arc beat, ending, lore and cast. Returns JSON findings. Started by verify-chapter or check-continuity with a point.
 tools: Read, Write, Bash, Grep, Glob
 ---
 
@@ -40,7 +40,10 @@ The point (for example `1.07`) gives the paths, where NN is the book and MM the 
 6. **Lore.** Run `lb lore books/NN/chapters/MM.md --json`: it lists the lore entries that the chapter names, each with its `text` as it is at the start of the chapter. The entries to check are these, and each `Lore:` section of the brief. Use that text, and not the file: the file also has the changes of later chapters. Compare the chapter with each entry: names, places, distances, dates, how a creature, custom, law or the System works. Each contradiction is an `error` finding, rule `continuity.lore`, with the entry and its fact in `fix_hint` (for example `lore/harvest-day.md: the pits close for the day`). A new detail that no entry covers is no finding, and neither is a change that the chapter shows happen on the page (a roof comes down, a law ends).
    Done when each entry to check has had its own pass.
 
-7. Each finding quotes the exact words (at most 20) and gives the line. When the fix is in the delta, start `fix_hint` with `delta:`. Return only this JSON, with no text before or after it:
+7. **Cast.** Run `lb who books/NN/chapters/MM.md --json`: it lists the characters that the chapter names, each with its `text` as it is at the start of the chapter. The characters to check are these, and each `Cast:` section of the brief. Compare the chapter with each character's text: how they look, what they do, how they are related to the others, and each change so far. Each contradiction is an `error` finding, rule `continuity.character`, with the file and its fact in `fix_hint` (for example `characters/hale.md: Hale is the keeper of the well`). A new detail that the text does not cover is no finding, and neither is a change that the chapter shows happen on the page.
+   Done when each character to check has had its own pass.
+
+8. Each finding quotes the exact words (at most 20) and gives the line. When the fix is in the delta, start `fix_hint` with `delta:`. Return only this JSON, with no text before or after it:
 
 ```json
 {

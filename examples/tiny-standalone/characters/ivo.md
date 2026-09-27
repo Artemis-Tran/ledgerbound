@@ -16,3 +16,5 @@ arc_beats:
   - { id: lie-challenged, book: 1, act: act2, beat: He sees his father's name in the red pages and still tells himself the debt is fair. }
   - { id: refuses-tithe, book: 1, act: act3, beat: "He keeps a level the well tries to take, and pays for it with the lamp." }
 ---
+
+A slate digger at the Lenholt well, the son of a dead digger. He works the rope before dawn with split knuckles, and his mother takes in washing. He counts everything and trusts a number that someone else wrote down.

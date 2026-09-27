@@ -5,9 +5,9 @@
 import { buildPlanIndex, comparePos, type PlanIndex, type Pos } from "./anchors.ts";
 import type { Issue } from "./issues.ts";
 import { aiNamesIn } from "./lint/patterns.ts";
-import { loreNames } from "./lore.ts";
+import { characterEntries, entryNames, loreEntries, type NamedEntry } from "./entries.ts";
 import { bookDir, pad2, type Project } from "./project.ts";
-import { chapterKey, fold, loadRecord, stagedPath } from "./record.ts";
+import { allEntries, chapterKey, fold, loadRecord, stagedPath } from "./record.ts";
 import { RULE_IDS } from "./rules.ts";
 import { checkValue, fieldDef, type Kind, numericRange } from "./fields.ts";
 import { checkPublish } from "./export/epub.ts";
@@ -20,6 +20,9 @@ export function validateProject(project: Project): Issue[] {
 
   const index = buildPlanIndex(project, issues);
   const characterIds = checkSchema(project, err);
+  // The characters that a chapter brings in with a `create` entry are characters too.
+  const types = project.schema?.data.types ?? {};
+  for (const { entry } of allEntries(loadRecord(project.root))) if (entry.op === "create" && types[entry.type ?? ""]?.kind === "character") characterIds.add(entry.entity);
   checkBible(project, err, warn);
   checkFacts(project, err);
   const totalBooks = checkLevels(project, err, warn);
@@ -30,6 +33,8 @@ export function validateProject(project: Project): Issue[] {
   checkTargets(project, index, characterIds, err, warn);
   checkVoiceSamples(project, characterIds, err);
   checkLore(project, index, err, warn);
+  checkCast(project, index, characterIds, err, warn);
+  checkEntryNames(project, err);
   checkNames(project, err);
   checkGeneration(project, issues, err, warn);
   for (const book of project.publish.keys()) issues.push(...checkPublish(project, book));
@@ -86,7 +91,7 @@ function checkDraws(project: Project, totalBooks: number, err: Report) {
   }
 }
 
-/** Returns the IDs of all entities whose type has kind `character`. */
+/** Returns the IDs of all entities in schema.yaml whose type has kind `character`. */
 function checkSchema(project: Project, err: Report): Set<string> {
   const characters = new Set<string>();
   const schema = project.schema;
@@ -169,7 +174,7 @@ function checkCharacters(project: Project, index: PlanIndex, characterIds: Set<s
   for (const c of chars) {
     const expectedFile = `characters/${c.data.id}.md`;
     if (c.file !== expectedFile) err("file-name", c.file, `id is '${c.data.id}', so the file must be ${expectedFile}`, "id");
-    if (project.schema && !characterIds.has(c.data.id)) warn("not-in-schema", c.file, `'${c.data.id}' is not a character entity in schema.yaml`, "id");
+    if (project.schema && !characterIds.has(c.data.id)) warn("not-in-schema", c.file, `'${c.data.id}' is not a character entity in schema.yaml or the ledger`, "id");
     for (const d of duplicates(c.data.arc_beats, (b) => b.id)) err("duplicate-id", c.file, `arc beat '${d}' is defined twice`, "arc_beats");
     c.data.arc_beats.forEach((beat, i) => {
       if (totalBooks > 0 && beat.book > totalBooks) err("unknown-book", c.file, `book ${beat.book} is not in the plan`, `arc_beats.${i}.book`);
@@ -440,25 +445,9 @@ function checkLore(project: Project, index: PlanIndex, err: Report, warn: Report
   for (const [id, entry] of project.lore) {
     if (!/^[a-z0-9][a-z0-9-]*$/.test(id)) err("file-name", entry.file, `the file name '${id}' is the entry ID: use lower-case letters, digits and '-'`);
     if (!entry.body.trim()) warn("lore-empty", entry.file, "the entry has no body: the brief gives the writer only the body");
-    // Each change resolves, and the changes are in story order.
-    let last: Pos | undefined;
-    entry.data.changes.forEach((c, i) => {
-      const r = index.resolve(c.from);
-      if ("error" in r) return err("bad-position", entry.file, r.error, `changes.${i}.from`);
-      if (last && comparePos(r.pos, last) < 0) err("lore-change-order", entry.file, `the change from ${c.from} comes before the change above it: keep the changes in story order`, `changes.${i}.from`);
-      last = r.pos;
-    });
+    checkChanges(entry.data.changes, entry.file, "lore-change-order", index, err);
     const words = entry.body.split(/\s+/).filter(Boolean).length;
     if (words > LORE_MAX_WORDS) warn("lore-long", entry.file, `the entry has ${words} words (more than ${LORE_MAX_WORDS}): keep the facts a writer needs, or split it into two entries`);
-  }
-  // A name finds the entry for a brief, so one name belongs to one entry.
-  const names = new Map<string, string>();
-  for (const [id, entry] of project.lore) {
-    for (const name of loreNames(id, entry)) {
-      const other = names.get(name);
-      if (other) err("lore-duplicate-name", entry.file, `the name '${name}' is also a name of lore/${other}.md: give each entry its own names`);
-      else names.set(name, id);
-    }
   }
   for (const plans of project.chapters.values()) {
     for (const plan of plans) {
@@ -479,6 +468,70 @@ function checkLore(project: Project, index: PlanIndex, err: Report, warn: Report
         });
         if (change && !here) err("lore-change-missing", m.file, `lore/${entry}.md has no change from ${point}: add it to its \`changes\``, `lore_added.${i}`);
       });
+    }
+  }
+}
+
+/** Each change of a lore entry or a character resolves, and the changes are in story order. */
+function checkChanges(changes: NamedEntry["changes"], file: string, orderCode: string, index: PlanIndex, err: Report) {
+  let last: Pos | undefined;
+  changes.forEach((c, i) => {
+    const r = index.resolve(c.from);
+    if ("error" in r) return err("bad-position", file, r.error, `changes.${i}.from`);
+    if (last && comparePos(r.pos, last) < 0) err(orderCode, file, `the change from ${c.from} comes before the change above it: keep the changes in story order`, `changes.${i}.from`);
+    last = r.pos;
+  });
+}
+
+/** A name finds the entry for a brief, so one name belongs to one lore entry or character. */
+function checkEntryNames(project: Project, err: Report) {
+  const names = new Map<string, NamedEntry>();
+  for (const e of [...loreEntries(project), ...characterEntries(project)]) {
+    for (const name of entryNames(e)) {
+      const other = names.get(name);
+      if (other) err("duplicate-name", e.file, `the name '${name}' is also a name of ${other.file}: give each entry its own names`);
+      else names.set(name, e);
+    }
+  }
+}
+
+// ---------- the cast ----------
+
+function checkCast(project: Project, index: PlanIndex, characterIds: Set<string>, err: Report, warn: Report) {
+  const known = new Set([...characterIds, ...project.characters.map((c) => c.data.id)]);
+  for (const c of project.characters) {
+    if (!c.body.trim()) warn("character-empty", c.file, "the file has no body: the brief tells the writer who the character is from the body");
+    checkChanges(c.data.changes, c.file, "character-change-order", index, err);
+  }
+  for (const plans of project.chapters.values()) {
+    for (const plan of plans) {
+      plan.data.characters.forEach((id, i) => {
+        if (!known.has(id)) err("character-unknown", plan.file, `'${id}' is not a character: write characters/${id}.md for a new one`, `characters.${i}`);
+      });
+    }
+  }
+  // A character on the page in two chapters comes back, so it needs a file.
+  const seenIn = new Map<string, number>();
+  for (const files of project.memory.values()) {
+    for (const m of files) {
+      m.data.appeared.forEach((id, i) => {
+        if (!known.has(id)) return err("character-unknown", m.file, `'${id}' is not a character entity or file`, `appeared.${i}`);
+        seenIn.set(id, (seenIn.get(id) ?? 0) + 1);
+      });
+      m.data.character_added.forEach(({ character, change }, i) => {
+        const c = project.characters.find((x) => x.data.id === character);
+        if (!c) return err("character-added-unknown", m.file, `there is no characters/${character}.md: write the fact into it`, `character_added.${i}.character`);
+        const here = c.data.changes.some((x) => {
+          const r = index.resolve(x.from);
+          return !("error" in r) && r.book === m.data.book && r.chapter === m.data.chapter;
+        });
+        if (change && !here) err("character-change-missing", m.file, `characters/${character}.md has no change from ${m.data.book}.${pad2(m.data.chapter)}: add it to its \`changes\``, `character_added.${i}`);
+      });
+    }
+  }
+  for (const [id, n] of seenIn) {
+    if (n >= 2 && !project.characters.some((c) => c.data.id === id)) {
+      warn("character-no-file", "characters/", `'${id}' is on the page in ${n} chapters but has no characters/${id}.md: the brief cannot tell the writer who it is`);
     }
   }
 }

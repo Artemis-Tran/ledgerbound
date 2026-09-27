@@ -1,4 +1,4 @@
-import { rmSync, writeFileSync } from "node:fs";
+import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
 import { check, edit, errorCodes, fixtureCopy } from "./helpers.ts";
@@ -65,7 +65,71 @@ describe("lore", () => {
   test("two entries with the same name are an error", () => {
     const dir = fixtureCopy();
     edit(dir, "lore/harvest-day.md", "aliases: [the harvest]", "aliases: [the harvest, Delving Crews]");
-    expect(check(dir)).toContainEqual(expect.objectContaining({ code: "lore-duplicate-name", file: "lore/harvest-day.md" }));
+    expect(check(dir)).toContainEqual(expect.objectContaining({ code: "duplicate-name", file: "lore/harvest-day.md" }));
+  });
+
+  test("a lore entry and a character with the same name are an error", () => {
+    const dir = fixtureCopy();
+    edit(dir, "lore/delving-crews.md", "aliases: [crew boss]", "aliases: [crew boss, The Warden]");
+    expect(check(dir)).toContainEqual(expect.objectContaining({ code: "duplicate-name", file: "characters/hale.md" }));
+  });
+});
+
+describe("the cast", () => {
+  /** Oren Pell: a character entity with no file. */
+  const withPell = () => {
+    const dir = fixtureCopy();
+    edit(dir, "schema.yaml", "  tithe-well:", "  pell:\n    type: person\n    name: Oren Pell\n  tithe-well:");
+    return dir;
+  };
+  const MEMORY_2 = "---\nbook: 1\nchapter: 2\nsummary: Ivo reaches copper.\nending_type: reveal\nappeared: [ivo, pell]\n---\n";
+
+  test("a chapter plan lists a character that does not exist", () => {
+    const dir = fixtureCopy();
+    edit(dir, "books/01/plan/03.md", "characters: [ivo, sabine, hale]", "characters: [ivo, pell]");
+    expect(check(dir)).toContainEqual(expect.objectContaining({ code: "character-unknown", file: "books/01/plan/03.md", path: "characters.1" }));
+    writeFileSync(join(dir, "characters/pell.md"), "---\nid: pell\nname: Oren Pell\nrole: supporting\nvoice: { vocabulary: Crew words., sentence_length: Short., verbal_habits: [], never_says: [] }\n---\n\nThe crew boss.\n");
+    expect(errorCodes(check(dir))).toEqual([]);
+  });
+
+  test("a memory file names a character that does not exist, or one with no file in two chapters", () => {
+    let dir = fixtureCopy();
+    edit(dir, "books/01/memory/01.md", "appeared: [ivo, sabine]", "appeared: [ivo, pell]");
+    expect(check(dir)).toContainEqual(expect.objectContaining({ code: "character-unknown", file: "books/01/memory/01.md", path: "appeared.1" }));
+
+    dir = withPell();
+    edit(dir, "books/01/memory/01.md", "appeared: [ivo, sabine]", "appeared: [ivo, pell]");
+    expect(check(dir).map((i) => i.code)).not.toContain("character-no-file");
+    writeFileSync(join(dir, "books/01/memory/02.md"), MEMORY_2);
+    expect(check(dir)).toContainEqual(expect.objectContaining({ code: "character-no-file", severity: "warn" }));
+  });
+
+  test("a character that a ledger entry creates is a character", () => {
+    const dir = fixtureCopy();
+    const create = { entity: "pell", op: "create", type: "person", name: "Oren Pell", value: { level: 6 }, cause: "The crew boss appears.", quote: "Pell", point: "1.01.6" };
+    writeFileSync(join(dir, "ledger.jsonl"), `${readFileSync(join(dir, "ledger.jsonl"), "utf8").trimEnd()}\n${JSON.stringify(create)}\n`);
+    edit(dir, "books/01/memory/01.md", "appeared: [ivo, sabine]", "appeared: [ivo, pell]");
+    expect(errorCodes(check(dir))).toEqual([]);
+  });
+
+  test("a new detail about a character needs its file, and a change needs a change from its chapter", () => {
+    const dir = fixtureCopy();
+    edit(dir, "books/01/memory/01.md", "appeared:", "character_added:\n  - { character: pell, fact: Pell has a burn scar. }\nappeared:");
+    expect(check(dir)).toContainEqual(expect.objectContaining({ code: "character-added-unknown", path: "character_added.0.character" }));
+    edit(dir, "books/01/memory/01.md", "{ character: pell, fact: Pell has a burn scar. }", "{ character: sabine, fact: Sabine is sent to the manor., change: true }");
+    expect(check(dir)).toContainEqual(expect.objectContaining({ code: "character-change-missing", path: "character_added.0" }));
+    edit(dir, "characters/sabine.md", "arc_beats:", "changes:\n  - { from: 1.01, text: Sabine is sent to the manor. }\narc_beats:");
+    expect(errorCodes(check(dir))).toEqual([]);
+  });
+
+  test("a character's changes need a known point or anchor, in story order, and a character needs a body", () => {
+    const dir = fixtureCopy();
+    edit(dir, "characters/hale.md", "aliases: [the warden]", "aliases: [the warden]\nchanges:\n  - { from: 1.04, text: Hale limps. }\n  - { from: 1.02, text: Hale is hurt. }\n  - { from: 9.01, text: x }");
+    writeFileSync(join(dir, "characters/ivo.md"), readFileSync(join(dir, "characters/ivo.md"), "utf8").replace(/---\n\n[\s\S]*$/, "---\n"));
+    const issues = check(dir);
+    expect(issues).toContainEqual(expect.objectContaining({ code: "character-change-order", file: "characters/hale.md", path: "changes.1.from" }));
+    expect(issues).toContainEqual(expect.objectContaining({ code: "bad-position", file: "characters/hale.md", path: "changes.2.from" }));
+    expect(issues).toContainEqual(expect.objectContaining({ code: "character-empty", severity: "warn", file: "characters/ivo.md" }));
   });
 });
 
