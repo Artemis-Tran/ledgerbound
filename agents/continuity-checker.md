@@ -10,7 +10,7 @@ The point (for example `1.07`) gives the paths, where NN is the book and MM the 
 
 ## Steps
 
-1. Read the chapter plan, `schema.yaml`, `facts.yaml`, `threads.yaml`, and the `window_template` in `bible.md`. They give you the entity IDs and field names.
+1. Read the chapter plan, `schema.yaml`, `facts.yaml`, `threads.yaml`, the `window_template` in `bible.md`, and the `Lore:` sections of the brief `runs/briefs/NN-MM.md` (run `lb brief <point>` when it is missing). They give you the entity IDs and field names.
 
 2. **Claims.** Read the chapter paragraph by paragraph, and write down every place where the prose states or shows a value of the record:
    - a number or a rank (each line of a status window is one claim);
@@ -37,7 +37,10 @@ The point (for example `1.07`) gives the paths, where NN is the book and MM the 
    - `plan.ending`: the chapter ends with the planned ending type, and the hook is the last beat.
    Done when each item has had its own pass.
 
-6. Each finding quotes the exact words (at most 20) and gives the line. When the fix is in the delta, start `fix_hint` with `delta:`. Return only this JSON, with no text before or after it:
+6. **Lore.** Compare the chapter with each `Lore:` section of the brief: names, places, distances, dates, how a creature, custom, law or the System works. Each contradiction is an `error` finding, rule `continuity.lore`. A new detail that no entry covers is no finding.
+   Done when each lore section of the brief has had its own pass.
+
+7. Each finding quotes the exact words (at most 20) and gives the line. When the fix is in the delta, start `fix_hint` with `delta:`. Return only this JSON, with no text before or after it:
 
 ```json
 {

@@ -27,6 +27,18 @@ function entitiesIn(state: State, text: string): string[] {
     .map(([id]) => id);
 }
 
+/** The lore entries of a chapter: the `always` ones, the ones the plan lists, then the ones the plan names by ID, title or alias (any case). */
+export function loreFor(project: Project, planText: string, listed: string[]): { id: string; listed: boolean }[] {
+  const named = (s: string) => new RegExp(`\\b${s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i").test(planText);
+  const out = new Map<string, boolean>();
+  for (const [id, e] of project.lore) if (e.data.always) out.set(id, true);
+  for (const id of listed) if (project.lore.has(id)) out.set(id, true);
+  for (const [id, e] of project.lore) {
+    if (!out.has(id) && [id.replace(/-/g, " "), e.data.title, ...e.data.aliases].some(named)) out.set(id, false);
+  }
+  return [...out].map(([id, listed]) => ({ id, listed }));
+}
+
 /** The last paragraphs of a chapter body, about `words` words, with no status windows. */
 function tail(body: string, words: number): string {
   const paras = body
@@ -133,6 +145,13 @@ export function buildBrief(project: Project, rec: RecordFiles, book: number, cha
     }),
   });
   if (targets.length) sections.push({ title: "Targets at the end of this chapter (the delta must meet them)", text: yaml(targets) });
+
+  // 5b. Lore: the setting facts this chapter touches. The prose never contradicts them.
+  // Entries found only by name can go when the brief is too long, after the next plans.
+  loreFor(project, rawFrontmatter(join(root, plan.file)), plan.data.lore).forEach(({ id, listed }, i) => {
+    const e = project.lore.get(id)!;
+    sections.push({ title: `Lore: ${e.data.title} (the prose never contradicts it)`, text: e.body.trim(), ...(listed ? {} : { drop: 200 - i }) });
+  });
 
   // 6. Voice cards.
   const cards = project.characters.filter((c) => ids.includes(c.data.id) || c.data.id === plan.data.pov);

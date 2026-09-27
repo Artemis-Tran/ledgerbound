@@ -73,6 +73,10 @@ _Avoid_: Plot line, subplot, setup/payoff pair
 The change of one character across the story: want, need, the lie they believe, and arc beats mapped to acts and books.
 _Avoid_: Using "arc" for a thread or a plot line
 
+**Lore entry**:
+One piece of setting knowledge in `lore/<id>.md`: a place, a faction, an event of the history, a custom, a law, a creature, or how the System works in the world. World planning (`plan-world`, the `world` checkpoint) writes the entries after the story bible. A chapter's brief includes the entries that its plan lists or names, and the prose never contradicts them. A setting detail that an approved chapter adds goes into its entry through the rolling memory. The record holds what changes; a lore entry holds what stays true.
+_Avoid_: Wiki page, codex, glossary
+
 **Voice card**:
 The rules for how one character speaks: vocabulary, sentence length, verbal habits.
 
@@ -150,7 +154,7 @@ _Avoid_: Story clock, calendar
 Where an entity is at a point.
 
 **Rolling memory**:
-The per-chapter files (summary, what changed, open questions, ending type, phrase log) that later chapters read in place of the old prose. A reader that did not write the chapter makes each file from the approved chapter.
+The per-chapter files (summary, what changed, open questions, ending type, new lore, phrase log) that later chapters read in place of the old prose. A reader that did not write the chapter makes each file from the approved chapter, and writes each new setting detail of the chapter into its lore entry.
 _Avoid_: Recap, summary
 
 **Phrase log**:

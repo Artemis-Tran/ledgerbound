@@ -37,6 +37,6 @@ The output is a **story bible**: the draws and every story decision, each marked
 
 9. **Facts.** Put each secret or misunderstanding that the plot turns on in `facts.yaml`: one `truth` per fact. The plan will say who knows, who is unaware, and who believes something false.
 
-10. **Bible body.** Below the frontmatter, write setting notes that the planners and writers need: places, factions, the setting's own words for common things (they feed the "specific, not generic" rule). No plot outline: that is plan-series' job.
+10. **Bible body.** Below the frontmatter, write short setting notes: the main places and factions by name, and the setting's own words for common things (they feed the "specific, not generic" rule). The detail of each place, faction, custom and event goes into the lore entries of plan-world. No plot outline: that is plan-series' job.
 
-10. Run **the checkpoint loop** in `${CLAUDE_PLUGIN_ROOT}/reference/checkpoint-loop.md` for the checkpoint `bible`. In the summary, list the draws, and say whether windows are `on` or `off`.
+11. Run **the checkpoint loop** in `${CLAUDE_PLUGIN_ROOT}/reference/checkpoint-loop.md` for the checkpoint `bible`. In the summary, list the draws, and say whether windows are `on` or `off`.

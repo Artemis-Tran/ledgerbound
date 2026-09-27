@@ -9,4 +9,4 @@ Every planning skill ends with this loop for the checkpoint it owns.
 3. When the user asks for changes: make them, set `status: draft` in each changed file, and go back to step 1.
 4. When the user approves: run `lb approve <checkpoint>`. It refuses if errors came back; then fix them and ask again. After it succeeds, run `lb status` and offer the next step it names.
 
-A later change to an approved file sets that file back to `status: draft`, and its checkpoint needs approval again.
+A later change to an approved file sets that file back to `status: draft`, and its checkpoint needs approval again. The one exception: the memory writer adds a detail of an approved chapter to a lore entry, and the entry stays approved.

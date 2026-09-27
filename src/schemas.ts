@@ -12,6 +12,7 @@ export const Status = z.enum(["draft", "approved"]).default("draft");
 
 export const CHECKPOINTS = [
   "bible",
+  "world",
   "series-plan",
   "book-plan",
   "character-arcs",
@@ -258,11 +259,30 @@ export const ChapterPlan = z.strictObject({
     .prefault({}),
   ending: z.strictObject({ type: z.enum(ENDING_TYPES), hook: Text }),
   anchors: z.array(z.string().regex(AnchorRe)).default([]),
+  /** Lore entry IDs (`lore/<id>.md`) that the brief must include, beyond the ones the plan names by title or alias. */
+  lore: z.array(Slug).default([]),
   exceptions: z.array(z.strictObject({ rule: Text, reason: Text })).default([]),
   day: z.number().optional(),
   scenes: z.array(Scene).min(1),
 });
 export type ChapterPlan = z.infer<typeof ChapterPlan>;
+
+// ---------- lore/<id>.md ----------
+
+/** The areas of the world that plan-world covers. `system` is how the System works in the world (who sees it, what people believe about it), not the numbers: those are in schema.yaml. */
+export const LORE_CATEGORIES = ["place", "faction", "history", "custom", "law", "creature", "system", "other"] as const;
+
+/** One lore entry: setting knowledge that the chapter writer needs when a chapter touches it. The markdown body is the entry. */
+export const LoreEntry = z.strictObject({
+  status: Status,
+  title: Text,
+  category: z.enum(LORE_CATEGORIES),
+  /** Other names for the same thing. A chapter plan that uses one of them gets the entry in its brief. */
+  aliases: TextList,
+  /** In every brief, not only when a chapter plan names it. For short rules that hold everywhere. */
+  always: z.boolean().default(false),
+});
+export type LoreEntry = z.infer<typeof LoreEntry>;
 
 // ---------- voice/<kind>.md ----------
 
@@ -381,6 +401,8 @@ export const RollingMemory = z.strictObject({
   changed: TextList,
   open_questions: TextList,
   ending_type: z.enum(ENDING_TYPES),
+  /** Setting details that this chapter adds and no lore entry had. The memory writer also writes each one into its entry. */
+  lore_added: z.array(z.strictObject({ entry: Slug, fact: Text })).default([]),
   phrase_log: z
     .strictObject({
       similes: TextList,

@@ -9,9 +9,9 @@ Plan **from the end**. Decide what is true at the end of the series first, then 
 
 ## Steps
 
-1. Run `lb gate bible`. If it is BLOCKED, stop and tell the user why.
+1. Run `lb gate world`. If it is BLOCKED, stop and tell the user why.
 
-2. Read `bible.md`, `schema.yaml` and `facts.yaml`. The locked decisions are fixed. Open decisions can change if the plan needs it; tell the user when you change one. The `draws` are the contract with the reader: the plan delivers every `gives` draw, and nothing in it touches an `excludes` draw.
+2. Read `bible.md`, `schema.yaml`, `facts.yaml` and the lore entries in `lore/`. The locked decisions are fixed. Open decisions can change if the plan needs it; tell the user when you change one. The `draws` are the contract with the reader: the plan delivers every `gives` draw, and nothing in it touches an `excludes` draw.
 
 3. **Series level** (skip for a standalone book). Write `series.md`: the number of books, and the four level fields:
    - `ending_state`: what is true at the end: power, relationships, and what the protagonist believes;

@@ -1,4 +1,4 @@
-import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
@@ -64,6 +64,30 @@ describe("gate", () => {
     const { project, issues } = load(dir);
     expect(gate(project, issues, "book-plan").cleared).toBe(true);
     expect(gate(project, issues, "chapter-plans").cleared).toBe(false);
+  });
+});
+
+describe("world", () => {
+  test("comes after the bible, and names plan-world when lore/ is empty", () => {
+    const dir = fixtureCopy();
+    rmSync(join(dir, "lore"), { recursive: true });
+    const { project, issues } = load(dir);
+    expect(gate(project, issues, "world")).toMatchObject({ cleared: false, state: "missing" });
+    expect(status(project, issues).next).toBe("Run the plan-world skill (lore/ has no lore entries).");
+  });
+
+  test("a draft lore entry waits for approval, and a lore error blocks the plans after it", () => {
+    const dir = fixtureCopy();
+    edit(dir, "lore/harvest-day.md", "status: approved", "status: draft");
+    let { project, issues } = load(dir);
+    expect(gate(project, issues, "world").reason).toContain("lore/harvest-day.md");
+    expect(approve(project, issues, "world").state).toBe("approved");
+    expect(readFileSync(join(dir, "lore/harvest-day.md"), "utf8")).toContain("status: approved");
+
+    edit(dir, "lore/harvest-day.md", "aliases: [the harvest]", "aliases: [crew boss]");
+    ({ project, issues } = load(dir));
+    expect(gate(project, issues, "bible").cleared).toBe(true);
+    expect(gate(project, issues, "chapter-plans")).toMatchObject({ cleared: false, state: "invalid" });
   });
 });
 

@@ -11,7 +11,7 @@ Only the next book to write gets chapter plans: for phase 1 that is book 1. File
 
 1. Run `lb gate character-arcs`. If it is BLOCKED, stop and tell the user why.
 
-2. Read `bible.md` (with its `draws`), `books/NN/plan.md` for this book (with the draws it delivers), `targets.yaml`, `facts.yaml` and every `characters/*.md`.
+2. Read `bible.md` (with its `draws`), the lore entries in `lore/`, `books/NN/plan.md` for this book (with the draws it delivers), `targets.yaml`, `facts.yaml` and every `characters/*.md`.
 
 3. **Chapter count and act ranges.** From `chapter_words` in `project.yaml` and the scope of the book plan, decide the number of chapters and which chapters each act gets. Write down the act ranges before any chapter.
    Give a chapter its own `words` when its scenes need a different length: a set-piece fight longer, a quiet turn shorter. Keep the total of the book near the number of chapters × `chapter_words`.
@@ -26,6 +26,7 @@ Only the next book to write gets chapter plans: for phase 1 that is book 1. File
    - `anchors`: the act ends and custom anchors that fall at the end of this chapter;
    - `scenes`: each with `goal` → `conflict` → `outcome`. Let some outcomes be worse than the goal;
    - `day`: the in-story day;
+   - `lore`: the IDs of the lore entries this chapter needs that its text does not name by title or alias (for example, a custom that shapes a scene). When the chapter brings in a place, creature or custom that has no entry, write one by step 5 of `${CLAUDE_PLUGIN_ROOT}/skills/plan-world/SKILL.md`, with `status: draft`;
    - `words`: only when this chapter's length differs from `chapter_words` (see step 3);
    - `exceptions`: only when the chapter breaks a guideline on purpose, once, for a clear effect, with the `reason`.
 
@@ -33,4 +34,4 @@ Only the next book to write gets chapter plans: for phase 1 that is book 1. File
 
 7. **Targets against the plan.** For each target at an anchor in this book, check that the chapters up to it show what produces it. The guidelines ask that power has a cost the reader saw: name the chapter where each rank or big gain is paid for. If a target cannot be earned in the chapters you have, change the plan or tell the user that the target must move.
 
-8. Run **the checkpoint loop** in `${CLAUDE_PLUGIN_ROOT}/reference/checkpoint-loop.md` for `chapter-plans`. In the summary, give a one-line table: chapter, job (from → to), ending type.
+8. Run **the checkpoint loop** in `${CLAUDE_PLUGIN_ROOT}/reference/checkpoint-loop.md` for `chapter-plans`. In the summary, give a one-line table: chapter, job (from → to), ending type. List each new lore entry too; when the user approves, also run `lb approve world`.

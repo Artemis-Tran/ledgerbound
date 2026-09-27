@@ -1,4 +1,4 @@
-import { rmSync } from "node:fs";
+import { rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
 import { check, edit, errorCodes, fixtureCopy } from "./helpers.ts";
@@ -6,6 +6,40 @@ import { check, edit, errorCodes, fixtureCopy } from "./helpers.ts";
 describe("the fixture", () => {
   test("has no errors", () => {
     expect(errorCodes(check(fixtureCopy()))).toEqual([]);
+  });
+});
+
+describe("lore", () => {
+  test("a chapter plan lists a lore entry that does not exist", () => {
+    const dir = fixtureCopy();
+    edit(dir, "books/01/plan/03.md", "pov: ivo", "pov: ivo\nlore: [the-duke]");
+    expect(check(dir)).toContainEqual(expect.objectContaining({ code: "lore-unknown", file: "books/01/plan/03.md", path: "lore.0" }));
+  });
+
+  test("an entry with no body is a warning, and a file name that is not an ID is an error", () => {
+    const dir = fixtureCopy();
+    writeFileSync(join(dir, "lore/Old_Well.md"), "---\ntitle: The old well\ncategory: place\n---\n");
+    const issues = check(dir);
+    expect(issues).toContainEqual(expect.objectContaining({ code: "lore-empty", severity: "warn" }));
+    expect(issues).toContainEqual(expect.objectContaining({ code: "file-name", file: "lore/Old_Well.md" }));
+  });
+
+  test("an entry needs a category from the list", () => {
+    const dir = fixtureCopy();
+    edit(dir, "lore/counting-house.md", "category: place", "category: building");
+    expect(check(dir)).toContainEqual(expect.objectContaining({ code: "format", file: "lore/counting-house.md", path: "category" }));
+  });
+
+  test("a new lore fact in a memory file needs its entry", () => {
+    const dir = fixtureCopy();
+    rmSync(join(dir, "lore/tithe-bell.md"));
+    expect(check(dir)).toContainEqual(expect.objectContaining({ code: "lore-unknown", file: "books/01/memory/01.md", path: "lore_added.0.entry" }));
+  });
+
+  test("two entries with the same name are an error", () => {
+    const dir = fixtureCopy();
+    edit(dir, "lore/harvest-day.md", "aliases: [the harvest]", "aliases: [the harvest, Delving Crews]");
+    expect(check(dir)).toContainEqual(expect.objectContaining({ code: "lore-duplicate-name", file: "lore/harvest-day.md" }));
   });
 });
 

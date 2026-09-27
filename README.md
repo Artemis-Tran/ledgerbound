@@ -50,10 +50,11 @@ The workflow has three phases. **Planning** makes the plan and the voice, and yo
 |---|---|---|---|---|
 | 0 (optional) | `develop-idea <idea>` | Offers 3 premises from a short idea. You choose or mix. When none fits, it asks you what to include and exclude, one question at a time, and offers 3 new premises. | `pitch.md` | – |
 | 1 | `start-project` | Asks only what is missing, offers options, and records each decision as `locked` (you chose) or `open` (the system chose). Writes the draws, and sets `windows`. | `bible.md`, `schema.yaml`, `facts.yaml`, `project.yaml` | `bible` |
-| 2 | `plan-series` | Plans from the end: the series, then each book, with ending states, promises, questions, handoffs, and targets for the record. | `series.md`, `books/NN/plan.md`, `targets.yaml` | `series-plan`, `book-plan` |
-| 3 | `plan-arcs` | Want, need, lie, voice card and arc beats for each main character. | `characters/*.md` | `character-arcs` |
-| 4 | `plan-book` | A job, threads, arc beats, an ending type and scenes for each chapter of the next book. | `books/NN/plan/MM.md`, `threads.yaml` | `chapter-plans` |
-| 5 | `voice-sample` | Three ~500-word scenes (dialogue, action, quiet), checked by `check-prose`. They become the reference for all prose. | `voice/*.md`, the window template in `bible.md` | `voice-sample` |
+| 2 | `plan-world` | Plans the world with you, one area at a time: places, factions, history, customs, laws, creatures, and how the System works in the world. One lore entry per thing. The writer gets the entries that each chapter needs, and the continuity checker finds prose that contradicts one. | `lore/*.md` | `world` |
+| 3 | `plan-series` | Plans from the end: the series, then each book, with ending states, promises, questions, handoffs, and targets for the record. | `series.md`, `books/NN/plan.md`, `targets.yaml` | `series-plan`, `book-plan` |
+| 4 | `plan-arcs` | Want, need, lie, voice card and arc beats for each main character. | `characters/*.md` | `character-arcs` |
+| 5 | `plan-book` | A job, threads, arc beats, an ending type and scenes for each chapter of the next book. | `books/NN/plan/MM.md`, `threads.yaml` | `chapter-plans` |
+| 6 | `voice-sample` | Three ~500-word scenes (dialogue, action, quiet), checked by `check-prose`. They become the reference for all prose. | `voice/*.md`, the window template in `bible.md` | `voice-sample` |
 
 **Draws.** The draws are what a reader chooses the story for (`gives`: "time loop with significant variation", "a magic academy with real focus on the academy") and what the story promises not to have (`excludes`: "zero romance"). They are in `bible.md`. `develop-idea` gives each premise its draws, and `reference/draws.md` lists common ones. Each book plan names the `gives` draws that it delivers. The writer gets every exclusion in the brief, and the prose checker gives an error when a chapter breaks one.
 
@@ -76,7 +77,7 @@ Both skills do the same steps for each chapter. `lb run` finds the stage of each
 | `briefed` | **Write** | `chapter-writer` agent | First the delta `books/01/deltas/07.jsonl`, which `lb delta` must accept. Then the prose `books/01/chapters/07.md`. Then a quote from the prose on each delta entry. Then `lb lint` until clean. |
 | `drafted` | **Verify** | `verify-chapter`: `prose-checker` and `continuity-checker` agents at the same time, then the `reviser` agent | Findings in `runs/verify/01-07.json`. The reviser changes only the flagged spans. A maximum of 3 rounds. |
 | `verified` | **Approve** | `lb commit 1.07` (for chapter 1.01: you, then `lb approve chapter-1`) | The delta goes into `ledger.jsonl`, and the chapter gets `status: approved` |
-| `approved` | **Remember** | `memory-writer` agent | `books/01/memory/07.md`: summary, changes, open questions, ending type, phrase log |
+| `approved` | **Remember** | `memory-writer` agent | `books/01/memory/07.md`: summary, changes, open questions, ending type, phrase log. New setting details go into the lore entries. |
 | `remembered` | **Git** | the skill | One commit: `Book 1, chapter 7: <title>` |
 | `done` | – | – | The next chapter starts |
 | `blocked` | **Stop** (in autopilot: see "Autopilot" below) | the skill | The chapter still has an open error after its last verify round |
@@ -89,6 +90,7 @@ Both skills do the same steps for each chapter. `lb run` finds the stage of each
 - **The reviser changes only the flagged spans.** A full rewrite brings in new tics. When the record is what is wrong, the reviser changes the staged delta instead.
 - **Commit.** Until the commit, the delta is *staged* and can change. After the commit it is in `ledger.jsonl` and never changes. Chapters are committed in sequence.
 - **Rolling memory** is written by an agent that did not write the chapter, from the chapter as it is on the page. Later chapters read these files, never the old prose.
+- **New lore.** When a chapter adds a setting detail that no lore entry has, the memory writer lists it in `lore_added` and writes it into its entry (a new entry when none fits). The entry stays approved: the approved chapter is the source. Later briefs give the detail to the writer, and the continuity checker compares later chapters with it.
 
 ### Where the run stops for you
 
@@ -157,6 +159,10 @@ Use autopilot after the first chapters show that the voice and the plan work. Fo
 | `lb delta 1.07` | The staged delta of chapter 7, with its errors. |
 | `lb lint books/01/chapters/07.md` | The deterministic prose checks. |
 | `lb validate` | Every file and reference, and the ledger. |
+
+### A novel repo made before version 0.10.0
+
+The new `world` checkpoint comes after `bible`, and it needs at least one lore entry, so `lb status` names `plan-world`. Run `/ledgerbound:plan-world`: it writes the entries from the bible, and you approve them. The chapters that are not written yet get the entries in their briefs. The approved chapters and the ledger do not change. Add `world: on` under `checkpoints` in `project.yaml` if you want it in the list; a checkpoint that is not in the list is on.
 
 ### A novel repo made before version 0.8.0
 

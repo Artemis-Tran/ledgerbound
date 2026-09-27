@@ -27,6 +27,7 @@ export function validateProject(project: Project): Issue[] {
   checkThreads(project, index, err);
   checkTargets(project, index, characterIds, err, warn);
   checkVoiceSamples(project, characterIds, err);
+  checkLore(project, err, warn);
   checkGeneration(project, issues, err, warn);
   for (const book of project.publish.keys()) issues.push(...checkPublish(project, book));
   return issues;
@@ -403,6 +404,38 @@ function checkTargets(project: Project, index: PlanIndex, characterIds: Set<stri
       for (const id of [...plan.data.acts.map((a) => `b${book}/${a.id}/end`), `b${book}/end`]) {
         if (!targeted.has(id)) warn("target-missing", file, `the ending state at ${id} has no target`);
       }
+    }
+  }
+}
+
+// ---------- lore ----------
+
+function checkLore(project: Project, err: Report, warn: Report) {
+  for (const [id, entry] of project.lore) {
+    if (!/^[a-z0-9][a-z0-9-]*$/.test(id)) err("file-name", entry.file, `the file name '${id}' is the entry ID: use lower-case letters, digits and '-'`);
+    if (!entry.body.trim()) warn("lore-empty", entry.file, "the entry has no body: the brief gives the writer only the body");
+  }
+  // A name finds the entry for a brief, so one name belongs to one entry.
+  const names = new Map<string, string>();
+  for (const [id, entry] of project.lore) {
+    for (const name of new Set([id.replace(/-/g, " "), entry.data.title, ...entry.data.aliases].map((n) => n.trim().toLowerCase()))) {
+      const other = names.get(name);
+      if (other) err("lore-duplicate-name", entry.file, `the name '${name}' is also a name of lore/${other}.md: give each entry its own names`);
+      else names.set(name, id);
+    }
+  }
+  for (const plans of project.chapters.values()) {
+    for (const plan of plans) {
+      plan.data.lore.forEach((id, i) => {
+        if (!project.lore.has(id)) err("lore-unknown", plan.file, `there is no lore entry lore/${id}.md`, `lore.${i}`);
+      });
+    }
+  }
+  for (const files of project.memory.values()) {
+    for (const m of files) {
+      m.data.lore_added.forEach(({ entry }, i) => {
+        if (!project.lore.has(entry)) err("lore-unknown", m.file, `there is no lore entry lore/${entry}.md: write the fact into it`, `lore_added.${i}.entry`);
+      });
     }
   }
 }

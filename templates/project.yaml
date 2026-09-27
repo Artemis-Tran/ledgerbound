@@ -7,6 +7,7 @@ mode: normal              # normal | just-write-it (every checkpoint off except 
 # Each checkpoint is on unless you set it to off here.
 checkpoints:
   bible: on
+  world: on
   series-plan: on
   book-plan: on
   character-arcs: on

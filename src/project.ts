@@ -13,6 +13,7 @@ import {
   Page,
   Publish,
   Facts,
+  LoreEntry,
   ProjectConfig,
   RollingMemory,
   Schema,
@@ -43,6 +44,8 @@ export interface Project {
   /** book number → chapter plans, sorted by chapter */
   chapters: Map<number, Loaded<ChapterPlan>[]>;
   characters: Loaded<Character>[];
+  /** lore/<id>.md: entry ID → entry, sorted by ID. */
+  lore: Map<string, Loaded<LoreEntry>>;
   /** voice/*.md, one per kind. */
   voiceSamples: Loaded<VoiceSample>[];
   /** book number → chapter prose files (books/NN/chapters/MM.md), sorted by chapter */
@@ -130,6 +133,10 @@ export function loadProject(root: string): { project?: Project; issues: Issue[] 
     books: new Map(),
     chapters: new Map(),
     characters: mdFiles("characters").flatMap((p) => readMd(Character, p) ?? []),
+    lore: new Map(mdFiles("lore").flatMap((p) => {
+      const entry = readMd(LoreEntry, p);
+      return entry ? [[/([^/]+)\.md$/.exec(p)![1], entry] as const] : [];
+    })),
     voiceSamples: mdFiles("voice").flatMap((p) => readMd(VoiceSample, p) ?? []),
     prose: new Map(),
     memory: new Map(),

@@ -13,13 +13,14 @@ This is the approved design for phase 1 (planning) and phase 2 (generation). The
 |---|---|---|---|
 | 0 (optional) | `develop-idea` | `pitch.md` from the seed, via 3 premises (when none fits: an align step on what to include and exclude, then 3 new premises) | – (choosing a premise is the approval) |
 | 1 | `start-project` | `bible.md`, `schema.yaml`, `facts.yaml`, `project.yaml` | `bible` |
-| 2 | `plan-series` | `series.md`, `books/NN/plan.md` (book level, every book), `targets.yaml` | `series-plan` (series only), `book-plan` |
-| 3 | `plan-arcs` | `characters/*.md` | `character-arcs` |
-| 4 | `plan-book` | `books/NN/plan/MM.md`, `threads.yaml`, anchors | `chapter-plans` |
-| 5 | `voice-sample` | `voice/dialogue.md`, `voice/action.md`, `voice/quiet.md`, window template in `bible.md` | `voice-sample` |
-| 6 | `generate-chapter`, `verify-chapter` (or `generate-book` for all of them) | `books/NN/deltas/MM.jsonl`, `books/NN/chapters/MM.md`, `books/NN/memory/MM.md`, `ledger.jsonl` | `chapter-1` |
-| 7 | `publish-book` | `books/NN/publish.yaml`, `books/NN/pages/*.md`, then `exports/NN-<title>.epub` through `lb export` | – (the user approves the pages in the skill) |
-| any time | `replan` | chapter plans not written yet, `threads.yaml`, `targets.yaml`, open decisions | `replan` (on in every mode except `autopilot`) |
+| 2 | `plan-world` | `lore/*.md`: places, factions, history, customs, laws, creatures, and the System in the world | `world` |
+| 3 | `plan-series` | `series.md`, `books/NN/plan.md` (book level, every book), `targets.yaml` | `series-plan` (series only), `book-plan` |
+| 4 | `plan-arcs` | `characters/*.md` | `character-arcs` |
+| 5 | `plan-book` | `books/NN/plan/MM.md`, `threads.yaml`, anchors | `chapter-plans` |
+| 6 | `voice-sample` | `voice/dialogue.md`, `voice/action.md`, `voice/quiet.md`, window template in `bible.md` | `voice-sample` |
+| 7 | `generate-chapter`, `verify-chapter` (or `generate-book` for all of them) | `books/NN/deltas/MM.jsonl`, `books/NN/chapters/MM.md`, `books/NN/memory/MM.md`, `ledger.jsonl` | `chapter-1` |
+| 8 | `publish-book` | `books/NN/publish.yaml`, `books/NN/pages/*.md`, then `exports/NN-<title>.epub` through `lb export` | – (the user approves the pages in the skill) |
+| any time | `replan` | chapter plans not written yet, `threads.yaml`, `targets.yaml`, lore entries, open decisions | `replan` (on in every mode except `autopilot`) |
 
 - A series plans the series level and every book at book level. Only the next book to write gets act, chapter and scene plans.
 - Each checkpoint is `on` by default. `mode: just-write-it` switches all of them off except `replan`. `mode: autopilot` switches all of them off: a replan picks its own option (within the `open` decisions) and approves itself, and a chapter blocked after 3 rounds gets an automatic replan and one extra round when a plan error is open, or else is committed with its open errors. Each decision goes into `runs/autopilot.md`. The run still stops for a change to a `locked` decision or a draw, and for a record error.
@@ -64,7 +65,7 @@ This is the approved design for phase 1 (planning) and phase 2 (generation). The
 | check | `prose-checker` and `continuity-checker` agents, at the same time | paths only | findings (JSON) |
 | revise | `reviser` agent | the brief, the chapter, the findings | only the flagged spans, and the staged delta. Then check again; at most 3 rounds |
 | approve | the user for chapter 1 of book 1 (`lb approve chapter-1`), else `lb commit 1.07` after a clean check | – | `status: approved`, the delta appended to `ledger.jsonl` |
-| memory | `memory-writer` agent | the approved chapter | `books/01/memory/07.md` |
+| memory | `memory-writer` agent | the approved chapter | `books/01/memory/07.md`, and the new setting details in `lore/*.md` |
 | git | the skill | – | one commit: `Book 1, chapter 7: <title>` |
 
 The main session only coordinates. It never holds the prose, so it stays small for a whole book. All subagents use the session model.
@@ -84,7 +85,9 @@ The `continuity-checker` agent reads the chapter and the schema, **not the fold*
 
 ### Context brief
 
-`lb brief 1.07` writes one file with: the prose decisions and the window template; the chapter plan and the next 2 plans; the schema fields, the facts and the entity IDs; the fold at the chapter start for the entities in the plan, and the POV character's beliefs; the targets of this chapter's anchors; the voice cards of the characters in the chapter; the three voice samples; the rolling memory (the last 3 chapters in full, the `summary` of older ones); the phrase log of the book; the threads that are open or that this chapter moves; the last ~300 words of the previous chapter. When the brief is longer than `brief_chars` in `project.yaml` (default 60,000), it first drops the oldest summaries, then the next plans.
+When a chapter adds a setting detail that no lore entry has, the memory writer lists it in `lore_added` and writes it into its entry (a new entry when none fits). The entry keeps its status: the approved chapter is the source. `lb validate` gives `lore-unknown` when a `lore_added` entry has no file.
+
+`lb brief 1.07` writes one file with: the prose decisions and the window template; the chapter plan and the next 2 plans; the schema fields, the facts and the entity IDs; the fold at the chapter start for the entities in the plan, and the POV character's beliefs; the targets of this chapter's anchors; the lore entries that the plan lists or names, and each `always` entry; the voice cards of the characters in the chapter; the three voice samples; the rolling memory (the last 3 chapters in full, the `summary` of older ones); the phrase log of the book; the threads that are open or that this chapter moves; the last ~300 words of the previous chapter. When the brief is longer than `brief_chars` in `project.yaml` (default 60,000), it first drops the oldest summaries, then the next plans, then the lore entries that the plan only names.
 
 ### Checkpoints and replan
 

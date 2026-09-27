@@ -14,6 +14,7 @@ import type { Checkpoint } from "./schemas.ts";
 /** The checkpoints in workflow order, and the skill that produces each one. `replan` is not in the order: it can come at any time. */
 export const WORKFLOW: { checkpoint: Checkpoint; skill: string }[] = [
   { checkpoint: "bible", skill: "start-project" },
+  { checkpoint: "world", skill: "plan-world" },
   { checkpoint: "series-plan", skill: "plan-series" },
   { checkpoint: "book-plan", skill: "plan-series" },
   { checkpoint: "character-arcs", skill: "plan-arcs" },
@@ -53,6 +54,10 @@ function owned(project: Project, cp: Checkpoint, book: number): Owned {
         owns: ["project.yaml", "bible.md", "schema.yaml", "facts.yaml"],
         missing: !project.bible ? "bible.md is missing" : !project.schema ? "schema.yaml is missing" : undefined,
       };
+    case "world": {
+      const entries = [...project.lore.values()];
+      return { approvable: entries, owns: ["lore/"], missing: entries.length === 0 ? "lore/ has no lore entries" : undefined };
+    }
     case "series-plan":
       if (standalone) return { approvable: [], owns: [], notApplicable: "a standalone book has no series plan" };
       return { approvable: project.series ? [project.series] : [], owns: ["series.md", "targets.yaml"], missing: project.series ? undefined : "series.md is missing" };
@@ -84,8 +89,8 @@ function owned(project: Project, cp: Checkpoint, book: number): Owned {
     case "replan": {
       // The plan files that a replan can change. They are drafts again until the user approves the replan.
       const planned = [...project.chapters.keys()].map((b) => `${bookDir(b)}/plan/`);
-      const approvable = [...(project.series ? [project.series] : []), ...project.books.values(), ...[...project.chapters.values()].flat(), ...project.characters];
-      return { approvable, owns: ["series.md", "books/", ...planned, "characters/", "threads.yaml", "targets.yaml"] };
+      const approvable = [...(project.series ? [project.series] : []), ...project.books.values(), ...[...project.chapters.values()].flat(), ...project.characters, ...project.lore.values()];
+      return { approvable, owns: ["series.md", "books/", ...planned, "characters/", "threads.yaml", "targets.yaml", "lore/"] };
     }
   }
 }

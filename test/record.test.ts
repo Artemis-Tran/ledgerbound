@@ -290,8 +290,34 @@ describe("lb brief", () => {
     const dir = fixtureCopy();
     edit(dir, "project.yaml", "mode: normal", "mode: normal\nbrief_chars: 1000");
     const r = buildBrief(load(dir), loadRecord(dir), 1, 2);
-    expect(r.dropped).toEqual(["Next plan: 1.04 (for direction only; do not write it)", "Next plan: 1.03 (for direction only; do not write it)"]);
+    expect(r.dropped).toEqual([
+      "Next plan: 1.04 (for direction only; do not write it)",
+      "Next plan: 1.03 (for direction only; do not write it)",
+      "Lore: Delving crews (the prose never contradicts it)",
+    ]);
     expect(r.over).toBe(true);
+  });
+
+  const briefText = (dir: string, chapter: number) => readFileSync(join(dir, buildBrief(load(dir), loadRecord(dir), 1, chapter).file), "utf8");
+
+  test("has the lore entries that the chapter plan names by title or alias, and no others", () => {
+    const dir = fixtureCopy();
+    expect(briefText(dir, 2)).toContain("## Lore: Delving crews");
+    expect(briefText(dir, 2)).toContain("the boss keeps two shares");
+    expect(briefText(dir, 3)).not.toContain("## Lore:");
+    edit(dir, "lore/delving-crews.md", "aliases: [crew boss]", "aliases: [Hale]");
+    expect(briefText(dir, 3)).toContain("## Lore: Delving crews");
+  });
+
+  test("has a lore entry that the plan lists in `lore`, and an `always` entry in every chapter", () => {
+    const dir = fixtureCopy();
+    edit(dir, "books/01/plan/03.md", "pov: ivo", "pov: ivo\nlore: [delving-crews]");
+    writeFileSync(join(dir, "lore/slate.md"), "---\ntitle: Slate\ncategory: law\nalways: true\n---\n\nLenholt slate splits in sheets.\n");
+    const text = briefText(dir, 3);
+    expect(text).toContain("## Lore: Delving crews");
+    expect(text).toContain("## Lore: Slate");
+    const r = buildBrief(load(dir), loadRecord(dir), 1, 3);
+    expect(r.dropped).not.toContain("Lore: Delving crews (the prose never contradicts it)");
   });
 });
 
