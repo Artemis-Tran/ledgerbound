@@ -79,6 +79,7 @@ Both skills do the same steps for each chapter. `lb run` finds the stage of each
 | `approved` | **Remember** | `memory-writer` agent | `books/01/memory/07.md`: summary, changes, open questions, ending type, phrase log |
 | `remembered` | **Git** | the skill | One commit: `Book 1, chapter 7: <title>` |
 | `done` | – | – | The next chapter starts |
+| `blocked` | **Stop** (in autopilot: see "Autopilot" below) | the skill | The chapter still has an open error after its last verify round |
 
 **What each part does:**
 
@@ -91,12 +92,13 @@ Both skills do the same steps for each chapter. `lb run` finds the stage of each
 
 ### Where the run stops for you
 
-| Stop | Why | What you do |
-|---|---|---|
-| `chapter-1` checkpoint | Chapter 1.01 is the first time that the voice runs at full length. | Read `books/01/chapters/01.md`. Approve it, or say what to change: the reviser changes it, and it is verified again. |
-| `blocked` | A chapter still has an open error after 3 rounds. | The skill shows the errors. Say how to fix them, or accept a replan when they are about the plan. |
-| **REPLAN NEEDED** | After a commit, a later target can no longer be reached (for example, Ivo is already past the rank that a target expects). | The `replan` skill proposes changes. You approve them. |
-| `replan` from the writer or the reviser | The chapter cannot do its plan inside the rules of the record. | The same as above. |
+| Stop | Why | What you do | In autopilot |
+|---|---|---|---|
+| `chapter-1` checkpoint | Chapter 1.01 is the first time that the voice runs at full length. | Read `books/01/chapters/01.md`. Approve it, or say what to change: the reviser changes it, and it is verified again. | No stop. |
+| `blocked` | A chapter still has an open error after 3 rounds. | The skill shows the errors. Say how to fix them, or accept a replan when they are about the plan. | No stop: a replan and one more round, or a commit with the open errors. |
+| **REPLAN NEEDED** | After a commit, a later target can no longer be reached (for example, Ivo is already past the rank that a target expects). | The `replan` skill proposes changes. You approve them. | No stop, unless the replan must change a `locked` decision or a draw. |
+| `replan` from the writer or the reviser | The chapter cannot do its plan inside the rules of the record. | The same as above. | The same as above. |
+| A record error | `lb delta` or `lb commit` has an error that the reviser cannot fix. The record must stay legal. | Say how to fix the delta or the plan. | Stop. This stop is in every mode. |
 
 After a stop, or after a usage limit or a closed session, run `/ledgerbound:generate-book` again. It continues from the first stage that is not done, because all of its state is in the files.
 
@@ -120,17 +122,24 @@ Each checkpoint is `on` by default. Switch a checkpoint off in `project.yaml` (`
 
 A checkpoint that is off does not stop the workflow, but the validator still must pass.
 
-**Autopilot** makes your decisions for you, and writes each one in `runs/autopilot.md`:
-- A replan selects the option that keeps the most of the approved plan, changes only `open` decisions, and approves itself.
-- A chapter that is `blocked` after 3 rounds: when an error is about the plan, an automatic replan and one extra verify round. Otherwise the chapter is committed with its open errors.
+### Autopilot
 
-At the end of the book, the report lists the chapters that were committed with open errors (read these first) and each replan. Use autopilot after the first chapters show that the voice and the plan work.
+Set `mode: autopilot` in `project.yaml`. Autopilot switches off every checkpoint, also `chapter-1` and `replan`. It makes your decisions for you, and writes each one in `runs/autopilot.md` (the chapter, the cause, the choice, and a before → after line for each change):
+
+- A replan selects the option that keeps the most of the approved plan, changes only `open` decisions, and runs `lb approve replan` itself. When each option changes a `locked` decision or a draw, the run stops and asks you.
+- A chapter that is `blocked` after 3 rounds:
+  - When an open error is about the plan (`plan.*`): an automatic replan, then one more verify round (round 4). The verify file `runs/verify/NN-MM.json` gets `"extra_round": true`. This occurs one time for each chapter.
+  - Otherwise: the verify file gets `"accepted": true`. `lb run` then shows the chapter as `verified` ("open errors accepted"), and `lb commit` commits it with its lint errors.
+
+`lb run` shows the chapters with accepted errors on the line `Accepted open errors: 07 (2), ...` (chapter and number of errors). At the end of the book, the report lists these chapters with their errors (read these first), and each replan in one line.
+
+Use autopilot after the first chapters show that the voice and the plan work. For example, write chapter 1.01 in `normal` mode, then set `mode: autopilot` and run `/ledgerbound:generate-book`.
 
 ### Useful commands during generation
 
 | Command | Shows |
 |---|---|
-| `lb run` | The stage of each chapter, and the next step. |
+| `lb run` | The stage of each chapter, the next step, and the chapters with accepted open errors. |
 | `lb fold 1.07 --entity ivo` | Ivo at the end of chapter 7. Use `1.07.0` for the start of the chapter, and `1.07.3` for the state after its third entry. |
 | `lb delta 1.07` | The staged delta of chapter 7, with its errors. |
 | `lb lint books/01/chapters/07.md` | The deterministic prose checks. |
