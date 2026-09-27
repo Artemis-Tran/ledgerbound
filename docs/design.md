@@ -11,7 +11,7 @@ This is the approved design for phase 1 (planning) and phase 2 (generation). The
 
 | Step | Skill | Writes | Checkpoint |
 |---|---|---|---|
-| 0 (optional) | `develop-idea` | `pitch.md` from the seed, via 3 premises | – (choosing a premise is the approval) |
+| 0 (optional) | `develop-idea` | `pitch.md` from the seed, via 3 premises (when none fits: an align step on what to include and exclude, then 3 new premises) | – (choosing a premise is the approval) |
 | 1 | `start-project` | `bible.md`, `schema.yaml`, `facts.yaml`, `project.yaml` | `bible` |
 | 2 | `plan-series` | `series.md`, `books/NN/plan.md` (book level, every book), `targets.yaml` | `series-plan` (series only), `book-plan` |
 | 3 | `plan-arcs` | `characters/*.md` | `character-arcs` |

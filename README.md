@@ -48,7 +48,7 @@ The workflow has two phases. **Planning** makes the plan and the voice, and you 
 
 | Step | Skill | What it does | Files | Checkpoint |
 |---|---|---|---|---|
-| 0 (optional) | `develop-idea <idea>` | Offers 3 premises from a short idea. You choose or mix. | `pitch.md` | – |
+| 0 (optional) | `develop-idea <idea>` | Offers 3 premises from a short idea. You choose or mix. When none fits, it asks you what to include and exclude, one question at a time, and offers 3 new premises. | `pitch.md` | – |
 | 1 | `start-project` | Asks only what is missing, offers options, and records each decision as `locked` (you chose) or `open` (the system chose). Writes the draws, and sets `windows`. | `bible.md`, `schema.yaml`, `facts.yaml`, `project.yaml` | `bible` |
 | 2 | `plan-series` | Plans from the end: the series, then each book, with ending states, promises, questions, handoffs, and targets for the record. | `series.md`, `books/NN/plan.md`, `targets.yaml` | `series-plan`, `book-plan` |
 | 3 | `plan-arcs` | Want, need, lie, voice card and arc beats for each main character. | `characters/*.md` | `character-arcs` |
