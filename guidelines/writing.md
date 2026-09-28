@@ -156,4 +156,31 @@ writer wrote it. Compare each scene with the sample of its kind (dialogue, actio
 ## 10. Revision rules
 - Fix only the flagged spans. A full rewrite brings in new tics.
 - After a fix, run the lint again on the changed paragraph.
-- When two rules conflict, the story bible and the voice samples win over these guidelines.
+- When two rules conflict, the story bible and the voice samples win over these guidelines. The
+  exception is section 11: a line that follows a sample's style, but that a reader cannot follow,
+  changes. The voice samples follow section 11 too.
+
+## 11. Clarity [review]
+
+These are defaults for a reader who reads the story once, at normal speed. Style comes first. A
+writer can break any of them when the effect is worth a second read, but does it on purpose.
+`check-prose` reports a break as a `warn`, and as an `error` only when a reader would lose the
+thread.
+
+- **Orient early.** By the end of the first paragraph of a scene, the reader can name the POV
+  character, the place, who is present and what the POV character wants. Each line of dialogue has
+  a clear speaker.
+- **Gloss a new term where it first appears**: a short clause, a use in action, or a contrast. This
+  covers the setting's institutions, titles, creatures and System terms. A reader who never opened
+  the lore should not need it. Prefer few new terms in one scene, about two.
+- **Keep the reference close.** When a pronoun, "the boy" or "it" could mean two things, use the
+  noun.
+- **Say the plain event once.** Subtext hides why a character says a line. It does not hide what
+  was decided, refused or learned.
+- **Recited or clipped speech**: tell the reader first what is recited, or to whom. A line that
+  reads like a list of nouns is a list of nouns.
+- **Show each step of a reasoning.** When a character works something out, give the reader each
+  step and what each term refers to, not only the conclusion. "So the fault is not in the keel"
+  needs the reader to know what the keel was tested against.
+- **LitRPG mechanics**: say what an ability does, its limit and its cost before the plot depends
+  on it.

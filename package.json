@@ -1,6 +1,6 @@
 {
   "name": "ledgerbound",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "description": "Plan and write LitRPG / progression-fantasy novels with Claude Code: skills plus a deterministic CLI.",
   "type": "module",
   "private": true,

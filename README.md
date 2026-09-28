@@ -165,6 +165,10 @@ Use autopilot after the first chapters show that the voice and the plan work. Fo
 | `lb who hale --at 1.07` | One character at the start of chapter 7: who it is, its voice card, its record and when it was last seen. |
 | `lb validate` | Every file and reference, and the ledger. |
 
+### A novel repo made before version 0.15.0
+
+`guidelines/writing.md` has a new section, "11. Clarity", with 7 `clarity.*` rules that the prose checker judges (a reader can tell who, where and what; a new term is glossed; a pronoun has one clear antecedent; reasoning shows its steps). They are defaults: a finding is a `warn`, and an `error` only when a reader would lose the thread. Nothing in the ledger changes. To get the section, copy `guidelines/writing.md` over your copy, or add section 11 by hand.
+
 ### A novel repo made before version 0.13.0
 
 The character files can now have a body, `aliases` and `changes`, and the chapter plans a `characters` list. The workflow continues without them: `lb validate` gives only the warning `character-empty`. To add them, write 2–5 sentences of who each character is under the frontmatter of `characters/<id>.md`, and add `characters: [ids]` to each chapter plan that is not written yet. The brief also includes each character that a plan names. The duplicate-name error is now `duplicate-name` (it was `lore-duplicate-name`), and it also finds a lore entry and a character with the same name.
