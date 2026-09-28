@@ -24,6 +24,8 @@ export interface FileLintOptions {
   lines?: [number, number];
   /** Folder of other files to compare with. Default: for a chapter, the other chapters in books/NN/chapters/ and the voice samples in voice/; for a voice sample, the other two. */
   corpusDir?: string;
+  /** The same file before a revision: a rule with more findings now than then is an error. */
+  before?: string;
 }
 
 export function lintFile(path: string, opts: FileLintOptions = {}): LintResult & { file: string } {
@@ -63,18 +65,42 @@ export function lintFile(path: string, opts: FileLintOptions = {}): LintResult &
     }
   }
 
-  const { body, firstLine } = readBody(abs);
-  const result = lintProse(body, firstLine, file, { config: config?.success ? config.data.lint : undefined, corpus, waive, lines: opts.lines });
-  if (config?.success && !config.data.windows) {
-    result.findings.push(...windowsOff(body, firstLine, opts.lines));
-    result.findings.sort((a, b) => a.line - b.line);
-  }
+  const lintBody = (text: { body: string; firstLine: number }, lines?: [number, number]) => {
+    const r = lintProse(text.body, text.firstLine, file, { config: config?.success ? config.data.lint : undefined, corpus, waive, lines });
+    if (config?.success && !config.data.windows) {
+      r.findings.push(...windowsOff(text.body, text.firstLine, lines));
+      r.findings.sort((a, b) => a.line - b.line);
+    }
+    return r;
+  };
+  const now = readBody(abs);
+  const result = lintBody(now, opts.lines);
+  if (opts.before) result.findings.push(...added(lintBody(readBody(opts.before)).findings, opts.lines ? lintBody(now).findings : result.findings));
   // A re-check of a line range does not judge the length of the whole chapter.
   if (chapterMatch && config?.success && !opts.lines) {
-    const length = lengthFinding(result.words, planWords ?? config.data.chapter_words, firstLine);
+    const length = lengthFinding(result.words, planWords ?? config.data.chapter_words, now.firstLine);
     if (length) result.findings.unshift(waive.includes(length.rule) ? { ...length, waived: true } : length);
   }
   return { file, ...result };
+}
+
+/**
+ * One error for each rule that has more findings after a revision than before it: a fix must not add
+ * a one-line paragraph, a contrast frame or a repeat somewhere else.
+ */
+function added(before: Finding[], after: Finding[]): Finding[] {
+  const count = (fs: Finding[]) => {
+    const m = new Map<string, Finding[]>();
+    for (const f of fs.filter((x) => !x.waived)) m.set(f.rule, [...(m.get(f.rule) ?? []), f]);
+    return m;
+  };
+  const was = count(before);
+  return [...count(after)].flatMap(([rule, fs]) => {
+    const old = was.get(rule) ?? [];
+    if (fs.length <= old.length) return [];
+    const first = fs.find((f) => !old.some((o) => o.text === f.text)) ?? fs[0];
+    return [{ rule, severity: "error" as const, line: first.line, text: first.text, message: `the revision added ${rule} findings: ${old.length} before, ${fs.length} now. Fix it without a new one` }];
+  });
 }
 
 /** How far a chapter can be from its target length before a warning. */

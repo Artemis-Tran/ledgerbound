@@ -1,10 +1,10 @@
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
 import { buildBrief } from "../src/brief.ts";
 import { buildPlanIndex } from "../src/anchors.ts";
-import { compareClaims } from "../src/claims.ts";
+import { compareClaims, unplaced } from "../src/claims.ts";
 import { loadProject, type Project } from "../src/project.ts";
 import { checkDelta, commitChapter, fold, loadRecord, parsePoint, unreachableTargets } from "../src/record.ts";
 import { runReport } from "../src/run.ts";
@@ -258,6 +258,37 @@ describe("claims", () => {
     ]);
     expect(results.map((r) => r.verdict)).toEqual(["ok", "mismatch", "ok", "ok", "ok", "compare", "ok", "ok", "unknown"]);
   });
+
+  test("with the chapter text, a claim moves to the line of its quote, and a lost quote is marked", () => {
+    const dir = fixtureCopy();
+    stage(dir, GOOD_DELTA);
+    const revised = CHAPTER_2.replace("Copper, the window said", "He sat on the bucket until his hands stopped.\n\nCopper, the window said");
+    writeChapter2(dir, revised);
+    const c = checkDelta(load(dir), loadRecord(dir), 1, 2);
+    const results = compareClaims(
+      load(dir),
+      c,
+      [
+        { line: 18, quote: "Copper, the window said", entity: "ivo", field: "rank", value: "copper" },
+        { line: 20, quote: "Ivo waited in the dark", entity: "ivo", field: "level", value: 4 },
+      ],
+      revised,
+    );
+    expect(results[0]).toMatchObject({ line: 19, moved_from: 18, quote_found: true, verdict: "ok" });
+    expect(results[1]).toMatchObject({ line: 20, quote_found: false });
+  });
+
+  test("a claim where the record has no value is missing, and a named character with no place is listed", () => {
+    const dir = fixtureCopy();
+    stage(dir, GOOD_DELTA);
+    const text = `${CHAPTER_2}\nSabine Rook watched him from the door of the counting house.\n`;
+    writeChapter2(dir, text);
+    const c = checkDelta(load(dir), loadRecord(dir), 1, 2);
+    expect(unplaced(load(dir), c, [], text)).toEqual([{ entity: "sabine", name: "Sabine Rook" }]);
+    const claims = [{ line: 21, quote: "Sabine Rook watched him", entity: "sabine", field: "location", value: "the counting house" }];
+    expect(compareClaims(load(dir), c, claims, text)[0]).toMatchObject({ verdict: "missing", severity: "error" });
+    expect(unplaced(load(dir), c, claims, text)).toEqual([]);
+  });
 });
 
 describe("lb brief", () => {
@@ -286,7 +317,7 @@ describe("lb brief", () => {
     expect(text).toContain("No status windows");
   });
 
-  test("drops the next plans first, then shortens the lore index, then drops the lore that the plan only names", () => {
+  test("drops the next plans first, then shortens the lore index, then shortens the lore that the plan only names, with a warning", () => {
     const dir = fixtureCopy();
     edit(dir, "project.yaml", "mode: normal", "mode: normal\nbrief_chars: 1000");
     const r = buildBrief(load(dir), loadRecord(dir), 1, 2);
@@ -294,9 +325,14 @@ describe("lb brief", () => {
       "Next plan: 1.04 (for direction only; do not write it)",
       "Next plan: 1.03 (for direction only; do not write it)",
       "Lore index: the other entries (run `lb lore <id> --at 1.02` before the chapter uses one): shortened",
-      "Lore: The old gallery (the prose never contradicts it)",
-      "Lore: Delving crews (the prose never contradicts it)",
+      "Lore: The old gallery (the prose never contradicts it): shortened",
+      "Lore: Delving crews (the prose never contradicts it): shortened",
     ]);
+    expect(r.warnings).toEqual([
+      "the plan names lore entry `old-gallery`, and the brief has only its first sentence",
+      "the plan names lore entry `delving-crews`, and the brief has only its first sentence",
+    ]);
+    expect(readFileSync(join(dir, r.file), "utf8")).toContain("run `lb lore delving-crews --at 1.02` for the whole entry");
     expect(r.over).toBe(true);
   });
 
@@ -309,6 +345,10 @@ describe("lb brief", () => {
     expect(briefText(dir, 3)).not.toContain("## Lore:");
     edit(dir, "lore/delving-crews.md", "aliases: [crew boss]", "aliases: [Hale]");
     expect(briefText(dir, 3)).toContain("## Lore: Delving crews");
+  });
+
+  test("gives the kinds of things that the record does not track", () => {
+    expect(briefText(fixtureCopy(), 2)).toContain("Borrowed tools and crew ropes: the record tracks only what a character owns.");
   });
 
   test("has a lore index with one line for each entry that is not in full", () => {
@@ -403,6 +443,20 @@ describe("lb run", () => {
     expect(r.next.step).toContain("lb commit 1.02");
     expect(r.warnings).toEqual([{ chapter: 2, rule: "rhythm.triplets", problem: "y" }]);
     expect(existsSync(join(dir, "runs/book-01.json"))).toBe(true);
+  });
+
+  test("in git, a remembered chapter waits for its commit, and a later chapter's ledger entries do not make it wait again", () => {
+    const dir = fixtureCopy();
+    const git = (...args: string[]) => spawnSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", ...args], { cwd: dir, encoding: "utf8" });
+    git("init", "-q");
+    git("add", "-A", "--", ".", ":!ledger.jsonl");
+    git("commit", "-qm", "all but the ledger");
+    expect(runReport(load(dir), 1).chapters[0]).toMatchObject({ stage: "remembered" });
+    git("add", "ledger.jsonl");
+    git("commit", "-qm", "Book 1, chapter 1");
+    expect(runReport(load(dir), 1).chapters[0]).toMatchObject({ stage: "done" });
+    appendFileSync(join(dir, "ledger.jsonl"), `${JSON.stringify({ entity: "ivo", field: "level", op: "add", value: 1, cause: "x", quote: "y", point: "1.02.1" })}\n`);
+    expect(runReport(load(dir), 1).chapters[0]).toMatchObject({ stage: "done" });
   });
 
   test("autopilot: a blocked chapter gets an extra round, or is committed with its open errors", () => {

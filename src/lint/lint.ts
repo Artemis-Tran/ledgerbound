@@ -259,9 +259,20 @@ export function lintProse(body: string, firstLine: number, file: string, opts: L
   const contrasts = paragraphs.flatMap((p) => CONTRAST.flatMap((pattern) => matches(p, pattern)));
   contrasts.slice(1).forEach((m) => add({ rule: "rhythm.contrast", severity: "warn", line: m.line, text: m.text, message: `contrast frame number ${contrasts.indexOf(m) + 1} (max 1 per chapter)` }));
 
-  // §3 one-line paragraphs for drama: at most 2.
+  // §3 one-line paragraphs for drama: at most 2 (a warning), and never 3 in a row (an error).
   const oneLiners = paragraphs.filter((p) => p.sentences.length === 1 && !p.sentences[0].dialogue && p.sentences[0].words.length <= 10);
-  oneLiners.slice(2).forEach((p) => add({ rule: "rhythm.one-line-paragraphs", severity: "warn", line: p.line, text: p.text, message: `${oneLiners.length} one-line paragraphs (max 2 for drama): lines ${oneLiners.map((x) => x.line).join(", ")}` }));
+  const inRun = new Set(oneLiners.filter((p, i) => i >= 2 && oneLiners[i - 2].index === p.index - 2 && oneLiners[i - 1].index === p.index - 1));
+  oneLiners.slice(2).forEach((p) =>
+    add({
+      rule: "rhythm.one-line-paragraphs",
+      severity: inRun.has(p) ? "error" : "warn",
+      line: p.line,
+      text: p.text,
+      message: inRun.has(p)
+        ? `the third one-line paragraph in a row: join it to the paragraph before or after (lines ${oneLiners.map((x) => x.line).join(", ")})`
+        : `${oneLiners.length} one-line paragraphs (max 2 for drama): lines ${oneLiners.map((x) => x.line).join(", ")}`,
+    }),
+  );
 
   // §3 em dashes.
   const dashes = paragraphs.flatMap((p) => [...p.text.matchAll(/—|(?<=\S) ?-- ?(?=\S)/g)].map((m) => p.lineAt(m.index)));

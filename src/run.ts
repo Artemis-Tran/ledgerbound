@@ -9,12 +9,14 @@ import { join } from "node:path";
 import { briefPath } from "./brief.ts";
 import { isOn } from "./checkpoints.ts";
 import { pad2, bookDir, type Project } from "./project.ts";
-import { chapterKey, chapterPath, stagedPath } from "./record.ts";
+import { chapterKey, chapterPath, LEDGER, stagedPath } from "./record.ts";
 
 export const STAGES = ["planned", "briefed", "drafted", "verified", "approved", "remembered", "done"] as const;
 export type Stage = (typeof STAGES)[number] | "blocked";
 
 export const verifyPath = (book: number, chapter: number) => `runs/verify/${pad2(book)}-${pad2(chapter)}.json`;
+/** The chapter as the checkers read it in one round: `lb changed` compares the revision with it. */
+export const roundCopyPath = (book: number, chapter: number, round: number) => `runs/verify/${pad2(book)}-${pad2(chapter)}.r${round}.md`;
 export const memoryPath = (book: number, chapter: number) => `${bookDir(book)}/memory/${pad2(chapter)}.md`;
 export const MAX_ROUNDS = 3;
 export const AUTOPILOT_LOG = "runs/autopilot.md";
@@ -24,7 +26,7 @@ export interface VerifyRecord {
   round: number;
   verdict: "pass" | "fail";
   /** The findings that are still open: errors block, warnings go into the report. */
-  open: { severity: "error" | "warn"; rule: string; line?: number; problem: string }[];
+  open: { severity: "error" | "warn"; rule: string; line?: number; quote?: string; problem: string }[];
   /** Autopilot: a replan fixed the plan after the last round, so one more round is allowed. */
   extra_round?: boolean;
   /** The open errors are accepted: the chapter is committed with them (autopilot, or the user). */
@@ -55,15 +57,44 @@ export interface RunReport {
   accepted: { chapter: number; errors: { rule: string; line?: number; problem: string }[] }[];
 }
 
-function gitClean(root: string, paths: string[]): boolean | undefined {
+/**
+ * Whether the git commit of a remembered chapter is done: its chapter and memory files are committed and
+ * unchanged, and HEAD's ledger has its entries. The ledger is shared, so a later chapter's `lb commit`
+ * changes it; that change does not make this chapter wait for its commit again. Undefined outside git.
+ */
+function gitCommitted(root: string): ((book: number, chapter: number) => boolean) | undefined {
   try {
     execFileSync("git", ["rev-parse", "--is-inside-work-tree"], { cwd: root, stdio: "pipe" });
   } catch {
     return undefined;
   }
-  const out = execFileSync("git", ["status", "--porcelain", "--", ...paths], { cwd: root, encoding: "utf8" });
-  const tracked = execFileSync("git", ["ls-files", "--", ...paths], { cwd: root, encoding: "utf8" });
-  return out.trim() === "" && tracked.trim() !== "";
+  const git = (args: string[]) => {
+    try {
+      return execFileSync("git", args, { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
+    } catch {
+      return "";
+    }
+  };
+  /** The chapters (`1.07`) that have entries in a ledger text. */
+  const chaptersIn = (text: string) =>
+    new Set(
+      text.split("\n").flatMap((l) => {
+        try {
+          const point = (JSON.parse(l) as { point?: unknown }).point;
+          return typeof point === "string" ? [point.split(".").slice(0, 2).join(".")] : [];
+        } catch {
+          return [];
+        }
+      }),
+    );
+  const ledger = chaptersIn(existsSync(join(root, LEDGER)) ? readFileSync(join(root, LEDGER), "utf8") : "");
+  const committedLedger = chaptersIn(git(["show", `HEAD:${LEDGER}`]));
+  return (book, chapter) => {
+    const paths = [chapterPath(book, chapter), memoryPath(book, chapter)];
+    const clean = git(["status", "--porcelain", "--", ...paths]).trim() === "" && git(["ls-files", "--", ...paths]).trim().split("\n").length === paths.length;
+    const key = chapterKey(book, chapter);
+    return clean && (!ledger.has(key) || committedLedger.has(key));
+  };
 }
 
 export function runReport(project: Project, book: number): RunReport {
@@ -71,6 +102,7 @@ export function runReport(project: Project, book: number): RunReport {
   const has = (p: string) => existsSync(join(root, p));
   const warnings: RunReport["warnings"] = [];
   const accepted: RunReport["accepted"] = [];
+  const committed = gitCommitted(root);
   const chapters = (project.chapters.get(book) ?? []).map((plan): ChapterRun => {
     const n = plan.data.chapter;
     const prose = project.prose.get(book)?.find((c) => c.data.chapter === n);
@@ -80,8 +112,7 @@ export function runReport(project: Project, book: number): RunReport {
 
     if (prose?.data.status === "approved") {
       if (!has(memoryPath(book, n))) return { chapter: n, stage: "approved" };
-      const clean = gitClean(root, [chapterPath(book, n), memoryPath(book, n), "ledger.jsonl"]);
-      return { chapter: n, stage: clean === false ? "remembered" : "done" };
+      return { chapter: n, stage: committed && !committed(book, n) ? "remembered" : "done" };
     }
     if (prose) {
       if (verify?.verdict === "pass") return { chapter: n, stage: "verified" };

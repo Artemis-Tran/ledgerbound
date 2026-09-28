@@ -30,6 +30,7 @@ Only the next book to write gets chapter plans: for phase 1 that is book 1. File
    - `characters`: the ID of each character with a part in a scene, the POV character included. When the chapter brings in a character who comes back later or speaks, write `characters/<id>.md` with `status: draft`, `role: supporting`, a name by §4, Names, in `${CLAUDE_PLUGIN_ROOT}/guidelines/writing.md`, a voice card and a body by steps 5 and 6 of `${CLAUDE_PLUGIN_ROOT}/skills/plan-arcs/SKILL.md`. The chapter's delta then creates the entity with that ID;
    - `words`: only when this chapter's length differs from `chapter_words` (see step 3);
    - `exceptions`: only when the chapter breaks a guideline on purpose, once, for a clear effect, with the `reason`.
+   When a scene uses a kind of thing that looks like a record value and that the record does not track (exam work, borrowed tools, a practice binding), add it to `untracked` in `schema.yaml`, with the reason in one line. Else make it a field or an entity.
 
 6. **Draws.** Each draw in the book plan's `draws` gets chapters where the reader gets it, on the page: name them in the summary. No scene, thread or job touches an `excludes` draw.
 

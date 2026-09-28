@@ -9,6 +9,8 @@ types:
   well:
     fields:
       held_levels: { kind: counter, min: 0 }
+untracked:
+  - "Borrowed tools and crew ropes: the record tracks only what a character owns."
 entities:
   ivo:
     type: person

@@ -394,10 +394,9 @@ export function unreachableTargets(project: Project, index: PlanIndex, state: St
 
 // ---------- quotes ----------
 
-/** Finds each entry's quote in the chapter and returns its line (undefined when it is not there). */
-export function quoteLines(chapterText: string, entries: DeltaEntry[]): (number | undefined)[] {
+/** A normalized copy of a chapter body, with the file line of each character, to find quotes in. */
+function quoteIndex(chapterText: string): { flat: string; lineOf: number[] } {
   const { body, bodyOffset } = splitFrontmatter(chapterText);
-  // A normalized copy of the body, with the line of each character.
   let flat = "";
   const lineOf: number[] = [];
   body.split(/\r?\n/).forEach((l, i) => {
@@ -406,10 +405,29 @@ export function quoteLines(chapterText: string, entries: DeltaEntry[]): (number 
     flat += `${n} `;
     for (let k = 0; k <= n.length; k++) lineOf.push(bodyOffset + i + 1);
   });
+  return { flat, lineOf };
+}
+
+/** Finds each entry's quote in the chapter and returns its line (undefined when it is not there). */
+export function quoteLines(chapterText: string, entries: DeltaEntry[]): (number | undefined)[] {
+  const { flat, lineOf } = quoteIndex(chapterText);
   return entries.map((e) => {
     if (!e.quote) return undefined;
     const at = flat.indexOf(norm(e.quote));
     return at < 0 ? undefined : lineOf[at];
+  });
+}
+
+/** The line of each quote in the chapter; when a quote is there more than once, the one nearest to its `near` line. */
+export function findQuotes(chapterText: string, quotes: { quote: string; near: number }[]): (number | undefined)[] {
+  const { flat, lineOf } = quoteIndex(chapterText);
+  return quotes.map(({ quote, near }) => {
+    const q = norm(quote);
+    let best: number | undefined;
+    for (let at = flat.indexOf(q); q && at >= 0; at = flat.indexOf(q, at + 1)) {
+      if (best === undefined || Math.abs(lineOf[at] - near) < Math.abs(best - near)) best = lineOf[at];
+    }
+    return best;
   });
 }
 

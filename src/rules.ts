@@ -6,12 +6,17 @@
  * `record` = lb delta checks it (not in guidelines/writing.md: the record's own limits).
  * Section `bible`: the rule comes from the story bible, not from guidelines/writing.md.
  * Section `plan`: the rule comes from the chapter plan and project.yaml.
+ *
+ * A rule that only `lint` checks is a count or a pattern: lb lint gives its severity, and nobody judges it again.
+ * `max: "warn"`: a finding of this rule is always a warning. Such a rule is a matter of taste or frequency,
+ * so one finding never blocks a chapter.
  */
 export interface Rule {
   id: string;
   section: string;
   check: ("lint" | "judge" | "plan" | "record")[];
   summary: string;
+  max?: "warn";
 }
 
 export const RULES: Rule[] = [
@@ -23,14 +28,14 @@ export const RULES: Rule[] = [
   { id: "openings.banned", section: "2", check: ["lint", "judge"], summary: "No waking up, weather or sunrise opening." },
   { id: "openings.recap", section: "2", check: ["judge"], summary: "No recap of the previous chapter." },
   { id: "openings.in-scene", section: "2", check: ["judge"], summary: "Start inside a scene with a character who does or wants something." },
-  { id: "rhythm.staccato", section: "3", check: ["lint", "judge"], summary: "At most 2 consecutive sentences under 6 words (action beats: never 3 of one structure)." },
+  { id: "rhythm.staccato", section: "3", check: ["lint"], summary: "At most 2 consecutive sentences under 6 words (action beats: never 3 of one structure)." },
   { id: "rhythm.openings", section: "3", check: ["lint"], summary: "No 3 consecutive sentences that start with the same word." },
-  { id: "rhythm.anadiplosis", section: "3", check: ["lint", "judge"], summary: "A sentence does not start with the last word of the one before." },
-  { id: "rhythm.triplets", section: "3", check: ["judge"], summary: "No automatic lists of three." },
-  { id: "rhythm.contrast", section: "3", check: ["lint", "judge"], summary: "At most one 'not X, but Y' contrast frame per chapter." },
-  { id: "rhythm.one-line-paragraphs", section: "3", check: ["lint", "judge"], summary: "At most 2 one-line dramatic paragraphs per chapter." },
+  { id: "rhythm.anadiplosis", section: "3", check: ["lint", "judge"], summary: "A sentence does not start with the last word of the one before for effect; a chain of reasoning is permitted.", max: "warn" },
+  { id: "rhythm.triplets", section: "3", check: ["judge"], summary: "No automatic lists of three.", max: "warn" },
+  { id: "rhythm.contrast", section: "3", check: ["lint", "judge"], summary: "At most one 'not X, but Y' contrast frame per chapter.", max: "warn" },
+  { id: "rhythm.one-line-paragraphs", section: "3", check: ["lint"], summary: "At most 2 one-line dramatic paragraphs per chapter; never 3 in a row." },
   { id: "rhythm.em-dash", section: "3", check: ["lint"], summary: "At most 3 em dashes per 1,000 words." },
-  { id: "rhythm.variety", section: "3", check: ["judge"], summary: "Sentence length varies with the content, not with a pattern." },
+  { id: "rhythm.variety", section: "3", check: ["judge"], summary: "Sentence length varies with the content, not with a pattern.", max: "warn" },
   { id: "words.banned", section: "4", check: ["lint"], summary: "No banned word or phrase." },
   { id: "names.ai-default", section: "4", check: ["lint"], summary: "No character, place or thing has one of the 20 names that AI fiction overuses (Elara, Kael, Lyra, Thorne, Voss...)." },
   { id: "words.body-tells", section: "4", check: ["lint"], summary: "The same body tell at most twice per chapter." },
@@ -38,36 +43,36 @@ export const RULES: Rule[] = [
   { id: "dialogue.stated-feelings", section: "5", check: ["judge"], summary: "A feeling is said only when the character would say it, in their own voice; no explained feelings." },
   { id: "dialogue.therapy", section: "5", check: ["lint", "judge"], summary: "Therapy language only from a character whose voice card uses it." },
   { id: "dialogue.subtext", section: "5", check: ["judge"], summary: "The important thing is often said at an angle, but not every line: the turn of a scene can be said plainly." },
-  { id: "dialogue.direct-answers", section: "5", check: ["judge"], summary: "Not every question gets a direct answer." },
+  { id: "dialogue.direct-answers", section: "5", check: ["judge"], summary: "Not every question gets a direct answer.", max: "warn" },
   { id: "dialogue.voices", section: "5", check: ["judge"], summary: "Each line sounds like its speaker's voice card." },
   { id: "dialogue.as-you-know", section: "5", check: ["judge"], summary: "Characters do not tell each other what they both know." },
   { id: "dialogue.speeches", section: "5", check: ["judge"], summary: "A turn is 1-3 sentences unless the plan gives a reason." },
   { id: "dialogue.banter", section: "5", check: ["judge"], summary: "Jokes come from each speaker's voice card; quips answer, raise the stakes and have a winner; a funny scene has jokes that land." },
   { id: "dialogue.aphorisms", section: "5", check: ["judge"], summary: "No wise aphorisms." },
   { id: "dialogue.tags", section: "5", check: ["lint", "judge"], summary: "Mostly 'said'/'asked' or no tag; no tag adverbs; no fancy tag verbs." },
-  { id: "dialogue.action-beats", section: "5", check: ["judge"], summary: "Action beats are not on every line." },
-  { id: "dialogue.names", section: "5", check: ["judge"], summary: "Characters rarely say each other's names." },
+  { id: "dialogue.action-beats", section: "5", check: ["judge"], summary: "Action beats are not on every line.", max: "warn" },
+  { id: "dialogue.names", section: "5", check: ["judge"], summary: "Characters rarely say each other's names.", max: "warn" },
   { id: "dialogue.honest-talk", section: "5", check: ["judge"], summary: "Conflict is not resolved by one honest talk." },
   { id: "emotion.named", section: "6", check: ["judge"], summary: "Do not name an emotion that was already shown." },
   { id: "emotion.explained", section: "6", check: ["judge"], summary: "Do not explain the meaning of a scene." },
   { id: "emotion.hedges", section: "6", check: ["lint"], summary: "No hedges (somehow, seemed to, almost as if, a sort of)." },
-  { id: "emotion.generic", section: "6", check: ["judge"], summary: "Specific, setting-owned nouns, not generic ones." },
+  { id: "emotion.generic", section: "6", check: ["judge"], summary: "Specific, setting-owned nouns, not generic ones.", max: "warn" },
   { id: "emotion.tidy", section: "6", check: ["judge"], summary: "No tidy resolution." },
   { id: "litrpg.status-windows", section: "7", check: ["judge"], summary: "Status windows only where a change matters; show the delta; use the window template." },
   { id: "windows.off", section: "7", check: ["lint"], summary: "With `windows: off` in project.yaml, no status window: the prose shows progression." },
   { id: "length.target", section: "plan", check: ["lint"], summary: "The chapter is within 25% of its target length: the plan's `words`, else `chapter_words` in project.yaml." },
   { id: "draws.excluded", section: "bible", check: ["judge"], summary: "Nothing that an `excludes` draw in bible.md rules out. No chapter-plan exception waives it." },
   { id: "litrpg.fold-match", section: "7", check: ["judge"], summary: "Stats match the fold." },
-  { id: "litrpg.notifications", section: "7", check: ["judge"], summary: "Vary reactions to notifications; no notification streams." },
+  { id: "litrpg.notifications", section: "7", check: ["judge"], summary: "Vary reactions to notifications; no notification streams.", max: "warn" },
   { id: "litrpg.cost", section: "7", check: ["judge"], summary: "Gains come from effort, risk or sacrifice shown on the page." },
   { id: "litrpg.system-musing", section: "7", check: ["judge"], summary: "No meta-musing about the System as filler." },
   { id: "litrpg.fights", section: "7", check: ["judge"], summary: "Fights have clear geography, a changing situation and a cost." },
   { id: "voice.match", section: "9", check: ["judge"], summary: "The narration sounds like the voice samples: vocabulary, sentence rhythm, POV distance, how much it explains." },
   { id: "repetition.simile", section: "4, 8", check: ["lint"], summary: "The same simile never twice in a book." },
-  { id: "repetition.phrase", section: "8", check: ["lint", "judge"], summary: "The same distinctive phrase never twice in a book, and never a phrase from a voice sample." },
+  { id: "repetition.phrase", section: "8", check: ["lint", "judge"], summary: "The same distinctive phrase never twice in a book, and never a phrase from a voice sample.", max: "warn" },
   { id: "record.max-step", section: "rec", check: ["record"], summary: "A counter changes by at most its max_step in one chapter." },
   { id: "record.direction", section: "rec", check: ["record"], summary: "A counter or ladder changes only in its direction (a ladder only goes up)." },
-  { id: "repetition.verbal-habit", section: "8", check: ["judge"], summary: "A character's verbal habit at most once every few chapters." },
+  { id: "repetition.verbal-habit", section: "8", check: ["judge"], summary: "A character's verbal habit at most once every few chapters.", max: "warn" },
 ];
 
 export const RULE_IDS = new Set(RULES.map((r) => r.id));

@@ -1,3 +1,4 @@
+import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
 import { lintFile } from "../src/lint/index.ts";
@@ -118,6 +119,13 @@ describe("§3 rhythm", () => {
     const text = "It wasn't the rope. It was the hook. He came not for the pay, but for the rank.";
     expect(lint(text).filter((f) => f.rule === "rhythm.contrast")).toHaveLength(1);
   });
+
+  test("a third one-line paragraph is a warning, and a third in a row is an error", () => {
+    const apart = ["He waited.", FILLER, "The bell rang.", FILLER, "Nobody came."].join("\n\n");
+    expect(lint(apart).filter((f) => f.rule === "rhythm.one-line-paragraphs").map((f) => f.severity)).toEqual(["warn"]);
+    const together = [FILLER, "He waited.", "The bell rang.", "Nobody came."].join("\n\n");
+    expect(lint(together).filter((f) => f.rule === "rhythm.one-line-paragraphs").map((f) => [f.line, f.severity])).toEqual([[7, "error"]]);
+  });
 });
 
 describe("§1 endings and §2 openings", () => {
@@ -179,6 +187,19 @@ describe("waivers and line ranges", () => {
   test("--lines keeps only findings in the range", () => {
     const text = `His jaw tightened.\n\n${FILLER}\n\nHer eyes widened.`;
     expect(lint(text, { lines: [5, 5] }).map((f) => f.line)).toEqual([5]);
+  });
+});
+
+describe("--before: a revision adds no finding", () => {
+  test("a rule with more findings than before the revision is an error", () => {
+    const dir = fixtureCopy();
+    const chapter = join(dir, "books", "01", "chapters", "01.md");
+    const before = join(dir, "before.md");
+    writeFileSync(before, readFileSync(chapter, "utf8"));
+    expect(lintFile(chapter, { before }).findings).toEqual([]);
+    edit(dir, "books/01/chapters/01.md", "when the weight went out of the rope.", "when the weight went out of the rope. It was not the rope, but the hook. It was not fear, but the cold.");
+    const f = lintFile(chapter, { before }).findings.filter((x) => x.severity === "error");
+    expect(f).toContainEqual(expect.objectContaining({ rule: "rhythm.contrast", message: expect.stringContaining("0 before, 2 now") }));
   });
 });
 

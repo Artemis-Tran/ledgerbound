@@ -56,6 +56,8 @@ interface Section {
   text: string;
   /** Sections that can go when the brief is too long, lowest `drop` first. */
   drop?: number;
+  /** The lore entry of the section, for the warning when it is shortened. */
+  lore?: string;
   /** A shorter text that takes the place of `text` at its `drop` turn, instead of the section going. */
   short?: string;
 }
@@ -64,6 +66,8 @@ export interface BriefResult {
   file: string;
   chars: number;
   dropped: string[];
+  /** The lore entries that the plan names and that were shortened to fit brief_chars. */
+  warnings: string[];
   over: boolean;
 }
 
@@ -109,9 +113,10 @@ export function buildBrief(project: Project, rec: RecordFiles, book: number, cha
 
   // 3. The schema, the facts and the entity IDs.
   const types = Object.fromEntries(Object.entries(project.schema?.data.types ?? {}).map(([k, t]) => [k, { kind: t.kind, fields: t.fields }]));
+  const untracked = project.schema?.data.untracked ?? [];
   sections.push({
     title: "Record: schema, facts and entities",
-    text: `${yaml({ types })}\n\n${yaml({ facts: Object.fromEntries(project.facts.data.map((f) => [f.id, f.truth])) })}\n\n${yaml({ entities: Object.fromEntries(Object.entries(start.entities).map(([id, e]) => [id, `${e.name} (${e.type})`])) })}`,
+    text: `${yaml({ types })}\n\n${untracked.length ? `${yaml({ untracked })}\n\n` : ""}${yaml({ facts: Object.fromEntries(project.facts.data.map((f) => [f.id, f.truth])) })}\n\n${yaml({ entities: Object.fromEntries(Object.entries(start.entities).map(([id, e]) => [id, `${e.name} (${e.type})`])) })}`,
   });
 
   // 4 and 5. The targets of this chapter's anchors, and the fold at the chapter start for the entities that the plan or a target names.
@@ -149,11 +154,12 @@ export function buildBrief(project: Project, rec: RecordFiles, book: number, cha
   if (targets.length) sections.push({ title: "Targets at the end of this chapter (the delta must meet them)", text: yaml(targets) });
 
   // 5b. Lore: the setting facts this chapter touches. The prose never contradicts them.
-  // Entries found only by name can go when the brief is too long, after the next plans.
+  // Entries found only by name are shortened to their first sentence when the brief is too long, after the next plans.
   const lore = loreFor(project, rawFrontmatter(join(root, plan.file)), plan.data.lore);
   lore.forEach(({ id, listed }, i) => {
     const e = project.lore.get(id)!;
-    sections.push({ title: `Lore: ${e.data.title} (the prose never contradicts it)`, text: entryText(index, loreEntry(id, e), book, chapter), ...(listed ? {} : { drop: 200 - i }) });
+    const short = `${firstSentence(e.body)} (shortened: run \`lb lore ${id} --at ${book}.${pad2(chapter)}\` for the whole entry)`;
+    sections.push({ title: `Lore: ${e.data.title} (the prose never contradicts it)`, text: entryText(index, loreEntry(id, e), book, chapter), ...(listed ? {} : { drop: 200 - i, short, lore: id }) });
   });
   // The other entries, one line each, so that the writer knows what the world already has. When the brief is
   // too long, the index keeps only the titles and IDs.
@@ -201,7 +207,7 @@ export function buildBrief(project: Project, rec: RecordFiles, book: number, cha
   }
 
   // 7. The voice samples.
-  for (const v of project.voiceSamples) sections.push({ title: `Voice sample: ${v.data.kind}`, text: v.body.trim() });
+  for (const v of project.voiceSamples) sections.push({ title: `Voice sample: ${v.data.kind} (copy its voice; its lines, gestures, objects and events are its own)`, text: v.body.trim() });
 
   // 8. Rolling memory: the last 3 chapters in full, the summary of older ones.
   const earlier = [...project.memory.entries()]
@@ -212,8 +218,9 @@ export function buildBrief(project: Project, rec: RecordFiles, book: number, cha
   earlier.slice(0, -3).forEach((m, i) => {
     sections.push({ title: `Memory ${m.data.book}.${pad2(m.data.chapter)} (summary)`, text: m.data.summary, drop: i });
   });
+  // The lore and character details of a memory file are in the lore entries and character files already.
   for (const m of full) {
-    const { phrase_log: _, ...rest } = m.data;
+    const { phrase_log: _, lore_added: _l, character_added: _c, ...rest } = m.data;
     sections.push({ title: `Memory ${m.data.book}.${pad2(m.data.chapter)}`, text: yaml(rest) });
   }
 
@@ -262,17 +269,19 @@ export function buildBrief(project: Project, rec: RecordFiles, book: number, cha
   }
 
   // Keep the brief under the limit: drop the oldest summaries first, then the farthest next plans, then shorten
-  // the lore index and the cast index, then drop the lore entries and the characters that the plan only names.
+  // the lore index and the cast index, then shorten the lore entries and drop the characters that the plan only names.
   const render = (ss: Section[]) => `# Context brief: book ${book}, chapter ${chapter}\n\n${ss.map((s) => `## ${s.title}\n\n${s.text}`).join("\n\n")}\n`;
   const limit = project.config.brief_chars;
   const kept = [...sections];
   const dropped: string[] = [];
+  const warnings: string[] = [];
   const droppable = sections.filter((s) => s.drop !== undefined).sort((a, b) => a.drop! - b.drop!);
   while (render(kept).length > limit && droppable.length) {
     const s = droppable.shift()!;
     if (s.short !== undefined) {
       s.text = s.short;
       dropped.push(`${s.title}: shortened`);
+      if (s.lore) warnings.push(`the plan names lore entry \`${s.lore}\`, and the brief has only its first sentence`);
       continue;
     }
     kept.splice(kept.indexOf(s), 1);
@@ -282,5 +291,5 @@ export function buildBrief(project: Project, rec: RecordFiles, book: number, cha
   const file = briefPath(book, chapter);
   mkdirSync(dirname(join(root, file)), { recursive: true });
   writeFileSync(join(root, file), out);
-  return { file, chars: out.length, dropped, over: out.length > limit };
+  return { file, chars: out.length, dropped, warnings, over: out.length > limit };
 }

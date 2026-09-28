@@ -7,7 +7,7 @@ The complete worked example is `${CLAUDE_PLUGIN_ROOT}/examples/tiny-standalone/`
 - The validator reads only YAML: the `.yaml` files and the frontmatter between `---` lines of each `.md` file. The markdown body is for notes and reasons. Put nothing there that a check depends on.
 - Write YAML in block style. In a flow mapping (`{ a: …, b: … }`), a comma splits the value, so quote any value with a comma or a colon: `hook: "He runs, and the roof falls."`
 - IDs are lower-case slugs: `ivo`, `lie-challenged`, `warden-sells-tithes`.
-- Never write `status: approved`. Only `lb approve` sets it, after the user approves. New and changed files have `status: draft`.
+- Never write `status: approved`. Only `lb approve` sets it, after the user approves. New and changed files have `status: draft`. The one exception is the memory writer: a lore entry or character file that it makes from an approved chapter has `status: approved`, because the approved chapter is its source (a `draft` file would stop `lb gate` before the next chapter).
 
 ## Positions
 
@@ -22,7 +22,7 @@ The complete worked example is `${CLAUDE_PLUGIN_ROOT}/examples/tiny-standalone/`
 | `pitch.md` | optional, from develop-idea: frontmatter `working_title`, `format`, `premise`; a `## Draws` section (`- gives: …` / `- excludes: …`), then sections per bible decision; each bullet marked `(yours)`, `(chosen)` or `(filled)`. Not validated. | – |
 | `project.yaml` | title, `format` (series/standalone), `chapter_words`, `mode` (`normal`, `just-write-it`, or `autopilot`: no checkpoint, decisions logged in `runs/autopilot.md`), `windows` (`on`/`off`, default `on`: `off` means no status windows and no window template), `brief_chars`, `checkpoints`, `lint` overrides | – |
 | `bible.md` | `decisions:` list of `{id, topic, value, status: locked\|open, options_considered, reason}`. Required IDs: `plot`, `prose-style`, `pov-tense`, `characters`, `setting`, `stat-system`, `themes`, `tone`. `draws:` list of `{id, kind: gives\|excludes, text, status: locked\|open}`, at least 3 with at least 1 `excludes` (missing: a warning). `window_template:` after the voice sample (only with windows `on`). | `bible` |
-| `schema.yaml` | `types:` (each with `kind: character` or not, and `fields:`), `entities:` (each with `type`, `name`, `start` values; a character can also have `beliefs: {fact: belief}` in `start`) | `bible` |
+| `schema.yaml` | `types:` (each with `kind: character` or not, and `fields:`), `entities:` (each with `type`, `name`, `start` values; a character can also have `beliefs: {fact: belief}` in `start`), optional `untracked:` (a list of the kinds of things that the story shows and the record does not track, each with its reason: "Practice bindings in class: only a registered creation is a record entity") | `bible` |
 | `facts.yaml` | list of `{id, truth}`: things a character can know, not know, or believe falsely | `bible` |
 | `series.md` | `books`, `ending_state`, `promise`, `question: {raises, answers}`, `handoff` | `series-plan` |
 | `books/NN/plan.md` | the same four level fields, plus `acts:` (each with `id` and the four fields), `draws:` (the IDs of the `gives` draws this book delivers; together the book plans deliver every one) and custom `anchors:` | `book-plan` |
@@ -39,7 +39,7 @@ The complete worked example is `${CLAUDE_PLUGIN_ROOT}/examples/tiny-standalone/`
 | `books/NN/memory/MM.md` | rolling memory: `book`, `chapter`, `summary`, `changed`, `open_questions`, `ending_type`, `lore_added: [{entry, fact, change}]` (setting details that the chapter added; each `entry` is a file in `lore/` that has the fact; `change: true` when the chapter changes the world, and the entry then has a change from this chapter), `appeared` (the IDs of the characters on the page), `character_added: [{character, fact, change}]` (details about a character that the chapter added; each `character` has a file in `characters/` that has the fact; `change: true` when the chapter changes the character), `phrase_log: {similes, images, gestures: {character: [...]}}`. No body. | – |
 | `ledger.jsonl` | the committed delta entries, each with its `point`. Only `lb commit` writes it. | – |
 | `exports/` | the EPUB files from `lb export`: `NN-<title>.epub`, or `NN-<title>-draft.epub`. A build output: not in git. | – |
-| `runs/` | `briefs/NN-MM.md` (from `lb brief`), `verify/NN-MM.json` (`{round, verdict, open, extra_round?, accepted?}` from verify-chapter; `accepted: true` lets `lb commit` commit the chapter with its open errors), `autopilot.md` (the decisions of an autopilot run), `book-NN.json` (from `lb run`). | – |
+| `runs/` | `briefs/NN-MM.md` (from `lb brief`), `verify/NN-MM.json` (`{round, verdict, open, extra_round?, accepted?}` from verify-chapter; each open finding has `severity`, `rule`, `line`, `quote` and `problem`; `accepted: true` lets `lb commit` commit the chapter with its open errors), `verify/NN-MM.rK.md` (the chapter as the checkers read it in round K; `lb changed` compares the chapter with the copy of the last round), `autopilot.md` (the decisions of an autopilot run), `book-NN.json` (from `lb run`). | – |
 
 ## Schema field kinds
 
@@ -96,4 +96,4 @@ The continuity-checker writes the claims of a chapter as a JSON list for `lb cla
 [{"line":14,"quote":"Level ........ 3 → 4","entity":"ivo","field":"level","value":4}]
 ```
 
-`entity`, `field` and `value` use the same names as delta entries. For a collection, `value` is an item ID that the entity has, or `{"has":[...],"lacks":[...]}`.
+`entity`, `field` and `value` use the same names as delta entries. For a collection, `value` is an item ID that the entity has, or `{"has":[...],"lacks":[...]}`. `quote` is the exact words of the prose: `lb claims` compares each claim at the line where its quote is now, so the file stays usable after a revision. A claim of a value that the record does not have (a location that is `null`) is `missing`: the delta needs a `set` entry. `unplaced` lists the characters that the chapter names with no location in the record and no location claim.

@@ -141,6 +141,8 @@ export const Entity = z.strictObject({
 export const Schema = z.strictObject({
   types: z.record(Slug, EntityType),
   entities: z.record(Slug, Entity).default({}),
+  /** Kinds of things that the story shows and the record does not track, each with its reason. */
+  untracked: TextList,
 });
 export type Schema = z.infer<typeof Schema>;
 

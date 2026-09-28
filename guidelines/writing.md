@@ -22,7 +22,9 @@ action, a line of dialogue, an arrival, a number that changed, a concrete image.
 not in reflection. Cut the last paragraph and check: if the chapter is better without it, keep it cut.
 
 **Ending types.** Record one in memory for each chapter: `action`, `dialogue`, `reveal`,
-`decision`, `image`, `cliffhanger`, `quiet-cut`. Two consecutive chapters must not use the same
+`decision`, `image`, `cliffhanger`, `quiet-cut`. The type is the kind of the last new thing (the
+hook). One short beat after it that only reacts to it (a look, a pause) keeps its type: a last line
+of dialogue with a look after it is `dialogue`. Two consecutive chapters must not use the same
 type. A book uses `cliffhanger` for no more than one chapter in three.
 
 ## 2. Chapter openings
@@ -44,7 +46,7 @@ type. A book uses `cliffhanger` for no more than one chapter in three.
   or four. If you use three, the third must add something.
 - **Contrast framing**: no "It wasn't X. It was Y." / "not X, but Y" / "Not because X, but because
   Y". At most once per chapter.
-- **One-line paragraphs for drama**: at most 2 per chapter.
+- **[lint] One-line paragraphs for drama**: at most 2 per chapter, and never 3 in a row.
 - **[lint] Em dashes**: at most 3 per 1,000 words.
 - Vary sentence length because the content needs it, not because of a pattern.
 

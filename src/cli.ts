@@ -4,10 +4,11 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { buildBrief } from "./brief.ts";
+import { changedRanges } from "./changed.ts";
 import { parseArgs } from "node:util";
 import { buildPlanIndex } from "./anchors.ts";
 import { approve, currentBook, gate, isOn, status } from "./checkpoints.ts";
-import { Claims, compareClaims } from "./claims.ts";
+import { Claims, compareClaims, unplaced } from "./claims.ts";
 import { buildEpub } from "./export/epub.ts";
 import { initProject } from "./init.ts";
 import { splitFrontmatter } from "./frontmatter.ts";
@@ -17,7 +18,7 @@ import { characterEntry, charactersNamedIn, entryText, lastSeen, loreEntry, lore
 import { loadProject, type Project } from "./project.ts";
 import { chapterPath, checkDelta, commitChapter, fold, loadRecord, parsePoint, type Where } from "./record.ts";
 import { RULES } from "./rules.ts";
-import { readVerify, runReport } from "./run.ts";
+import { readVerify, roundCopyPath, runReport, verifyPath } from "./run.ts";
 import { type Checkpoint, CHECKPOINTS } from "./schemas.ts";
 import { validateProject } from "./validate.ts";
 
@@ -28,8 +29,9 @@ const HELP = `lb: the Ledgerbound CLI. Run it inside a novel repo (or pass --dir
   lb validate [bible|plan|all] [--json]  check the files and their references (exit 1 on error)
   lb gate <checkpoint> [--book N]        exit 0 when the checkpoint is cleared
   lb approve <checkpoint> [--book N]     mark the checkpoint's files approved (only after the user approves)
-  lb lint <file...> [--lines A-B] [--corpus DIR] [--json]
-                                         deterministic prose checks (exit 1 on an unwaived error)
+  lb lint <file...> [--lines A-B] [--corpus DIR] [--before FILE] [--json]
+                                         deterministic prose checks (exit 1 on an unwaived error);
+                                         --before: a rule with more findings than in FILE is an error
   lb rules [--json]                      the rule IDs of guidelines/writing.md
   lb lore <file> [--json]                the lore entries that a prose file names by ID, title or alias,
                                          each as it is at the start of that chapter
@@ -47,7 +49,9 @@ Generation (a point is 1.07 = book 1, chapter 7):
   lb fold [point] [--entity ID] [--committed] [--json]
                                          the state at a point: 1.07 = end of chapter 7, 1.07.0 = its start
   lb claims <point> <claims.json> [--json]
-                                         compare the prose's claims with the fold (exit 1 on a mismatch)
+                                         compare the prose's claims with the fold (exit 1 on a mismatch);
+                                         each claim moves to the line where its quote is now
+  lb changed <point> [--json]            the lines that changed since the last verify round (runs/verify/NN-MM.rK.md)
   lb commit <point> [--json]             append a verified chapter's delta to the ledger and approve it
 
 Publishing:
@@ -67,6 +71,7 @@ const { values, positionals } = parseArgs({
     format: { type: "string" },
     lines: { type: "string" },
     corpus: { type: "string" },
+    before: { type: "string" },
     entity: { type: "string" },
     committed: { type: "boolean", default: false },
     draft: { type: "boolean", default: false },
@@ -181,7 +186,7 @@ switch (command) {
       if (!m) fail("--lines must look like 40-52");
       lines = [Number(m[1]), Number(m[2])];
     }
-    const results = args.map((f) => lintFile(f, { lines, corpusDir: values.corpus }));
+    const results = args.map((f) => lintFile(f, { lines, corpusDir: values.corpus, before: values.before }));
     const blocking = results.flatMap((r) => r.findings.filter((f) => f.severity === "error" && !f.waived));
     const human = results
       .map(
@@ -261,7 +266,7 @@ switch (command) {
   }
 
   case "rules": {
-    out(RULES.map((r) => `${r.id.padEnd(28)} §${r.section.padEnd(5)} ${r.check.join("+").padEnd(11)} ${r.summary}`).join("\n"), RULES);
+    out(RULES.map((r) => `${r.id.padEnd(28)} §${r.section.padEnd(5)} ${r.check.join("+").padEnd(11)} ${(r.max ?? "").padEnd(5)} ${r.summary}`).join("\n"), RULES);
     break;
   }
 
@@ -283,7 +288,7 @@ switch (command) {
     const { book, chapter } = chapterArg();
     const { project } = load();
     const r = buildBrief(project, loadRecord(project.root), book, chapter);
-    out(`Wrote ${r.file} (${r.chars} characters).${r.dropped.length ? `\nDropped to fit brief_chars: ${r.dropped.join("; ")}` : ""}${r.over ? "\nWARN: still over brief_chars." : ""}`, r);
+    out(`Wrote ${r.file} (${r.chars} characters).${r.dropped.length ? `\nDropped to fit brief_chars: ${r.dropped.join("; ")}` : ""}${r.warnings.map((w) => `\nWARN: ${w}`).join("")}${r.over ? "\nWARN: still over brief_chars." : ""}`, r);
     break;
   }
 
@@ -312,14 +317,32 @@ switch (command) {
     const parsed = Claims.safeParse(JSON.parse(readFileSync(args[1], "utf8")));
     if (!parsed.success) fail(`the claims file is not valid: ${parsed.error.issues.map((e) => `${e.path.join(".")}: ${e.message}`).join("; ")}`);
     const c = checkDelta(project, loadRecord(project.root), book, chapter);
-    const results = compareClaims(project, c, parsed.data);
+    const chapterFile = join(project.root, chapterPath(book, chapter));
+    const text = existsSync(chapterFile) ? readFileSync(chapterFile, "utf8") : undefined;
+    const results = compareClaims(project, c, parsed.data, text);
     const bad = results.filter((r) => r.verdict !== "ok");
     const errors = bad.filter((r) => r.severity === "error").length;
+    const lost = results.filter((r) => !r.quote_found);
+    const nowhere = text === undefined ? [] : unplaced(project, c, parsed.data, text);
     out(
-      `${results.length} claim(s), ${errors} error(s), ${bad.length - errors} to compare.\n${bad.map((r) => `  ${String(r.line).padStart(4)} ${r.verdict.toUpperCase()} ${r.entity}.${r.field}: prose ${JSON.stringify(r.value)}, record ${JSON.stringify(r.record ?? null)}\n        "${r.quote}"`).join("\n")}`,
-      { ok: errors === 0, errors, results, delta_issues: c.issues },
+      `${results.length} claim(s), ${errors} error(s), ${bad.length - errors} to compare.\n${bad.map((r) => `  ${String(r.line).padStart(4)} ${r.verdict.toUpperCase()} ${r.entity}.${r.field}: prose ${JSON.stringify(r.value)}, record ${JSON.stringify(r.record ?? null)}\n        "${r.quote}"`).join("\n")}` +
+        (lost.length ? `\nQuote not in the chapter (take the claim again from the prose): ${lost.map((r) => `line ${r.line} "${r.quote}"`).join("; ")}` : "") +
+        (nowhere.length ? `\nWARN: named in the chapter, with no location in the record and no location claim: ${nowhere.map((u) => `${u.name} (${u.entity})`).join(", ")}` : ""),
+      { ok: errors === 0, errors, results, unplaced: nowhere, delta_issues: c.issues },
     );
     process.exit(errors ? 1 : 0);
+  }
+
+  case "changed": {
+    const { book, chapter } = chapterArg();
+    const { project } = load();
+    const round = readVerify(project.root, book, chapter)?.round ?? fail(`${verifyPath(book, chapter)} does not exist: round 1 checks the whole chapter`);
+    const copy = roundCopyPath(book, chapter, round);
+    if (!existsSync(join(project.root, copy))) fail(`${copy} does not exist: check the whole chapter`);
+    const ranges = changedRanges(readFileSync(join(project.root, copy), "utf8"), readFileSync(join(project.root, chapterPath(book, chapter)), "utf8"));
+    const lines = ranges.map(([a, b]) => (a === b ? `${a}` : `${a}-${b}`));
+    out(ranges.length ? `Changed since round ${round}: lines ${lines.join(", ")}` : `No change since round ${round}.`, { round, copy, ranges });
+    break;
   }
 
   case "commit": {
