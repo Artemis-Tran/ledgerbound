@@ -103,6 +103,10 @@ text: some things are said at an angle, and some are said plainly.
   this", "I need you to understand", "space", "trauma".
 - **Distinct voices**: each line sounds like its speaker's voice card. Test: remove the tags.
   If you cannot tell who speaks, rewrite it.
+- **Voices under pressure**: when a scene puts a character in one of the `states` of their voice
+  card (angry, afraid, lying, close), their speech changes as the state says, and it is still
+  their voice. A character who talks the same when calm and when afraid is one note. Use the
+  state's `tell` at most once in a scene.
 - **Personality is on the page.** Each speaker wants something in the scene and goes after it in
   their own way. The card's `humour` shows when the scene allows it: a dry character is dry on the
   page, and the reader sees it.
@@ -123,6 +127,11 @@ text: some things are said at an angle, and some are said plainly.
 - **Conflict is not resolved by one honest talk.** Agreement costs something or comes slowly.
 
 ## 6. Emotion and narration
+- **The wound stays under the page.** A character's `wound` is for the writer. The prose shows it
+  only in what the character avoids, refuses or cannot say: no flashback, no memory told in full,
+  and no line that explains it. A plan that reveals the wound names it in an `exceptions` entry.
+- **The contradiction shows without comment.** When a scene allows, the character does the thing
+  that goes against their type, and the narration does not explain it.
 - **Do not explain the meaning of a scene** after it happens. Trust the reader.
 - **No hedges**: somehow, seemed to, almost as if, a sort of.
 - **Specific, not generic**: "a chipped enamel mug", not "a cup". Use the setting's own words and objects.
@@ -201,3 +210,32 @@ one hard fragment. The writer does it on purpose and for a reason a reader can s
 - **Commas.** Put a comma after an opening clause or phrase, round an aside, and before a conjunction
   that joins two full clauses. Put none between a subject and its verb, and none before a conjunction
   that joins two verbs with one subject.
+
+## 13. Tension and stakes [review]
+
+Each chapter plan has `stakes`: what the POV character can lose in the chapter, and why it matters
+to them. Each chapter plan also has a `tension` level from 1 to 5, inside the book plan's range. The
+level sets the urgency of the chapter. It does not set its tone: a funny scene can be at level 4,
+because a joke under pressure is still a joke. A cozy book keeps a low range, and each of its
+chapters still has a conflict.
+
+- **The stakes are on the page.** Before the turn of the chapter, the reader knows what the POV
+  character can lose. Show it through a thought, a line of dialogue, a price, a deadline or an object
+  (the letter, the empty cell, the ranking on the door). Show it once, clearly, and do not repeat it
+  in every scene. A scene with its own `stakes` shows those too.
+- **Each level reads differently:**
+  - **1, quiet**: room for small talk, the workshop, the setting and jokes. There is still a
+    conflict, and a small loss is possible.
+  - **2, low**: something is at risk, but not yet close. A question or a rival keeps the pages moving.
+  - **3, rising**: the cost is named, and a scene can go wrong. Fewer digressions, and each scene
+    moves the stakes.
+  - **4, high**: a clock (a tide, a deadline, air that runs out) or an enemy that acts. The scenes
+    are shorter, the choices are harder, and at least one thing is lost or damaged on the page.
+  - **5, climax**: all of the stakes of the book at once. The protagonist decides it by their own
+    choice or act, and nobody rescues them. The cost is paid on the page.
+- **The events make the tension, not the words.** A high level comes from time, danger and cost.
+  It does not come from inflated emotion, from a narrator who says that the moment is tense, or
+  from a character who shouts what they feel. Sections 4, 5 and 6 still apply at level 5.
+- **Some scenes are lost.** The `result` of a scene in the plan (`win`, `loss` or `mixed`) is the
+  target. A `loss` stays a loss on the page: the character does not get the goal back in the next
+  paragraph.

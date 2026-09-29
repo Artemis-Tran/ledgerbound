@@ -3,6 +3,7 @@
  * an entry by the same names: its ID (with spaces for '-'), its title or name, its aliases and, for a character,
  * each capitalized part of its name. Each entry has a body and changes, each from a point or plan anchor.
  */
+import { stringify } from "yaml";
 import { comparePos, type PlanIndex } from "./anchors.ts";
 import { type Loaded, pad2, type Project } from "./project.ts";
 import type { Character, LoreEntry } from "./schemas.ts";
@@ -103,6 +104,48 @@ export function entryText(index: PlanIndex, entry: NamedEntry, book: number, cha
   const body = entry.body.trim();
   if (!changes.length) return body;
   return `${body}\n\nChanges in the story so far (each one wins over what it contradicts above):\n${changes.map((c) => `- Since ${c.label}: ${c.text}`).join("\n")}`;
+}
+
+/**
+ * The arc beats of a character up to this chapter: every beat of an earlier book, and each beat that a chapter plan of
+ * this book places at or before this chapter. A later beat stays out, the same as a later change.
+ */
+export function beatsSoFar(project: Project, c: Loaded<Character>, book: number, chapter: number) {
+  const placed = new Map<string, number>();
+  for (const p of project.chapters.get(book) ?? []) for (const ref of p.data.arc_beats) placed.set(ref, p.data.chapter);
+  return c.data.arc_beats.flatMap((b) => {
+    if (b.book < book) return [{ ...b, now: false }];
+    const at = placed.get(`${c.data.id}/${b.id}`);
+    return b.book === book && at !== undefined && at <= chapter ? [{ ...b, now: at === chapter }] : [];
+  });
+}
+
+/**
+ * A character as the writer of a chapter must know them: who they are, the arc so far, the voice card, then each
+ * change so far. A change comes last because it wins over the text above it, the voice card included.
+ */
+export function characterText(project: Project, index: PlanIndex, c: Loaded<Character>, book: number, chapter: number): string {
+  const d = c.data;
+  const beats = beatsSoFar(project, c, book, chapter);
+  const inner = [
+    d.want && `- **Wants** (chases on the page): ${d.want}`,
+    d.need && `- **Needs** (what would fix them): ${d.need}`,
+    d.lie && `- **Believes** (the lie): ${d.lie}`,
+    d.wound && `- **Wound** (the prose never tells it; it shows in what they avoid): ${d.wound}`,
+    d.contradiction && `- **Contradiction** (show it when a scene allows): ${d.contradiction}`,
+  ].filter(Boolean);
+  const changes = changesBefore(index, characterEntry(c), book, chapter);
+  return [
+    c.body.trim(),
+    inner.join("\n"),
+    beats.length ? `Arc beats so far:\n${beats.map((b) => `- ${b.now ? "**This chapter**" : `Book ${b.book}, ${b.act}`}: ${b.beat}`).join("\n")}` : "",
+    `Voice card:\n\n\`\`\`yaml\n${stringify(d.voice, { lineWidth: 0 }).trimEnd()}\n\`\`\``,
+    changes.length
+      ? `Changes in the story so far (each one wins over what it contradicts above, the voice card included):\n${changes.map((ch) => `- Since ${ch.label}: ${ch.text}`).join("\n")}`
+      : "",
+  ]
+    .filter(Boolean)
+    .join("\n\n");
 }
 
 /** The last chapter before this one whose rolling memory has the character in `appeared`, as a point like 1.04. */

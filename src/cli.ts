@@ -14,7 +14,7 @@ import { initProject } from "./init.ts";
 import { splitFrontmatter } from "./frontmatter.ts";
 import { formatIssues, hasErrors, type Issue } from "./issues.ts";
 import { findProjectRoot, lintFile } from "./lint/index.ts";
-import { characterEntry, charactersNamedIn, entryText, lastSeen, loreEntry, loreNamedIn } from "./entries.ts";
+import { characterText, charactersNamedIn, entryText, lastSeen, loreEntry, loreNamedIn } from "./entries.ts";
 import { loadProject, type Project } from "./project.ts";
 import { chapterPath, checkDelta, commitChapter, fold, loadRecord, parsePoint, type Where } from "./record.ts";
 import { RULES } from "./rules.ts";
@@ -39,7 +39,7 @@ const HELP = `lb: the Ledgerbound CLI. Run it inside a novel repo (or pass --dir
   lb who <file> [--json]                 the characters that a prose file names by ID, name, alias or a
                                          part of the name, each as it is at the start of that chapter
   lb who <id> --at <point> [--json]      one character as it is at the start of a chapter: who it is,
-                                         its voice card, its record state and the chapter it was last seen
+                                         its arc so far, its voice card, its record state and the chapter it was last seen
   lb where                               the ledgerbound folder (reference/, examples/)
 
 Generation (a point is 1.07 = book 1, chapter 7):
@@ -236,7 +236,7 @@ switch (command) {
       const state = fold(project, rec, { book, chapter, index: 0 }).state.entities[id];
       if (!c && !state) return undefined;
       const record = state ? { name: state.name, ...state.fields, beliefs: state.beliefs } : null;
-      const text = c ? entryText(index, characterEntry(c), book, chapter) : "";
+      const text = c ? characterText(project, index, c, book, chapter) : "";
       return { id, name: c?.data.name ?? state!.name, role: c?.data.role ?? null, file: c?.file ?? null, text, voice: c?.data.voice ?? null, last_seen: lastSeen(project, id, book, chapter) ?? null, record };
     };
     const human = (v: NonNullable<ReturnType<typeof view>>, at: string) =>
@@ -244,7 +244,6 @@ switch (command) {
         `# ${v.name} (${v.file ?? "no character file"}, at the start of ${at})`,
         v.text,
         `Last seen: ${v.last_seen ?? "not yet"}.`,
-        v.voice ? `Voice card:\n${JSON.stringify(v.voice, null, 2)}` : "",
         `Record:\n${v.record ? JSON.stringify(v.record, null, 2) : "(no entity yet)"}`,
       ]
         .filter(Boolean)

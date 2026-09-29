@@ -118,7 +118,7 @@ describe("the cast", () => {
     expect(check(dir)).toContainEqual(expect.objectContaining({ code: "character-added-unknown", path: "character_added.0.character" }));
     edit(dir, "books/01/memory/01.md", "{ character: pell, fact: Pell has a burn scar. }", "{ character: sabine, fact: Sabine is sent to the manor., change: true }");
     expect(check(dir)).toContainEqual(expect.objectContaining({ code: "character-change-missing", path: "character_added.0" }));
-    edit(dir, "characters/sabine.md", "arc_beats:", "changes:\n  - { from: 1.01, text: Sabine is sent to the manor. }\narc_beats:");
+    edit(dir, "characters/sabine.md", "changes:\n", "changes:\n  - { from: 1.01, text: Sabine is sent to the manor. }\n");
     expect(errorCodes(check(dir))).toEqual([]);
   });
 
@@ -130,6 +130,23 @@ describe("the cast", () => {
     expect(issues).toContainEqual(expect.objectContaining({ code: "character-change-order", file: "characters/hale.md", path: "changes.1.from" }));
     expect(issues).toContainEqual(expect.objectContaining({ code: "bad-position", file: "characters/hale.md", path: "changes.2.from" }));
     expect(issues).toContainEqual(expect.objectContaining({ code: "character-empty", severity: "warn", file: "characters/ivo.md" }));
+  });
+
+  test("a main character without a wound, a contradiction or 2 voice states is a warning; a supporting one needs none", () => {
+    const dir = fixtureCopy();
+    expect(check(dir).map((i) => i.code)).not.toContain("character-depth");
+    const sabine = readFileSync(join(dir, "characters/sabine.md"), "utf8");
+    writeFileSync(join(dir, "characters/sabine.md"), sabine.replace(/^wound: .*\n/m, "").replace(/^ {4}- \{ state: (lying|close).*\n/gm, ""));
+    const depth = check(dir).filter((i) => i.code === "character-depth");
+    expect(depth).toEqual([expect.objectContaining({ severity: "warn", file: "characters/sabine.md" })]);
+    expect(depth[0].message).toContain("`wound`, 2 or more `voice.states`");
+    expect(depth[0].message).not.toContain("contradiction");
+  });
+
+  test("a voice state needs a state, a speech and a tell", () => {
+    const dir = fixtureCopy();
+    edit(dir, "characters/ivo.md", ", tell: Checks a knot that he checked already.", "");
+    expect(check(dir)).toContainEqual(expect.objectContaining({ code: "format", file: "characters/ivo.md", path: "voice.states.1.tell" }));
   });
 });
 
@@ -176,14 +193,14 @@ describe("book levels", () => {
 
   test("the last act must end on the last chapter", () => {
     const dir = fixtureCopy();
-    edit(dir, "books/01/plan/06.md", "anchors: [b1/act3/end]\n", "");
+    edit(dir, "books/01/plan/06.md", "anchors: [b1/climax, b1/act3/end]", "anchors: [b1/climax]");
     edit(dir, "books/01/plan/05.md", "arc_beats: []", "arc_beats: []\nanchors: [b1/act3/end]");
     expect(errorCodes(check(dir))).toContain("anchor-order");
   });
 
   test("an unmapped act end is reported once, not as a target order error", () => {
     const dir = fixtureCopy();
-    edit(dir, "books/01/plan/06.md", "anchors: [b1/act3/end]\n", "");
+    edit(dir, "books/01/plan/06.md", "anchors: [b1/climax, b1/act3/end]", "anchors: [b1/climax]");
     const codes = errorCodes(check(dir));
     expect(codes).toContain("anchor-unmapped");
     expect(codes).not.toContain("target-order");
@@ -386,6 +403,70 @@ describe("draws", () => {
     const dir = fixtureCopy();
     edit(dir, "books/01/plan/05.md", "exceptions:\n", "exceptions:\n  - { rule: draws.excluded, reason: a kiss }\n");
     expect(errorCodes(check(dir))).toContain("unwaivable");
+  });
+});
+
+describe("tension, stakes and the climax", () => {
+  const codes = (dir: string) => check(dir).map((i) => `${i.severity} ${i.code} ${i.file}`);
+
+  test("the fixture has no tension warning", () => {
+    expect(codes(fixtureCopy()).filter((c) => /tension|climax/.test(c))).toEqual([]);
+  });
+
+  test("a plan without tension, stakes, results or a climax gets warnings, not errors", () => {
+    const dir = fixtureCopy();
+    edit(dir, "books/01/plan/03.md", /tension: 3\nstakes: .*\n/, "");
+    edit(dir, "books/01/plan/03.md", ", result: loss }", " }");
+    edit(dir, "books/01/plan.md", /tension: \{ min: 2, max: 5 \}\nclimax:\n(  .*\n)+/, "");
+    edit(dir, "books/01/plan/06.md", "b1/climax, ", "");
+    const issues = check(dir);
+    expect(errorCodes(issues)).toEqual([]);
+    expect(issues).toContainEqual(expect.objectContaining({ code: "tension-missing", severity: "warn", file: "books/01/plan/03.md", message: expect.stringContaining("`tension`, `stakes`, a `result` for each scene") }));
+    expect(codes(dir)).toEqual(expect.arrayContaining(["warn tension-missing books/01/plan.md", "warn climax-missing books/01/plan.md"]));
+  });
+
+  test("a chapter outside the book's range is an error", () => {
+    const dir = fixtureCopy();
+    edit(dir, "books/01/plan.md", "tension: { min: 2, max: 5 }", "tension: { min: 2, max: 4 }");
+    expect(codes(dir)).toContain("error tension-range books/01/plan/06.md");
+  });
+
+  test("the climax needs a chapter, in the last act, with the highest tension", () => {
+    const dir = fixtureCopy();
+    edit(dir, "books/01/plan/06.md", "b1/climax, ", "");
+    expect(errorCodes(check(dir))).toContain("anchor-unmapped");
+    edit(dir, "books/01/plan/03.md", "anchors: [b1/midpoint]", "anchors: [b1/midpoint, b1/climax]");
+    expect(errorCodes(check(dir))).toContain("anchor-order");
+
+    const dir2 = fixtureCopy();
+    edit(dir2, "books/01/plan/06.md", "tension: 5", "tension: 4");
+    edit(dir2, "books/01/plan/05.md", "tension: 4", "tension: 5");
+    expect(codes(dir2)).toContain("error climax-peak books/01/plan/06.md");
+  });
+
+  test("the climax cannot also be a custom anchor", () => {
+    const dir = fixtureCopy();
+    edit(dir, "books/01/plan.md", "  - { id: b1/midpoint", "  - { id: b1/climax, act: act3 }\n  - { id: b1/midpoint");
+    expect(check(dir)).toContainEqual(expect.objectContaining({ code: "duplicate-id", message: expect.stringContaining("comes from `climax`") }));
+  });
+
+  test("a flat curve, no drop after the peak, a lower act and an act of only wins are warnings", () => {
+    const dir = fixtureCopy();
+    for (const n of ["01", "04"]) edit(dir, `books/01/plan/${n}.md`, /tension: \d/, "tension: 3");
+    expect(codes(dir)).toContain("warn tension.flat books/01/plan/04.md");
+
+    const dir2 = fixtureCopy();
+    edit(dir2, "books/01/plan/02.md", "tension: 3", "tension: 5");
+    expect(codes(dir2)).toContain("warn tension.act-rise books/01/plan/04.md");
+    edit(dir2, "books/01/plan/05.md", "tension: 4", "tension: 5");
+    expect(codes(dir2)).toContain("warn tension.after-peak books/01/plan/06.md");
+
+    const dir3 = fixtureCopy();
+    edit(dir3, "books/01/plan/01.md", /result: mixed/g, "result: win");
+    edit(dir3, "books/01/plan/02.md", "result: mixed", "result: win");
+    expect(codes(dir3)).toContain("warn tension.results books/01/plan/02.md");
+    edit(dir3, "books/01/plan/02.md", "scenes:", "exceptions:\n  - { rule: tension.results, reason: The first act is a clean climb. }\nscenes:");
+    expect(codes(dir3)).not.toContain("warn tension.results books/01/plan/02.md");
   });
 });
 

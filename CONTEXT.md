@@ -57,6 +57,22 @@ _Avoid_: Cliffhanger, carry-over
 The smallest level of the plan: one goal, one conflict and one outcome.
 _Avoid_: Beat, section
 
+**Result**:
+If a scene's goal is met: `win` (met), `loss` (not met, or worse) or `mixed` (met at a cost). Each act has at least one `loss` or `mixed`.
+_Avoid_: Success, outcome (the outcome is what happens; the result is if the goal is met)
+
+**Stakes**:
+What the POV character can lose in a chapter (or a scene), and why it matters to them. The prose shows the stakes before the turn of the chapter.
+_Avoid_: Risk (for a chapter), consequences
+
+**Tension**:
+The urgency of a chapter, a level from 1 (quiet, but still a conflict) to 5 (the climax), inside the book's tension range. It sets the pressure, the pace and the cost on the page, not the tone: a funny scene can have high tension.
+_Avoid_: Intensity, drama, pacing
+
+**Climax**:
+The one big event of a book, in its last act, at the book's highest tension: an action, a confrontation, a reveal or a choice. The protagonist decides it by their own act. Its plan anchor is `bN/climax`.
+_Avoid_: Finale, showdown, set-piece
+
 **Ending type**:
 How a chapter stops: `action`, `dialogue`, `reveal`, `decision`, `image`, `cliffhanger` or `quiet-cut`.
 _Avoid_: Ending style, closer
@@ -82,10 +98,22 @@ _Avoid_: Update, revision, event The record holds what changes; a lore entry hol
 _Avoid_: Wiki page, codex, glossary
 
 **Voice card**:
-The rules for how one character speaks: vocabulary, sentence length, verbal habits, what they never say, and how they joke (humour).
+The rules for how one character speaks: vocabulary, sentence length, verbal habits, what they never say, how they joke (humour), and their voice states. A character change can change the voice card when the arc moves the character.
+
+**Voice state**:
+How a character's speech changes in one emotional state (angry, afraid, lying, close to someone), with one body tell. Part of the voice card.
+_Avoid_: Mood, emotion card
+
+**Wound**:
+The one event before the story that made a character's lie feel true. The writer knows it; the prose never tells it, and shows it only in what the character avoids.
+_Avoid_: Backstory, trauma
+
+**Contradiction**:
+One trait of a character that goes against their type, so that they are not one note.
+_Avoid_: Quirk, flaw
 
 **Character file**:
-`characters/<id>.md`: who one character is at the start of the story (the body), its voice card, its aliases and its character changes, and for a main character its arc. The record holds its state; the character file holds what stays true. A chapter's brief includes the file of each character in its cast. The memory writer makes the file of a character who speaks, or who is on the page in a second chapter.
+`characters/<id>.md`: who one character is at the start of the story (the body), its voice card, its aliases and its character changes, and for a main character its arc, wound and contradiction. The record holds its state; the character file holds what stays true. A chapter's brief includes the file of each character in its cast. The memory writer makes the file of a character who speaks, or who is on the page in a second chapter.
 _Avoid_: Character sheet, profile
 
 **Character change**:

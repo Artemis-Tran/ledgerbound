@@ -9,7 +9,7 @@ The written chapters are the story now. A replan moves the plan to meet them, an
 
 ## What a replan can change
 
-- The chapter plans of chapters that are not approved, and the custom anchors in the book plan.
+- The chapter plans of chapters that are not approved (with their `tension`, `stakes` and scene `result`s), and the custom anchors, the `climax` and the `tension` range in the book plan. The climax stays in a chapter that is not written.
 - `threads.yaml`: the beats and payoffs in chapters that are not written. A plant in a written chapter stays.
 - `targets.yaml`: a target moves, changes, or gets `reset: true`.
 - The lore entries: a new entry, a fact that no approved chapter contradicts, or a change in `changes` from a chapter that is not approved.
@@ -21,6 +21,7 @@ The approved chapters and `ledger.jsonl` stay as they are. When the committed re
 ## Steps
 
 1. **Cause.** Write down in one or two sentences why the plan must change: the `REPLAN NEEDED` lines of `lb commit`, the open errors in `runs/verify/NN-MM.json`, or the user's request.
+   When `lb validate` gives `tension-missing` or `climax-missing` (a plan from an earlier version), the replan adds them: the `climax` and `tension` range of the book plan by step 4 of `${CLAUDE_PLUGIN_ROOT}/skills/plan-series/SKILL.md`, then the `tension`, `stakes` and scene `result`s of each chapter that is not written by steps 3 and 5 of `${CLAUDE_PLUGIN_ROOT}/skills/plan-book/SKILL.md`. Read the memory files of the written chapters first: the curve starts from where the story is. Give the written chapters no new fields.
 
 2. Read `bible.md`, the book plan, `targets.yaml`, `threads.yaml`, the plans of the chapters that are not written, the memory files of the written chapters, and `lb fold` (the state now).
 

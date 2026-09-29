@@ -29,6 +29,7 @@ export function validateProject(project: Project): Issue[] {
   checkDraws(project, totalBooks, err);
   checkCharacters(project, index, characterIds, totalBooks, err, warn);
   checkChapters(project, index, characterIds, err, warn);
+  checkTension(project, index, err, warn);
   checkThreads(project, index, err);
   checkTargets(project, index, characterIds, err, warn);
   checkVoiceSamples(project, characterIds, err);
@@ -249,6 +250,71 @@ function checkChapters(project: Project, index: PlanIndex, characterIds: Set<str
         });
       }
     });
+  }
+}
+
+// ---------- tension, stakes and the climax ----------
+
+function checkTension(project: Project, index: PlanIndex, err: Report, warn: Report) {
+  for (const plan of project.books.values()) {
+    if (!plan.data.tension) warn("tension-missing", plan.file, "the book plan has no `tension` range, so nothing checks the tension of its chapters", "tension");
+    if (!plan.data.climax) warn("climax-missing", plan.file, "the book plan has no `climax`: a book needs one big event in its last act", "climax");
+  }
+
+  for (const [book, chapters] of project.chapters) {
+    const plan = project.books.get(book);
+    const range = plan?.data.tension;
+    const levels = chapters.flatMap((c) => c.data.tension ?? []);
+    const peak = range?.max ?? Math.max(0, ...levels);
+    const waived = (c: (typeof chapters)[number], rule: string) => c.data.exceptions.some((e) => e.rule === rule);
+
+    chapters.forEach((c, i) => {
+      const d = c.data;
+      const missing = [d.tension === undefined && "`tension`", !d.stakes && "`stakes`", d.scenes.some((s) => !s.result) && "a `result` for each scene"].filter(Boolean);
+      if (missing.length) warn("tension-missing", c.file, `the chapter plan has no ${missing.join(", ")}: the writer does not know how urgent the chapter is`);
+      if (d.tension === undefined) return;
+      if (range && (d.tension < range.min || d.tension > range.max)) err("tension-range", c.file, `tension ${d.tension} is outside the book's range ${range.min}–${range.max}`, "tension");
+      const run = chapters.slice(Math.max(0, i - 3), i + 1);
+      if (run.length === 4 && run.every((r) => r.data.tension === d.tension) && !waived(c, "tension.flat")) {
+        warn("tension.flat", c.file, `chapters ${run[0].data.chapter}–${d.chapter} all have tension ${d.tension}`, "tension");
+      }
+      const prev = chapters[i - 1];
+      if (prev?.data.tension === peak && d.tension >= peak && !waived(c, "tension.after-peak")) {
+        warn("tension.after-peak", c.file, `chapter ${prev.data.chapter} is at the book's highest tension (${peak}), so this chapter must be lower`, "tension");
+      }
+    });
+
+    // Each act: its peak does not fall below the peak of the act before, and not every scene is a win.
+    const ranges = index.actRanges.get(book);
+    let prevPeak: number | undefined;
+    for (const act of plan?.data.acts ?? []) {
+      const r = ranges?.get(act.id);
+      if (!r) continue;
+      const inAct = chapters.filter((c) => c.data.chapter >= r[0] && c.data.chapter <= r[1]);
+      const last = inAct.at(-1)!;
+      const actLevels = inAct.flatMap((c) => c.data.tension ?? []);
+      if (actLevels.length) {
+        const actPeak = Math.max(...actLevels);
+        if (prevPeak !== undefined && actPeak < prevPeak && !waived(last, "tension.act-rise")) {
+          warn("tension.act-rise", last.file, `the highest tension of ${act.id} is ${actPeak}, lower than ${prevPeak} in the act before`, "tension");
+        }
+        prevPeak = actPeak;
+      }
+      const results = inAct.flatMap((c) => c.data.scenes.flatMap((s) => s.result ?? []));
+      if (results.length && results.every((x) => x === "win") && !waived(last, "tension.results")) {
+        warn("tension.results", last.file, `every scene of ${act.id} is a win: give at least one scene the result loss or mixed`, "scenes");
+      }
+    }
+
+    // The climax chapter has the highest tension of the book.
+    const climax = index.anchors.get(`b${book}/climax`);
+    const cc = climax?.chapter !== undefined ? chapters.find((c) => c.data.chapter === climax.chapter) : undefined;
+    const level = cc?.data.tension;
+    if (cc && level !== undefined) {
+      const higher = chapters.filter((c) => (c.data.tension ?? 0) > level).map((c) => c.data.chapter);
+      if (higher.length) err("climax-peak", cc.file, `the climax chapter has tension ${level}, but chapter(s) ${higher.join(", ")} are higher`, "tension");
+      else if (range && level < range.max) warn("climax-peak", cc.file, `the climax chapter has tension ${level}, below the book's highest level ${range.max}`, "tension");
+    }
   }
 }
 
@@ -501,6 +567,14 @@ function checkCast(project: Project, index: PlanIndex, characterIds: Set<string>
   const known = new Set([...characterIds, ...project.characters.map((c) => c.data.id)]);
   for (const c of project.characters) {
     if (!c.body.trim()) warn("character-empty", c.file, "the file has no body: the brief tells the writer who the character is from the body");
+    if (c.data.role !== "supporting") {
+      const missing = [
+        !c.data.wound && "`wound`",
+        !c.data.contradiction && "`contradiction`",
+        c.data.voice.states.length < 2 && "2 or more `voice.states`",
+      ].filter(Boolean);
+      if (missing.length) warn("character-depth", c.file, `a ${c.data.role} character needs ${missing.join(", ")}: without them the character has one note`);
+    }
     checkChanges(c.data.changes, c.file, "character-change-order", index, err);
   }
   for (const plans of project.chapters.values()) {

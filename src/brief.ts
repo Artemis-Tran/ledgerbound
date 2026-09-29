@@ -7,7 +7,7 @@ import { dirname, join } from "node:path";
 import { stringify } from "yaml";
 import { buildPlanIndex, comparePos, type Pos } from "./anchors.ts";
 import { splitFrontmatter } from "./frontmatter.ts";
-import { changesBefore, characterEntry, charactersNamedIn, entryText, firstSentence, loreEntry, loreNamedIn, nameParts, lastSeen } from "./entries.ts";
+import { changesBefore, characterEntry, charactersNamedIn, characterText, entryText, firstSentence, loreEntry, loreNamedIn, nameParts, lastSeen } from "./entries.ts";
 import { pad2, type Project } from "./project.ts";
 import { chapterPath, fold, type RecordFiles, type State } from "./record.ts";
 
@@ -105,6 +105,27 @@ export function buildBrief(project: Project, rec: RecordFiles, book: number, cha
 
   // 2. The chapter plan, and the next 2.
   sections.push({ title: `This chapter: ${book}.${pad2(chapter)} (about ${plan.data.words ?? project.config.chapter_words} words)`, text: `\`\`\`yaml\n${rawFrontmatter(join(root, plan.file))}\n\`\`\`` });
+  // 2b. The act of this chapter and the book: where the chapter goes, and how urgent it is.
+  const bookPlan = project.books.get(book)?.data;
+  if (bookPlan) {
+    const range = [...(index.actRanges.get(book) ?? [])].find(([, [a, b]]) => chapter >= a && chapter <= b);
+    const act = range && bookPlan.acts.find((a) => a.id === range[0]);
+    const t = plan.data.tension;
+    const level = t === undefined ? "" : `Tension ${t}${bookPlan.tension ? ` (this book: ${bookPlan.tension.min}–${bookPlan.tension.max})` : ""}: write the pressure, pace and cost of level ${t} in guidelines/writing.md §13.`;
+    const stakes = plan.data.stakes ? `Stakes: ${plan.data.stakes} Put them on the page before the turn of the chapter.` : "";
+    sections.push({
+      title: `This act${act ? ` (${act.id}, chapters ${range![1][0]}–${range![1][1]})` : ""} and the book`,
+      text: [
+        [level, stakes].filter(Boolean).join("\n\n"),
+        yaml({
+          book: { promise: bookPlan.promise, ...(bookPlan.climax ? { climax: bookPlan.climax } : {}) },
+          ...(act ? { act: { id: act.id, promise: act.promise, question: act.question, ending_state: act.ending_state } } : {}),
+        }),
+      ]
+        .filter(Boolean)
+        .join("\n\n"),
+    });
+  }
   plans
     .filter((p) => p.data.chapter > chapter && p.data.chapter <= chapter + 2)
     .forEach((p, i) => {
@@ -180,11 +201,10 @@ export function buildBrief(project: Project, rec: RecordFiles, book: number, cha
   // A character that the plan only names can go when the brief is too long, after the lore it only names.
   const cast = [...listedCast, ...namedCast].flatMap((id) => project.characters.find((c) => c.data.id === id) ?? []);
   cast.forEach((c, i) => {
-    const who = entryText(index, characterEntry(c), book, chapter);
     const seen = lastSeen(project, c.data.id, book, chapter);
     sections.push({
       title: `Cast: ${c.data.name} (${c.data.role}; the prose never contradicts it)`,
-      text: [who, seen ? `Last seen: ${seen}.` : "", `Voice card:\n\n${yaml(c.data.voice)}`].filter(Boolean).join("\n\n"),
+      text: [characterText(project, index, c, book, chapter), seen ? `Last seen: ${seen}.` : ""].filter(Boolean).join("\n\n"),
       ...(namedCast.includes(c.data.id) ? { drop: 300 - i } : {}),
     });
   });

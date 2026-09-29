@@ -338,6 +338,15 @@ describe("lb brief", () => {
 
   const briefText = (dir: string, chapter: number) => readFileSync(join(dir, buildBrief(load(dir), loadRecord(dir), 1, chapter).file), "utf8");
 
+  test("has the act, the climax, the tension and the stakes of the chapter", () => {
+    const text = briefText(fixtureCopy(), 4);
+    expect(text).toContain("## This act (act2, chapters 3–4) and the book");
+    expect(text).toContain("Tension 4 (this book: 2–5): write the pressure, pace and cost of level 4 in guidelines/writing.md §13.");
+    expect(text).toContain("Stakes: The crew that took him in");
+    expect(text).toContain("ending_state: Ivo knows about his father's debt");
+    expect(text).toContain("kind: choice");
+  });
+
   test("has the lore entries that the chapter plan names by title or alias, and no others", () => {
     const dir = fixtureCopy();
     expect(briefText(dir, 2)).toContain("## Lore: Delving crews");
@@ -412,6 +421,27 @@ describe("lb brief", () => {
     const r = buildBrief(load(dir), loadRecord(dir), 1, 3);
     expect(r.dropped.slice(-2)).toEqual(["Cast: Warden Hale (supporting; the prose never contradicts it)", "Cast: Sabine Rook (main; the prose never contradicts it)"]);
     expect(briefText(dir, 5)).toContain("Warden Hale (`hale`) · Sabine Rook (`sabine`)");
+  });
+
+  test("gives a main character's want, need, lie, wound and contradiction, and the arc beats up to this chapter", () => {
+    const dir = fixtureCopy();
+    const sabine = section(briefText(dir, 4), "Cast: Sabine Rook");
+    expect(sabine).toContain("- **Believes** (the lie): Numbers do not lie");
+    expect(sabine).toContain("- **Wound** (the prose never tells it; it shows in what they avoid): At eleven");
+    expect(sabine).toContain("- **Contradiction** (show it when a scene allows): She is exact");
+    expect(sabine).toContain("- Book 1, act1: She copies the warden's rate");
+    expect(sabine).toContain("- **This chapter**: She changes one entry to save Ivo");
+    expect(sabine).not.toContain("She gives Ivo the ledger");
+    expect(sabine).toContain("state: lying");
+    expect(section(briefText(dir, 2), "Cast: Warden Hale")).toContain("- **Wants** (chases on the page): A full tithe");
+  });
+
+  test("gives a voice change of the arc after its anchor, below the voice card", () => {
+    const dir = fixtureCopy();
+    expect(section(briefText(dir, 4), "Cast: Sabine Rook")).not.toContain("in the margin");
+    const sabine = section(briefText(dir, 6), "Cast: Sabine Rook");
+    expect(sabine).toContain("- Since 1.04 (b1/act2/end): She no longer corrects Ivo's numbers aloud.");
+    expect(sabine.indexOf("Voice card:")).toBeLessThan(sabine.indexOf("Since 1.04"));
   });
 
   test("gives a character change only to the chapters after it", () => {

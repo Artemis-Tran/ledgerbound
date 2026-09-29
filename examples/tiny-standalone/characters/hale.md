@@ -4,6 +4,7 @@ id: hale
 name: Warden Hale
 role: supporting
 aliases: [the warden]
+want: A full tithe every season and diggers who thank him for it.
 voice:
   vocabulary: Mill and harvest words; he talks about levels as grain.
   sentence_length: Long, warm, and full of small promises.

@@ -1,6 +1,6 @@
 ---
 name: plan-book
-description: Chapter and scene plans for the next LitRPG book to write - each chapter's job, threads, arc beats, ending type and scenes, plus threads.yaml. Use after the character arcs are approved, or when `lb status` names plan-book.
+description: Chapter and scene plans for the next LitRPG book to write - each chapter's job, tension and stakes, threads, arc beats, ending type and scenes with their results, plus threads.yaml. Use after the character arcs are approved, or when `lb status` names plan-book.
 ---
 
 # plan-book
@@ -15,19 +15,22 @@ Only the next book to write gets chapter plans: for phase 1 that is book 1. File
 
 3. **Chapter count and act ranges.** From `chapter_words` in `project.yaml` and the scope of the book plan, decide the number of chapters and which chapters each act gets. Write down the act ranges before any chapter.
    Give a chapter its own `words` when its scenes need a different length: a set-piece fight longer, a quiet turn shorter. Keep the total of the book near the number of chapters × `chapter_words`.
+   **Tension curve.** Choose the climax chapter in the last act first: it gets `b${N}/climax` in its `anchors` and the book's highest tension. Then give each chapter a `tension` inside the book plan's `tension` range (the levels are in §13 of `${CLAUDE_PLUGIN_ROOT}/guidelines/writing.md`). Let the curve rise from act to act, with drops: a quiet chapter after a peak, and never 4 chapters in a row at one level. When the book plan has no `climax` or `tension` (a plan from an earlier version), add them by step 4 of `${CLAUDE_PLUGIN_ROOT}/skills/plan-series/SKILL.md`, set the book plan to `status: draft`, and name them in the summary of step 8: the user approves them with the chapter plans (also run `lb approve book-plan`).
 
 4. **Threads.** List every setup, mystery, subplot, promise and relationship that the book plan, the arcs and the facts need, in `threads.yaml`: each with a `plant`, the `beats` where it moves, and a `payoff` (a point in this book, or an anchor in a later book or `series/end` for a thread that the handoff carries on).
 
 5. **Chapter plans**, `books/NN/plan/MM.md`, one per chapter. Each chapter has a **job**:
    - `job`: the value that shifts, and its state `from` → `to`. If nothing changes, the chapter has no reason to exist: merge it or give it a shift;
+   - `tension`: the level from step 3;
+   - `stakes`: what the POV character can lose in this chapter, and why it matters to them, in one or two sentences. Make it concrete and connect it to the character's `want`: "If the team loses, Aren goes back to the docks, and the Quiet Vaults stay closed to him" passes; "things get worse" fails. When a chapter's job is about a character's place, rank or life, the stakes say what the character gives up with it;
    - `arc_beats`: every arc beat of this book goes in exactly one chapter, inside its act;
    - `threads`: exactly the plants, beats and payoffs that `threads.yaml` puts in this chapter;
    - `ending`: a type, and a `hook` that is the concrete last beat (a fact, a line, an arrival, a number that changed). Vary the types: never the same type twice in a row, and at most one `cliffhanger` in any three chapters;
    - `anchors`: the act ends and custom anchors that fall at the end of this chapter;
-   - `scenes`: each with `goal` → `conflict` → `outcome`. Let some outcomes be worse than the goal. Give each scene with dialogue a `tone`: how it must read (`funny`, `sarcastic`, `hostile`, `tender`, `funny, then cold`). Let the tones of a book vary, and give each main character's `humour` scenes where it can show;
+   - `scenes`: each with `goal` → `conflict` → `outcome`, and a `result`: `win` (the goal is met), `loss` (it is not met, or the outcome is worse) or `mixed` (it is met at a cost). Give each act at least one `loss` or `mixed`, and more as the tension rises. Give a scene its own `stakes` when they differ from the chapter's. Give each scene with dialogue a `tone`: how it must read (`funny`, `sarcastic`, `hostile`, `tender`, `funny, then cold`). Let the tones of a book vary, and give each main character's `humour` scenes where it can show;
    - `day`: the in-story day;
    - `lore`: the IDs of the lore entries this chapter needs that its text does not name by title or alias (for example, a custom that shapes a scene). When the chapter brings in a place, creature or custom that has no entry, write one by step 5 of `${CLAUDE_PLUGIN_ROOT}/skills/plan-world/SKILL.md`, with `status: draft`. When the chapter changes the world (a place is destroyed, a law ends), add `{ from: <this chapter's point>, text: <how it is after> }` to the entry's `changes`;
-   - `characters`: the ID of each character with a part in a scene, the POV character included. When the chapter brings in a character who comes back later or speaks, write `characters/<id>.md` with `status: draft`, `role: supporting`, a name by §4, Names, in `${CLAUDE_PLUGIN_ROOT}/guidelines/writing.md`, a voice card and a body by steps 5 and 6 of `${CLAUDE_PLUGIN_ROOT}/skills/plan-arcs/SKILL.md`. The chapter's delta then creates the entity with that ID;
+   - `characters`: the ID of each character with a part in a scene, the POV character included. When the chapter brings in a character who comes back later or speaks, write `characters/<id>.md` with `status: draft`, `role: supporting`, a `want` when the character comes back, a name by §4, Names, in `${CLAUDE_PLUGIN_ROOT}/guidelines/writing.md`, a voice card and a body by steps 5 and 6 of `${CLAUDE_PLUGIN_ROOT}/skills/plan-arcs/SKILL.md`. The chapter's delta then creates the entity with that ID;
    - `words`: only when this chapter's length differs from `chapter_words` (see step 3);
    - `exceptions`: only when the chapter breaks a guideline on purpose, once, for a clear effect, with the `reason`.
    When a scene uses a kind of thing that looks like a record value and that the record does not track (exam work, borrowed tools, a practice binding), add it to `untracked` in `schema.yaml`, with the reason in one line. Else make it a field or an entity.
@@ -36,4 +39,4 @@ Only the next book to write gets chapter plans: for phase 1 that is book 1. File
 
 7. **Targets against the plan.** For each target at an anchor in this book, check that the chapters up to it show what produces it. The guidelines ask that power has a cost the reader saw: name the chapter where each rank or big gain is paid for. If a target cannot be earned in the chapters you have, change the plan or tell the user that the target must move.
 
-8. Run **the checkpoint loop** in `${CLAUDE_PLUGIN_ROOT}/reference/checkpoint-loop.md` for `chapter-plans`. In the summary, give a one-line table: chapter, job (from → to), ending type. List each new lore entry and each new character too; when the user approves, also run `lb approve world` for the lore and `lb approve character-arcs` for the characters.
+8. Run **the checkpoint loop** in `${CLAUDE_PLUGIN_ROOT}/reference/checkpoint-loop.md` for `chapter-plans`. In the summary, give a one-line table: chapter, job (from → to), tension, the results of its scenes, ending type. Mark the climax chapter. List each new lore entry and each new character too; when the user approves, also run `lb approve world` for the lore and `lb approve character-arcs` for the characters.

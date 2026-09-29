@@ -62,6 +62,14 @@ export function buildPlanIndex(project: Project, issues: Issue[]): PlanIndex {
       }
       anchors.set(a.id, { id: a.id, book, act: a.act, pos: [book, i, j] });
     });
+    // The climax is in the last act, after its custom anchors.
+    if (plan.data.climax) {
+      const id = `b${book}/climax`;
+      const last = acts.length - 1;
+      if (anchors.has(id)) {
+        issues.push({ code: "duplicate-id", severity: "error", file: plan.file, path: "anchors", message: `${id} comes from \`climax\`: remove it from \`anchors\`` });
+      } else anchors.set(id, { id, book, act: acts[last].id, pos: [book, last, plan.data.anchors.length] });
+    }
     anchors.set(`b${book}/end`, { id: `b${book}/end`, book, pos: [book, END, 0] });
   }
   anchors.set("series/end", { id: "series/end", book: Infinity, pos: [Infinity, 0, 0] });

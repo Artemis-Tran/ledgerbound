@@ -27,6 +27,12 @@ acts:
 draws: [cost-of-power, small-town-conspiracy, underdog-climb]
 anchors:
   - { id: b1/midpoint, act: act2, note: Ivo learns about the debt. }
+tension: { min: 2, max: 5 }
+climax:
+  kind: choice
+  event: At the reeve's door, the well pulls at Ivo's next level through the cracked lamp while Sabine carries the ledger to the manor.
+  risk: His iron rank, and the level that the well takes if he pays.
+  choice: Ivo refuses the tithe, lets the lamp break, and takes the ledger to the manor gate himself.
 ---
 
 # Notes

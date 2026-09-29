@@ -204,6 +204,25 @@ export type SeriesPlan = z.infer<typeof SeriesPlan>;
 
 export const Act = z.strictObject({ id: Slug, ...levelFields });
 
+/** The urgency of a chapter, from 1 (quiet, but still a conflict) to 5 (the climax). guidelines/writing.md §13 says how each level reads. */
+export const Tension = z.number().int().min(1).max(5);
+
+export const CLIMAX_KINDS = ["action", "confrontation", "reveal", "choice"] as const;
+
+/**
+ * The one big event of a book, in its last act. Its plan anchor is `bN/climax`: the chapter plan that holds the
+ * climax lists it in `anchors`, and that chapter has the highest tension of the book.
+ */
+export const Climax = z.strictObject({
+  kind: z.enum(CLIMAX_KINDS),
+  /** What happens. */
+  event: Text,
+  /** What the protagonist can lose in it. */
+  risk: Text,
+  /** What the protagonist does or chooses that decides it: the protagonist is not rescued. */
+  choice: Text,
+});
+
 export const BookPlan = z.strictObject({
   status: Status,
   book: z.number().int().min(1),
@@ -214,12 +233,21 @@ export const BookPlan = z.strictObject({
   draws: z.array(Slug).default([]),
   /** Custom plan anchors (`b1/<slug>`), each inside one act. */
   anchors: z.array(z.strictObject({ id: z.string().regex(AnchorRe), act: Slug, note: z.string().optional() })).default([]),
+  /** The lowest and the highest chapter tension of this book. A cozy book keeps a low `max`; an early book can have a lower range than a late one. */
+  tension: z
+    .strictObject({ min: Tension, max: Tension })
+    .refine((t) => t.min <= t.max, "min must not be larger than max")
+    .optional(),
+  climax: Climax.optional(),
 });
 export type BookPlan = z.infer<typeof BookPlan>;
 
 // ---------- characters/<id>.md ----------
 
 export const ArcBeat = z.strictObject({ id: Slug, book: z.number().int().min(1), act: Slug, beat: Text });
+
+/** How a character speaks in one emotional state (angry, afraid, lying, close): what changes, and one body tell. */
+export const VoiceState = z.strictObject({ state: Text, speech: Text, tell: Text });
 
 export const Character = z
   .strictObject({
@@ -232,6 +260,10 @@ export const Character = z
     want: z.string().optional(),
     need: z.string().optional(),
     lie: z.string().optional(),
+    /** The one event that made the lie feel true. The writer knows it; the prose shows it only in what the character avoids. */
+    wound: Text.optional(),
+    /** One trait that goes against the character's type, so that they are not one note. */
+    contradiction: Text.optional(),
     voice: z.strictObject({
       vocabulary: Text,
       sentence_length: Text,
@@ -239,6 +271,8 @@ export const Character = z
       never_says: TextList,
       /** How the character jokes or mocks, or that they do not. The writer shows it when the scene allows. */
       humour: Text.optional(),
+      /** How the speech changes under pressure or when close to someone. A scene in that state uses it. */
+      states: z.array(VoiceState).default([]),
     }),
     arc_beats: z.array(ArcBeat).default([]),
     /** How the character changes in the story (a lost eye, a new post). The markdown body is who the character is. */
@@ -255,8 +289,21 @@ export type Character = z.infer<typeof Character>;
 
 // ---------- books/NN/plan/MM.md ----------
 
-/** `tone`: how the scene must read (funny, sarcastic, hostile, tender). The writer makes it clear on the page. */
-export const Scene = z.strictObject({ goal: Text, conflict: Text, outcome: Text, tone: Text.optional() });
+export const SCENE_RESULTS = ["win", "loss", "mixed"] as const;
+
+/**
+ * `tone`: how the scene must read (funny, sarcastic, hostile, tender). The writer makes it clear on the page.
+ * `stakes`: what the goal's owner loses if the goal fails, when it differs from the chapter's `stakes`.
+ * `result`: is the goal met? `win` (met), `loss` (not met, or worse), `mixed` (met at a cost).
+ */
+export const Scene = z.strictObject({
+  goal: Text,
+  conflict: Text,
+  outcome: Text,
+  tone: Text.optional(),
+  stakes: Text.optional(),
+  result: z.enum(SCENE_RESULTS).optional(),
+});
 
 export const ChapterPlan = z.strictObject({
   status: Status,
@@ -267,6 +314,10 @@ export const ChapterPlan = z.strictObject({
   words: z.number().int().positive().optional(),
   pov: Slug,
   job: z.strictObject({ value: Text, from: Text, to: Text }),
+  /** The urgency of this chapter, inside the book plan's `tension` range. */
+  tension: Tension.optional(),
+  /** What the POV character can lose in this chapter, and why it matters to them. */
+  stakes: Text.optional(),
   /** `character-id/beat-id` */
   arc_beats: z.array(z.string().regex(/^[a-z0-9-]+\/[a-z0-9-]+$/, "use character-id/beat-id")).default([]),
   threads: z
