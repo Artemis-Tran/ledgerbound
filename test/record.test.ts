@@ -347,6 +347,13 @@ describe("lb brief", () => {
     expect(text).toContain("kind: choice");
   });
 
+  test("tells the writer which part of the climax the chapter is", () => {
+    const dir = fixtureCopy();
+    expect(briefText(dir, 5)).toContain("This chapter is part 1 of the climax (chapters 5–6)");
+    expect(briefText(dir, 6)).toContain("This chapter is the end of the climax (chapters 5–6)");
+    expect(briefText(dir, 4)).not.toContain("of the climax (");
+  });
+
   test("has the lore entries that the chapter plan names by title or alias, and no others", () => {
     const dir = fixtureCopy();
     expect(briefText(dir, 2)).toContain("## Lore: Delving crews");

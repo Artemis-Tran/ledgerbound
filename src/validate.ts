@@ -2,7 +2,7 @@
  * The plan validator. It checks every file that exists, and the references between files.
  * Missing files are the business of checkpoints.ts, which knows which step is next.
  */
-import { buildPlanIndex, comparePos, type PlanIndex, type Pos } from "./anchors.ts";
+import { buildPlanIndex, climaxSpan, comparePos, type PlanIndex, type Pos } from "./anchors.ts";
 import type { Issue } from "./issues.ts";
 import { aiNamesIn } from "./lint/patterns.ts";
 import { characterEntries, entryNames, loreEntries, type NamedEntry } from "./entries.ts";
@@ -267,6 +267,9 @@ function checkTension(project: Project, index: PlanIndex, err: Report, warn: Rep
     const levels = chapters.flatMap((c) => c.data.tension ?? []);
     const peak = range?.max ?? Math.max(0, ...levels);
     const waived = (c: (typeof chapters)[number], rule: string) => c.data.exceptions.some((e) => e.rule === rule);
+    // The chapters of the climax stay high together: the flat and after-peak rules start after its decisive chapter.
+    const span = climaxSpan(index, book);
+    const inSpan = (c: (typeof chapters)[number]) => span !== undefined && c.data.chapter >= span[0] && c.data.chapter <= span[1];
 
     chapters.forEach((c, i) => {
       const d = c.data;
@@ -275,11 +278,11 @@ function checkTension(project: Project, index: PlanIndex, err: Report, warn: Rep
       if (d.tension === undefined) return;
       if (range && (d.tension < range.min || d.tension > range.max)) err("tension-range", c.file, `tension ${d.tension} is outside the book's range ${range.min}–${range.max}`, "tension");
       const run = chapters.slice(Math.max(0, i - 3), i + 1);
-      if (run.length === 4 && run.every((r) => r.data.tension === d.tension) && !waived(c, "tension.flat")) {
+      if (run.length === 4 && !inSpan(c) && run.every((r) => r.data.tension === d.tension) && !waived(c, "tension.flat")) {
         warn("tension.flat", c.file, `chapters ${run[0].data.chapter}–${d.chapter} all have tension ${d.tension}`, "tension");
       }
       const prev = chapters[i - 1];
-      if (prev?.data.tension === peak && d.tension >= peak && !waived(c, "tension.after-peak")) {
+      if (prev?.data.tension === peak && d.tension >= peak && !inSpan(c) && !waived(c, "tension.after-peak")) {
         warn("tension.after-peak", c.file, `chapter ${prev.data.chapter} is at the book's highest tension (${peak}), so this chapter must be lower`, "tension");
       }
     });
@@ -306,14 +309,23 @@ function checkTension(project: Project, index: PlanIndex, err: Report, warn: Rep
       }
     }
 
-    // The climax chapter has the highest tension of the book.
-    const climax = index.anchors.get(`b${book}/climax`);
-    const cc = climax?.chapter !== undefined ? chapters.find((c) => c.data.chapter === climax.chapter) : undefined;
-    const level = cc?.data.tension;
-    if (cc && level !== undefined) {
+    // The climax spans 2 or more chapters, and its decisive chapter has the highest tension of the book.
+    if (!span) continue;
+    const [first, decisive] = span;
+    const cc = chapters.find((c) => c.data.chapter === decisive)!;
+    if (first >= decisive) {
+      err("climax-span", cc.file, `b${book}/climax-start (chapter ${first}) must come before b${book}/climax (chapter ${decisive}): the climax spans 2 or more chapters`, "anchors");
+      continue;
+    }
+    const level = cc.data.tension;
+    if (level !== undefined) {
       const higher = chapters.filter((c) => (c.data.tension ?? 0) > level).map((c) => c.data.chapter);
-      if (higher.length) err("climax-peak", cc.file, `the climax chapter has tension ${level}, but chapter(s) ${higher.join(", ")} are higher`, "tension");
-      else if (range && level < range.max) warn("climax-peak", cc.file, `the climax chapter has tension ${level}, below the book's highest level ${range.max}`, "tension");
+      if (higher.length) err("climax-peak", cc.file, `the decisive chapter of the climax has tension ${level}, but chapter(s) ${higher.join(", ")} are higher`, "tension");
+      else if (range && level < range.max) warn("climax-peak", cc.file, `the decisive chapter of the climax has tension ${level}, below the book's highest level ${range.max}`, "tension");
+    }
+    const floor = (range?.max ?? peak) - 1;
+    for (const c of chapters.filter(inSpan)) {
+      if (c.data.tension !== undefined && c.data.tension < floor) warn("climax-tension", c.file, `the chapter is in the climax (chapters ${first}–${decisive}), so its tension is at least ${floor}`, "tension");
     }
   }
 }

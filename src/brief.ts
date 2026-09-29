@@ -5,7 +5,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { stringify } from "yaml";
-import { buildPlanIndex, comparePos, type Pos } from "./anchors.ts";
+import { buildPlanIndex, climaxSpan, comparePos, type Pos } from "./anchors.ts";
 import { splitFrontmatter } from "./frontmatter.ts";
 import { changesBefore, characterEntry, charactersNamedIn, characterText, entryText, firstSentence, loreEntry, loreNamedIn, nameParts, lastSeen } from "./entries.ts";
 import { pad2, type Project } from "./project.ts";
@@ -113,10 +113,17 @@ export function buildBrief(project: Project, rec: RecordFiles, book: number, cha
     const t = plan.data.tension;
     const level = t === undefined ? "" : `Tension ${t}${bookPlan.tension ? ` (this book: ${bookPlan.tension.min}–${bookPlan.tension.max})` : ""}: write the pressure, pace and cost of level ${t} in guidelines/writing.md §13.`;
     const stakes = plan.data.stakes ? `Stakes: ${plan.data.stakes} Put them on the page before the turn of the chapter.` : "";
+    const span = climaxSpan(index, book);
+    const climax =
+      span && chapter >= span[0] && chapter <= span[1]
+        ? chapter === span[1]
+          ? `This chapter is the end of the climax (chapters ${span[0]}–${span[1]}): the protagonist decides it here, by the climax's \`choice\`.`
+          : `This chapter is part ${chapter - span[0] + 1} of the climax (chapters ${span[0]}–${span[1]}): raise the stakes toward chapter ${span[1]}, where the protagonist decides it, and do not decide it here.`
+        : "";
     sections.push({
       title: `This act${act ? ` (${act.id}, chapters ${range![1][0]}–${range![1][1]})` : ""} and the book`,
       text: [
-        [level, stakes].filter(Boolean).join("\n\n"),
+        [level, stakes, climax].filter(Boolean).join("\n\n"),
         yaml({
           book: { promise: bookPlan.promise, ...(bookPlan.climax ? { climax: bookPlan.climax } : {}) },
           ...(act ? { act: { id: act.id, promise: act.promise, question: act.question, ending_state: act.ending_state } } : {}),

@@ -70,7 +70,7 @@ The urgency of a chapter, a level from 1 (quiet, but still a conflict) to 5 (the
 _Avoid_: Intensity, drama, pacing
 
 **Climax**:
-The one big event of a book, in its last act, at the book's highest tension: an action, a confrontation, a reveal or a choice. The protagonist decides it by their own act. Its plan anchor is `bN/climax`.
+The one big event of a book, in its last act, at the book's highest tension: an action, a confrontation, a reveal or a choice. It spans 2 or more chapters, from the plan anchor `bN/climax-start` to `bN/climax`, the chapter where the protagonist decides it by their own act.
 _Avoid_: Finale, showdown, set-piece
 
 **Ending type**:

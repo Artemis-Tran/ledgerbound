@@ -36,6 +36,13 @@ const END = 1e9;
 
 export const comparePos = (a: Pos, b: Pos) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2];
 
+/** The chapters of a book's climax, [first, decisive], when both of its anchors are mapped. */
+export function climaxSpan(index: PlanIndex, book: number): [number, number] | undefined {
+  const start = index.anchors.get(`b${book}/climax-start`)?.chapter;
+  const end = index.anchors.get(`b${book}/climax`)?.chapter;
+  return start !== undefined && end !== undefined ? [start, end] : undefined;
+}
+
 export function buildPlanIndex(project: Project, issues: Issue[]): PlanIndex {
   const anchors = new Map<string, AnchorInfo>();
   const planned = new Set<number>(project.chapters.keys());
@@ -62,13 +69,16 @@ export function buildPlanIndex(project: Project, issues: Issue[]): PlanIndex {
       }
       anchors.set(a.id, { id: a.id, book, act: a.act, pos: [book, i, j] });
     });
-    // The climax is in the last act, after its custom anchors.
+    // The climax is a span of chapters in the last act, after its custom anchors: `climax-start` is its first
+    // chapter, and `climax` the chapter where the protagonist decides it.
     if (plan.data.climax) {
-      const id = `b${book}/climax`;
       const last = acts.length - 1;
-      if (anchors.has(id)) {
-        issues.push({ code: "duplicate-id", severity: "error", file: plan.file, path: "anchors", message: `${id} comes from \`climax\`: remove it from \`anchors\`` });
-      } else anchors.set(id, { id, book, act: acts[last].id, pos: [book, last, plan.data.anchors.length] });
+      ["climax-start", "climax"].forEach((slug, k) => {
+        const id = `b${book}/${slug}`;
+        if (anchors.has(id)) {
+          issues.push({ code: "duplicate-id", severity: "error", file: plan.file, path: "anchors", message: `${id} comes from \`climax\`: remove it from \`anchors\`` });
+        } else anchors.set(id, { id, book, act: acts[last].id, pos: [book, last, plan.data.anchors.length + k] });
+      });
     }
     anchors.set(`b${book}/end`, { id: `b${book}/end`, book, pos: [book, END, 0] });
   }

@@ -231,8 +231,10 @@ chapters still has a conflict.
     moves the stakes.
   - **4, high**: a clock (a tide, a deadline, air that runs out) or an enemy that acts. The scenes
     are shorter, the choices are harder, and at least one thing is lost or damaged on the page.
-  - **5, climax**: all of the stakes of the book at once. The protagonist decides it by their own
-    choice or act, and nobody rescues them. The cost is paid on the page.
+  - **5, climax**: all of the stakes of the book at once. The climax spans 2 or more chapters:
+    the first ones raise the stakes and take away the protagonist's options, and the last one is
+    where the protagonist decides it by their own choice or act. Nobody rescues them. The cost is
+    paid on the page.
 - **The events make the tension, not the words.** A high level comes from time, danger and cost.
   It does not come from inflated emotion, from a narrator who says that the moment is tense, or
   from a character who shouts what they feel. Sections 4, 5 and 6 still apply at level 5.

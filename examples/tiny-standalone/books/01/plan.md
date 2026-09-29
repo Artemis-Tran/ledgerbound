@@ -30,7 +30,7 @@ anchors:
 tension: { min: 2, max: 5 }
 climax:
   kind: choice
-  event: At the reeve's door, the well pulls at Ivo's next level through the cracked lamp while Sabine carries the ledger to the manor.
+  event: Trapped by the collapse, Ivo climbs out through the tithe vault and sees the Duke's seal; at the reeve's door, the well pulls at his next level through the cracked lamp while Sabine carries the ledger to the manor.
   risk: His iron rank, and the level that the well takes if he pays.
   choice: Ivo refuses the tithe, lets the lamp break, and takes the ledger to the manor gate himself.
 ---

@@ -194,7 +194,7 @@ describe("book levels", () => {
   test("the last act must end on the last chapter", () => {
     const dir = fixtureCopy();
     edit(dir, "books/01/plan/06.md", "anchors: [b1/climax, b1/act3/end]", "anchors: [b1/climax]");
-    edit(dir, "books/01/plan/05.md", "arc_beats: []", "arc_beats: []\nanchors: [b1/act3/end]");
+    edit(dir, "books/01/plan/05.md", "anchors: [b1/climax-start]", "anchors: [b1/climax-start, b1/act3/end]");
     expect(errorCodes(check(dir))).toContain("anchor-order");
   });
 
@@ -419,6 +419,7 @@ describe("tension, stakes and the climax", () => {
     edit(dir, "books/01/plan/03.md", ", result: loss }", " }");
     edit(dir, "books/01/plan.md", /tension: \{ min: 2, max: 5 \}\nclimax:\n(  .*\n)+/, "");
     edit(dir, "books/01/plan/06.md", "b1/climax, ", "");
+    edit(dir, "books/01/plan/05.md", "anchors: [b1/climax-start]\n", "");
     const issues = check(dir);
     expect(errorCodes(issues)).toEqual([]);
     expect(issues).toContainEqual(expect.objectContaining({ code: "tension-missing", severity: "warn", file: "books/01/plan/03.md", message: expect.stringContaining("`tension`, `stakes`, a `result` for each scene") }));
@@ -431,7 +432,24 @@ describe("tension, stakes and the climax", () => {
     expect(codes(dir)).toContain("error tension-range books/01/plan/06.md");
   });
 
-  test("the climax needs a chapter, in the last act, with the highest tension", () => {
+  test("the climax spans 2 or more chapters, each one near the book's highest tension", () => {
+    const dir = fixtureCopy();
+    edit(dir, "books/01/plan/05.md", "anchors: [b1/climax-start]\n", "");
+    expect(errorCodes(check(dir))).toContain("anchor-unmapped");
+    edit(dir, "books/01/plan/06.md", "anchors: [b1/climax, ", "anchors: [b1/climax-start, b1/climax, ");
+    expect(codes(dir)).toContain("error climax-span books/01/plan/06.md");
+
+    const dir2 = fixtureCopy();
+    edit(dir2, "books/01/plan/05.md", "tension: 4", "tension: 3");
+    expect(codes(dir2)).toContain("warn climax-tension books/01/plan/05.md");
+
+    // Two chapters at the peak are fine inside the climax.
+    const dir3 = fixtureCopy();
+    edit(dir3, "books/01/plan/05.md", "tension: 4", "tension: 5");
+    expect(codes(dir3).filter((c) => /tension|climax/.test(c))).toEqual([]);
+  });
+
+  test("the decisive chapter of the climax is in the last act, with the highest tension", () => {
     const dir = fixtureCopy();
     edit(dir, "books/01/plan/06.md", "b1/climax, ", "");
     expect(errorCodes(check(dir))).toContain("anchor-unmapped");
@@ -458,8 +476,8 @@ describe("tension, stakes and the climax", () => {
     const dir2 = fixtureCopy();
     edit(dir2, "books/01/plan/02.md", "tension: 3", "tension: 5");
     expect(codes(dir2)).toContain("warn tension.act-rise books/01/plan/04.md");
-    edit(dir2, "books/01/plan/05.md", "tension: 4", "tension: 5");
-    expect(codes(dir2)).toContain("warn tension.after-peak books/01/plan/06.md");
+    edit(dir2, "books/01/plan/03.md", "tension: 3", "tension: 5");
+    expect(codes(dir2)).toContain("warn tension.after-peak books/01/plan/03.md");
 
     const dir3 = fixtureCopy();
     edit(dir3, "books/01/plan/01.md", /result: mixed/g, "result: win");
