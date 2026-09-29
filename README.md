@@ -165,9 +165,18 @@ Use autopilot after the first chapters show that the voice and the plan work. Fo
 | `lb who hale --at 1.07` | One character at the start of chapter 7: who it is, its voice card, its record and when it was last seen. |
 | `lb validate` | Every file and reference, and the ledger. |
 
+### A novel repo made before version 0.16.0
+
+Section 11 of `guidelines/writing.md` is now "11. Clear by default". It replaces "11. Clarity" and its 7 `clarity.*` rules, which made the reviser change pronouns to names and state the subtext. The 2 `plain.*` rules that the prose checker judges are: plain words and one main idea per sentence (`plain.words`), and at most one new term in a sentence and two in a paragraph (`plain.terms`). They are defaults: when the `prose-style` decision in `bible.md` asks for richer prose, or a scene needs it, they give way. Section 10 is as before 0.15.0: the voice samples win over the guidelines.
+
+Section 3 has two new lint rules, `rhythm.clause-chains` (a sentence with 2 or more clauses joined by ", and" / ", but" / ", so") and `rhythm.commas` (more than 4 commas in one sentence). Both give a `warn`. The new section "12. Grammar" has 4 `grammar.*` rules that the prose checker judges (comma splices and run-ons, fragments, conjunctions that show the relation, commas).
+
+Nothing in the ledger changes. To get the new text, copy `guidelines/writing.md` over your copy. A plan `exceptions` list with a `clarity.*` rule now fails `lb validate`: remove the rule from the list.
+
 ### A novel repo made before version 0.15.0
 
 `guidelines/writing.md` has a new section, "11. Clarity", with 7 `clarity.*` rules that the prose checker judges (a reader can tell who, where and what; a new term is glossed; a pronoun has one clear antecedent; reasoning shows its steps). They are defaults: a finding is a `warn`, and an `error` only when a reader would lose the thread. Nothing in the ledger changes. To get the section, copy `guidelines/writing.md` over your copy, or add section 11 by hand.
+
 
 ### A novel repo made before version 0.13.0
 

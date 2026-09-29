@@ -52,6 +52,9 @@ export interface LintResult {
   findings: Finding[];
 }
 
+/** `, and he…`: a comma and a conjunction that join two full clauses, not the items of a list. */
+const CLAUSE_JOIN = /,\s+(?:and|but|so|or|yet)\s+(?:then\s+|now\s+)?(?:the|a|an|he|she|they|it|we|i|you|his|her|their|its|this|that|there|no|nothing|nobody|[A-Z][\p{L}'’-]*)\b/gu;
+
 const snippet = (s: string, max = 100) => (s.length > max ? `${s.slice(0, max - 1)}…` : s);
 
 function quotedAt(text: string, offset: number): boolean {
@@ -253,6 +256,15 @@ export function lintProse(body: string, firstLine: number, file: string, opts: L
     if (a.paragraph === b.paragraph && last && last === b.words[0] && last.length > 2 && !STOPWORDS.has(last)) {
       add({ rule: "rhythm.anadiplosis", severity: "warn", line: b.line, text: `${a.text} ${b.text}`, message: `the sentence starts with "${last}", the last word of the one before` });
     }
+  }
+
+  // §3 clause chains and comma-heavy sentences, in narration only.
+  for (const s of sentences) {
+    if (s.dialogue) continue;
+    const joins = [...s.text.matchAll(CLAUSE_JOIN)].length;
+    if (joins >= 2) add({ rule: "rhythm.clause-chains", severity: "warn", line: s.line, text: s.text, message: `${joins + 1} clauses chained with a conjunction: subordinate one, or split the sentence` });
+    const commas = (s.text.match(/,/g) ?? []).length;
+    if (commas >= 5) add({ rule: "rhythm.commas", severity: "warn", line: s.line, text: s.text, message: `${commas} commas in one sentence (max 4): split it` });
   }
 
   // §3 contrast framing: at most once.

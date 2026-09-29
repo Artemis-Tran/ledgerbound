@@ -115,6 +115,18 @@ describe("§3 rhythm", () => {
     expect(rules(`${FILLER} A rope — a long one.`)).not.toContain("rhythm.em-dash");
   });
 
+  test("a clause chain is a warning, and a list of items is not", () => {
+    const chain = "Then they were gone, and the sand was grey and pocked, and the sea came in over it.";
+    expect(lint(chain)).toContainEqual(expect.objectContaining({ rule: "rhythm.clause-chains", severity: "warn" }));
+    expect(rules("The sand was grey, pocked, and cold, and he left.")).not.toContain("rhythm.clause-chains");
+    expect(rules('"He ran, and she ran, and the dog ran," Ivo said.')).not.toContain("rhythm.clause-chains");
+  });
+
+  test("five commas in one sentence is a warning", () => {
+    expect(rules("He took the rope, the hook, the slate, the lamp, the knife, and the bread from the shelf.")).toContain("rhythm.commas");
+    expect(rules("He took the rope, the hook, the slate, and the lamp from the shelf.")).not.toContain("rhythm.commas");
+  });
+
   test("the second contrast frame is a warning", () => {
     const text = "It wasn't the rope. It was the hook. He came not for the pay, but for the rank.";
     expect(lint(text).filter((f) => f.rule === "rhythm.contrast")).toHaveLength(1);

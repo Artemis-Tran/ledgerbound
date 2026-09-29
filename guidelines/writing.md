@@ -44,6 +44,11 @@ type. A book uses `cliffhanger` for no more than one chapter in three.
   ("…from Body Writs. Body Writs were signed by working people, so…"), is permitted.
 - **Triplets**: no automatic lists of three ("cold, dark, and silent"). Use one precise item, two,
   or four. If you use three, the third must add something.
+- **[lint] Clause chains**: no sentence with 2 or more clauses joined by ", and" / ", but" / ", so"
+  (a triplet of clauses). Each "and" then only means "next". Subordinate one clause, or split.
+  Bad: "Then they were gone, and the sand was grey and pocked, and the sea came in over it."
+  Better: "Then they were gone. The sand lay grey and pocked, and the sea came in over it."
+- **[lint] Commas**: at most 4 commas in one sentence. Split it.
 - **Contrast framing**: no "It wasn't X. It was Y." / "not X, but Y" / "Not because X, but because
   Y". At most once per chapter.
 - **[lint] One-line paragraphs for drama**: at most 2 per chapter, and never 3 in a row.
@@ -156,31 +161,43 @@ writer wrote it. Compare each scene with the sample of its kind (dialogue, actio
 ## 10. Revision rules
 - Fix only the flagged spans. A full rewrite brings in new tics.
 - After a fix, run the lint again on the changed paragraph.
-- When two rules conflict, the story bible and the voice samples win over these guidelines. The
-  exception is section 11: a line that follows a sample's style, but that a reader cannot follow,
-  changes. The voice samples follow section 11 too.
+- When two rules conflict, the story bible and the voice samples win over these guidelines.
 
-## 11. Clarity [review]
+## 11. Clear by default [review]
 
-These are defaults for a reader who reads the story once, at normal speed. Style comes first. A
-writer can break any of them when the effect is worth a second read, but does it on purpose.
-`check-prose` reports a break as a `warn`, and as an `error` only when a reader would lose the
-thread.
+This section is a default, not a style. Use it when nothing asks for more. Richer prose is
+correct when one of these asks for it:
+- the `prose-style` decision in `bible.md` (the user asked for dense, lyrical or ornate prose)
+- a scene that needs it (a dream, a vision, an old text, a character who speaks that way)
+- the chapter plan, which lists `plain.words` or `plain.terms` in `exceptions`
 
-- **Orient early.** By the end of the first paragraph of a scene, the reader can name the POV
-  character, the place, who is present and what the POV character wants. Each line of dialogue has
-  a clear speaker.
-- **Gloss a new term where it first appears**: a short clause, a use in action, or a contrast. This
-  covers the setting's institutions, titles, creatures and System terms. A reader who never opened
-  the lore should not need it. Prefer few new terms in one scene, about two.
-- **Keep the reference close.** When a pronoun, "the boy" or "it" could mean two things, use the
-  noun.
-- **Say the plain event once.** Subtext hides why a character says a line. It does not hide what
-  was decided, refused or learned.
-- **Recited or clipped speech**: tell the reader first what is recited, or to whom. A line that
-  reads like a list of nouns is a list of nouns.
-- **Show each step of a reasoning.** When a character works something out, give the reader each
-  step and what each term refers to, not only the conclusion. "So the fault is not in the keel"
-  needs the reader to know what the keel was tested against.
-- **LitRPG mechanics**: say what an ability does, its limit and its cost before the plot depends
-  on it.
+Even then, a reader must be able to follow the sentence.
+
+- **Plain words and sentences.** Use the common word before the rare one. Give a sentence one
+  main idea, and join two only when the content links them. One image or metaphor in a paragraph
+  is enough; do not put one in every sentence.
+- **New terms, few at a time.** A new term is a name, title, place, creature, custom or System
+  term that the reader meets for the first time in the book. At most one new term in a sentence,
+  and at most two in a paragraph. Until a name matters to the scene, use a common word ("the
+  guard", not "the Tithe-warden of the Low Gate"), and bring the name in later.
+  Bad: "Hale showed his Body Writ to the Low Gate reeve and paid the tithe-copper."
+  Better: "Hale showed the guard his Body Writ and paid."
+- **Pronouns and subtext stay.** This section changes words and density only. Keep a pronoun when
+  the reader can tell who it means, and leave implied meaning implied.
+
+## 12. Grammar [review]
+
+Standard grammar is the default. Voice can break it: a character's speech, a clipped action beat or
+one hard fragment. The writer does it on purpose and for a reason a reader can see.
+`check-prose` reports a break as a `warn`, and as an `error` only when the sense is unclear.
+
+- **Comma splices and run-ons.** Join two full clauses with a conjunction, a semicolon or a full stop,
+  never with a comma alone. Do not run three or more clauses together without a stop.
+- **Fragments.** A fragment stands for a reason: voice, speech, or one hard beat. It never stands where
+  the sense needs a subject or a verb, and never twice in a row for effect.
+- **Conjunctions show the relation.** Use the word that says how two clauses relate: "because",
+  "but", "so", "while", "until". "And" is for things that go together, not for "next". Sentences
+  with no conjunction at all, where the relation matters, read as a list of events.
+- **Commas.** Put a comma after an opening clause or phrase, round an aside, and before a conjunction
+  that joins two full clauses. Put none between a subject and its verb, and none before a conjunction
+  that joins two verbs with one subject.
