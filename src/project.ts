@@ -15,6 +15,7 @@ import {
   Facts,
   LoreEntry,
   ProjectConfig,
+  Relationship,
   RollingMemory,
   Schema,
   SeriesPlan,
@@ -44,6 +45,8 @@ export interface Project {
   /** book number → chapter plans, sorted by chapter */
   chapters: Map<number, Loaded<ChapterPlan>[]>;
   characters: Loaded<Character>[];
+  /** relationships/<id>.md: relationship ID → relationship, sorted by ID. */
+  relationships: Map<string, Loaded<Relationship>>;
   /** lore/<id>.md: entry ID → entry, sorted by ID. */
   lore: Map<string, Loaded<LoreEntry>>;
   /** voice/*.md, one per kind. */
@@ -121,6 +124,15 @@ export function loadProject(root: string): { project?: Project; issues: Issue[] 
 
   const empty = <T>(file: string, data: T): Loaded<T> => ({ file, data, body: "" });
 
+  /** The files of a folder whose file name is the ID, sorted by ID. */
+  const byFileName = <S extends z.ZodType>(schema: S, dir: string) =>
+    new Map(
+      mdFiles(dir).flatMap((p) => {
+        const entry = readMd(schema, p);
+        return entry ? [[/([^/]+)\.md$/.exec(p)![1], entry] as const] : [];
+      }),
+    );
+
   const project: Project = {
     root,
     config: config.data,
@@ -133,10 +145,8 @@ export function loadProject(root: string): { project?: Project; issues: Issue[] 
     books: new Map(),
     chapters: new Map(),
     characters: mdFiles("characters").flatMap((p) => readMd(Character, p) ?? []),
-    lore: new Map(mdFiles("lore").flatMap((p) => {
-      const entry = readMd(LoreEntry, p);
-      return entry ? [[/([^/]+)\.md$/.exec(p)![1], entry] as const] : [];
-    })),
+    relationships: byFileName(Relationship, "relationships"),
+    lore: byFileName(LoreEntry, "lore"),
     voiceSamples: mdFiles("voice").flatMap((p) => readMd(VoiceSample, p) ?? []),
     prose: new Map(),
     memory: new Map(),

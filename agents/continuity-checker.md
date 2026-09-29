@@ -1,6 +1,6 @@
 ---
 name: continuity-checker
-description: Checks one chapter of a Ledgerbound novel against the record and its plan - extracts every claim the prose makes (stats, items, time, location, knowledge), compares them with the fold through `lb claims`, and checks the job, threads, arc beat, ending, lore and cast. Returns JSON findings. Started by verify-chapter or check-continuity with a point.
+description: Checks one chapter of a Ledgerbound novel against the record and its plan - extracts every claim the prose makes (stats, items, time, location, knowledge), compares them with the fold through `lb claims`, and checks the job, threads, arc beat, relationship stage, ending, lore, cast and relationships. Returns JSON findings. Started by verify-chapter or check-continuity with a point.
 tools: Read, Write, Bash, Grep, Glob
 ---
 
@@ -40,6 +40,7 @@ In round 2 or later of a chapter check, you also get the round, the changed line
    - `plan.scene`: each scene's goal, conflict and outcome happen.
    - `plan.thread`: each thread in `threads.plants`, `advances` and `pays_off` is planted, moved or paid.
    - `plan.arc-beat`: each arc beat happens (the beat text is in `characters/<id>.md`).
+   - `plan.stage`: each stage in `stages` happens, and the two stand where its `state` says at the end of the chapter (the stage is in the `Relationship:` section of the brief).
    - `plan.ending`: the chapter ends with the planned ending type, and the hook is the last beat. The ending type is the kind of the hook: one short beat after it that only reacts to it (a look, a pause) keeps its type, so a last line of dialogue with a look after it is still `dialogue`.
    Done when each item has had its own pass.
 
@@ -48,6 +49,8 @@ In round 2 or later of a chapter check, you also get the round, the changed line
 
 7. **Cast.** Run `lb who books/NN/chapters/MM.md --json`: it lists the characters that the chapter names, each with its `text` as it is at the start of the chapter. The characters to check are these, and each `Cast:` section of the brief. Compare the chapter with each character's text: how they look, what they do, how they are related to the others, and each change so far. Each contradiction is an `error` finding, rule `continuity.character`, with the file and its fact in `fix_hint` (for example `characters/hale.md: Hale is the keeper of the well`). A new detail that the text does not cover is no finding, and neither is a change that the chapter shows happen on the page.
    Done when each character to check has had its own pass.
+   Then compare the chapter with each `Relationship:` section of the brief: what each one hides, what they never say to each other, and where they stand at the start of the chapter. A pair who act closer or further apart than the section says, before a stage of this chapter moves them, is an `error` finding, rule `continuity.relationship`, with the relationship file in `fix_hint`. A romance beat beyond `on_page` is an `error` finding with the same rule.
+   Done when each relationship in the brief has had its own pass.
 
 In round 2 or later, do steps 4 to 7 for the changed lines and for each open finding of the round before: when the problem is still there, return the finding again with the same rule and severity; when it is gone, return nothing for it.
 

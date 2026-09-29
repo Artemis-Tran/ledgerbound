@@ -287,6 +287,56 @@ export const Character = z
   });
 export type Character = z.infer<typeof Character>;
 
+// ---------- relationships/<id>.md ----------
+
+export const SHIFTS = ["closer", "apart"] as const;
+
+/** One step of a relationship, mapped to an act like an arc beat: the event on the page, and where the two stand after it. */
+export const Stage = z.strictObject({
+  id: Slug,
+  book: z.number().int().min(1),
+  act: Slug,
+  /** Does the event bring the two closer or push them apart? */
+  shift: z.enum(SHIFTS),
+  /** The event that a chapter shows. */
+  beat: Text,
+  /** Where the two stand after it. */
+  state: Text,
+});
+
+/**
+ * How two characters are together, and how that changes. At least one of the two is a protagonist or main character.
+ * The file name is the ID. The markdown body is how the two know each other at the start of the story.
+ */
+export const Relationship = z
+  .strictObject({
+    status: Status,
+    between: z.tuple([Slug, Slug]).refine(([a, b]) => a !== b, "a relationship is between two different characters"),
+    romance: z.boolean().default(false),
+    /** character ID → what that character wants from the other. */
+    wants: z.record(Slug, Text),
+    /** The source of conflict between the two, from the lies of both. */
+    friction: Text,
+    /** character ID → what that character hides from the other. */
+    hides: z.record(Slug, Text).default({}),
+    /** How the two talk together: the tone, shared jokes, private words. */
+    talk: Text,
+    /** What the two never say to each other. These carry the subtext of their scenes. */
+    never_says: TextList,
+    /** Romance only: why they are not together now, from the lies of both. */
+    obstacle: Text.optional(),
+    /** Romance only: how much the prose shows (for example, "closed door: the scene cuts at the first kiss"). */
+    on_page: Text.optional(),
+    stages: z.array(Stage).default([]),
+  })
+  .superRefine((r, ctx) => {
+    if (!r.romance) return;
+    for (const k of ["obstacle", "on_page"] as const) {
+      if (!r[k]) ctx.addIssue({ code: "custom", path: [k], message: `a romance needs '${k}'` });
+    }
+  });
+export type Relationship = z.infer<typeof Relationship>;
+
 // ---------- books/NN/plan/MM.md ----------
 
 export const SCENE_RESULTS = ["win", "loss", "mixed"] as const;
@@ -320,6 +370,10 @@ export const ChapterPlan = z.strictObject({
   stakes: Text.optional(),
   /** `character-id/beat-id` */
   arc_beats: z.array(z.string().regex(/^[a-z0-9-]+\/[a-z0-9-]+$/, "use character-id/beat-id")).default([]),
+  /** `relationship-id/stage-id` */
+  stages: z.array(z.string().regex(/^[a-z0-9-]+\/[a-z0-9-]+$/, "use relationship-id/stage-id")).default([]),
+  /** A relaxed chapter of characters together. Its value shift is in a relationship, and its conflict is small and inside it. */
+  bonding: z.boolean().default(false),
   threads: z
     .strictObject({ plants: z.array(Slug).default([]), advances: z.array(Slug).default([]), pays_off: z.array(Slug).default([]) })
     .prefault({}),

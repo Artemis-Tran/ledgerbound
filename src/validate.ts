@@ -5,13 +5,13 @@
 import { buildPlanIndex, climaxSpan, comparePos, type PlanIndex, type Pos } from "./anchors.ts";
 import type { Issue } from "./issues.ts";
 import { aiNamesIn } from "./lint/patterns.ts";
-import { characterEntries, entryNames, loreEntries, type NamedEntry } from "./entries.ts";
-import { bookDir, pad2, type Project } from "./project.ts";
+import { characterEntries, entryNames, loreEntries, type NamedEntry, relationshipsOf } from "./entries.ts";
+import { bookDir, type Loaded, pad2, type Project } from "./project.ts";
 import { allEntries, chapterKey, fold, loadRecord, stagedPath } from "./record.ts";
 import { RULE_IDS } from "./rules.ts";
 import { checkValue, fieldDef, type Kind, numericRange } from "./fields.ts";
 import { checkPublish } from "./export/epub.ts";
-import { BELIEFS, REQUIRED_DECISIONS, VOICE_KINDS, type Target } from "./schemas.ts";
+import { BELIEFS, type ChapterPlan, REQUIRED_DECISIONS, VOICE_KINDS, type Target } from "./schemas.ts";
 
 export function validateProject(project: Project): Issue[] {
   const issues: Issue[] = [];
@@ -28,6 +28,7 @@ export function validateProject(project: Project): Issue[] {
   const totalBooks = checkLevels(project, err, warn);
   checkDraws(project, totalBooks, err);
   checkCharacters(project, index, characterIds, totalBooks, err, warn);
+  checkRelationships(project, index, totalBooks, err, warn);
   checkChapters(project, index, characterIds, err, warn);
   checkTension(project, index, err, warn);
   checkThreads(project, index, err);
@@ -209,6 +210,78 @@ function checkCharacters(project: Project, index: PlanIndex, characterIds: Set<s
   }
 }
 
+// ---------- relationships ----------
+
+function checkRelationships(project: Project, index: PlanIndex, totalBooks: number, err: Report, warn: Report) {
+  const role = (id: string) => project.characters.find((c) => c.data.id === id)?.data.role;
+  const main = (id: string) => role(id) === "protagonist" || role(id) === "main";
+  const pairKey = (a: string, b: string) => [a, b].sort().join(" and ");
+  const pairs = new Map<string, string>();
+
+  for (const [id, r] of project.relationships) {
+    const d = r.data;
+    if (!/^[a-z0-9][a-z0-9-]*$/.test(id)) err("file-name", r.file, `the file name '${id}' is the relationship ID: use lower-case letters, digits and '-'`);
+    d.between.forEach((c, i) => {
+      if (!role(c)) err("relationship-unknown", r.file, `'${c}' has no characters/${c}.md`, `between.${i}`);
+    });
+    if (d.between.every((c) => role(c)) && !d.between.some(main)) {
+      err("relationship-supporting", r.file, "a relationship file needs a protagonist or main character: two supporting characters get none", "between");
+    }
+    const key = pairKey(...d.between);
+    const other = pairs.get(key);
+    if (other) err("relationship-duplicate", r.file, `${key} already have a relationship file: relationships/${other}.md`, "between");
+    else pairs.set(key, id);
+    for (const field of ["wants", "hides"] as const) {
+      for (const c of Object.keys(d[field])) {
+        if (!d.between.includes(c)) err("relationship-field", r.file, `'${c}' is not one of ${d.between.join(" and ")}`, `${field}.${c}`);
+      }
+    }
+    for (const c of d.between) {
+      if (!(c in d.wants)) err("relationship-field", r.file, `say what ${c} wants from the other`, "wants");
+    }
+
+    for (const s of duplicates(d.stages, (s) => s.id)) err("duplicate-id", r.file, `stage '${s}' is defined twice`, "stages");
+    d.stages.forEach((s, i) => {
+      if (totalBooks > 0 && s.book > totalBooks) err("unknown-book", r.file, `book ${s.book} is not in the plan`, `stages.${i}.book`);
+      const plan = project.books.get(s.book);
+      if (plan && !plan.data.acts.some((a) => a.id === s.act)) err("unknown-act", r.file, `book ${s.book} has no act '${s.act}'`, `stages.${i}.act`);
+    });
+    if (d.stages.length === 0) warn("relationship-static", r.file, "the relationship has no stages: nothing on the page changes how the two are together", "stages");
+    else if (d.stages.length >= 3 && d.stages.every((s) => s.shift === "closer")) {
+      warn("relationship-flat", r.file, "every stage brings the two closer: give the relationship at least one stage that pushes them apart", "stages");
+    }
+
+    // Every stage of a book with chapter plans is placed in exactly one chapter of its act.
+    for (const book of index.planned) {
+      const chapters = project.chapters.get(book)!;
+      for (const s of d.stages.filter((s) => s.book === book)) {
+        const ref = `${id}/${s.id}`;
+        const placed = chapters.filter((ch) => ch.data.stages.includes(ref));
+        if (placed.length === 0) err("stage-unplaced", `${bookDir(book)}/plan`, `stage ${ref} is not in any chapter plan`);
+        if (placed.length > 1) err("stage-twice", `${bookDir(book)}/plan`, `stage ${ref} is in chapters ${placed.map((p) => p.data.chapter).join(", ")}`);
+        const range = index.actRanges.get(book)?.get(s.act);
+        for (const p of placed) {
+          if (range && (p.data.chapter < range[0] || p.data.chapter > range[1])) {
+            err("stage-wrong-act", p.file, `stage ${ref} belongs to ${s.act} (chapters ${range[0]}–${range[1]})`, "stages");
+          }
+        }
+      }
+    }
+  }
+
+  // Two main characters who share the cast of 2 or more chapters need a relationship file.
+  const shared = new Map<string, number>();
+  for (const plans of project.chapters.values()) {
+    for (const p of plans) {
+      const cast = [...new Set([p.data.pov, ...p.data.characters])].filter(main).sort();
+      for (let i = 0; i < cast.length; i++) for (let j = i + 1; j < cast.length; j++) shared.set(pairKey(cast[i], cast[j]), (shared.get(pairKey(cast[i], cast[j])) ?? 0) + 1);
+    }
+  }
+  for (const [key, n] of shared) {
+    if (n >= 2 && !pairs.has(key)) warn("relationship-missing", "relationships/", `${key} are main characters together in ${n} chapters, but have no relationship file: the brief cannot tell the writer how they are together`);
+  }
+}
+
 // ---------- chapter plans ----------
 
 function checkChapters(project: Project, index: PlanIndex, characterIds: Set<string>, err: Report, warn: Report) {
@@ -243,6 +316,16 @@ function checkChapters(project: Project, index: PlanIndex, characterIds: Set<str
         const beat = beats.get(ref);
         if (!beat) err("unknown-beat", c.file, `arc beat ${ref} is not defined in characters/`, `arc_beats.${k}`);
         else if (beat.book !== book) err("beat-wrong-book", c.file, `arc beat ${ref} belongs to book ${beat.book}`, `arc_beats.${k}`);
+      });
+      d.stages.forEach((ref, k) => {
+        const [rel, id] = ref.split("/");
+        const r = project.relationships.get(rel);
+        const stage = r?.data.stages.find((s) => s.id === id);
+        if (!r || !stage) return err("unknown-stage", c.file, `stage ${ref} is not defined in relationships/`, `stages.${k}`);
+        if (stage.book !== book) err("stage-wrong-book", c.file, `stage ${ref} belongs to book ${stage.book}`, `stages.${k}`);
+        const cast = [d.pov, ...d.characters];
+        const away = r.data.between.filter((x) => !cast.includes(x));
+        if (away.length) warn("stage-cast", c.file, `stage ${ref} moves ${r.data.between.join(" and ")}, but ${away.join(" and ")} is not in \`characters\``, `stages.${k}`);
       });
       for (const kind of ["plants", "advances", "pays_off"] as const) {
         d.threads[kind].forEach((t, k) => {
@@ -309,6 +392,8 @@ function checkTension(project: Project, index: PlanIndex, err: Report, warn: Rep
       }
     }
 
+    checkBonding(project, chapters, range?.min ?? 1, ranges, span, waived, warn);
+
     // The climax spans 2 or more chapters, and its decisive chapter has the highest tension of the book.
     if (!span) continue;
     const [first, decisive] = span;
@@ -328,6 +413,33 @@ function checkTension(project: Project, index: PlanIndex, err: Report, warn: Rep
       if (c.data.tension !== undefined && c.data.tension < floor) warn("climax-tension", c.file, `the chapter is in the climax (chapters ${first}–${decisive}), so its tension is at least ${floor}`, "tension");
     }
   }
+}
+
+/** A bonding chapter is a rest after pressure: at the lowest tension, rare, away from the climax, and about a relationship. */
+function checkBonding(
+  project: Project,
+  chapters: Loaded<ChapterPlan>[],
+  floor: number,
+  acts: Map<string, [number, number]> | undefined,
+  span: [number, number] | undefined,
+  waived: (c: Loaded<ChapterPlan>, rule: string) => boolean,
+  warn: Report,
+) {
+  const actOf = (n: number) => [...(acts ?? [])].find(([, [a, b]]) => n >= a && n <= b)?.[0];
+  chapters.forEach((c, i) => {
+    const d = c.data;
+    if (!d.bonding) return;
+    const flag = (rule: string, message: string, path?: string) => {
+      if (!waived(c, rule)) warn(rule, c.file, message, path);
+    };
+    if (d.tension !== undefined && d.tension > floor) flag("bonding.tension", `a bonding chapter is at the book's lowest tension (${floor}), not ${d.tension}`, "tension");
+    const earlier = chapters.slice(0, i).filter((p) => p.data.bonding);
+    if (chapters[i - 1]?.data.bonding) flag("bonding.rate", `chapter ${d.chapter - 1} is a bonding chapter too: never two in a row`, "bonding");
+    else if (earlier.some((p) => actOf(p.data.chapter) === actOf(d.chapter) && actOf(d.chapter))) flag("bonding.rate", `${actOf(d.chapter)} already has a bonding chapter: at most one in an act`, "bonding");
+    if (span && d.chapter >= span[0] - 1 && d.chapter <= span[1]) flag("bonding.climax", `the climax is chapters ${span[0]}–${span[1]}: a bonding chapter there, or just before it, stops the pressure`, "bonding");
+    const cast = [d.pov, ...d.characters];
+    if (!relationshipsOf(project, cast).length) flag("bonding.cast", "no relationship file is between two characters of the cast: a bonding chapter moves a relationship", "characters");
+  });
 }
 
 // ---------- threads ----------

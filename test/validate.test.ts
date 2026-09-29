@@ -488,6 +488,114 @@ describe("tension, stakes and the climax", () => {
   });
 });
 
+describe("relationships", () => {
+  const REL = "relationships/ivo-sabine.md";
+  const codes = (dir: string) => check(dir).map((i) => `${i.severity} ${i.code} ${i.file}`);
+
+  test("the fixture has no relationship warning", () => {
+    expect(codes(fixtureCopy()).filter((c) => /relationship|stage|bonding/.test(c))).toEqual([]);
+  });
+
+  test("a relationship is between two characters with files, and at least one of them is main", () => {
+    let dir = fixtureCopy();
+    edit(dir, REL, "between: [ivo, sabine]", "between: [ivo, pell]");
+    expect(check(dir)).toContainEqual(expect.objectContaining({ code: "relationship-unknown", file: REL, path: "between.1" }));
+    dir = fixtureCopy();
+    edit(dir, "characters/sabine.md", "role: main", "role: supporting");
+    edit(dir, REL, "between: [ivo, sabine]", "between: [hale, sabine]");
+    edit(dir, REL, "  ivo: A fair entry", "  hale: A fair entry");
+    expect(errorCodes(check(dir))).toContain("relationship-supporting");
+  });
+
+  test("wants and hides name only the two, and wants names both", () => {
+    const dir = fixtureCopy();
+    edit(dir, REL, "  sabine: Her own father's debt", "  hale: Her own father's debt");
+    edit(dir, REL, "  ivo: A fair entry and no questions about it.\n", "");
+    const issues = check(dir);
+    expect(issues).toContainEqual(expect.objectContaining({ code: "relationship-field", path: "hides.hale" }));
+    expect(issues).toContainEqual(expect.objectContaining({ code: "relationship-field", path: "wants", message: expect.stringContaining("ivo") }));
+  });
+
+  test("one file for each pair", () => {
+    const dir = fixtureCopy();
+    writeFileSync(join(dir, "relationships/sabine-ivo.md"), readFileSync(join(dir, REL), "utf8").replace("between: [ivo, sabine]", "between: [sabine, ivo]").replace(/stages:\n(  .*\n)+/, ""));
+    expect(check(dir)).toContainEqual(expect.objectContaining({ code: "relationship-duplicate", file: "relationships/sabine-ivo.md" }));
+  });
+
+  test("a romance needs an obstacle and what the prose shows", () => {
+    const dir = fixtureCopy();
+    edit(dir, REL, "between: [ivo, sabine]", "between: [ivo, sabine]\nromance: true");
+    const issues = check(dir);
+    expect(issues).toContainEqual(expect.objectContaining({ code: "format", file: REL, path: "obstacle" }));
+    expect(issues).toContainEqual(expect.objectContaining({ code: "format", file: REL, path: "on_page" }));
+    edit(dir, REL, "romance: true", "romance: true\nobstacle: Each thinks the other keeps the warden's book.\non_page: Closed door.");
+    expect(errorCodes(check(dir))).toEqual([]);
+  });
+
+  test("each stage of a planned book is in one chapter of its act, with both characters in its cast", () => {
+    let dir = fixtureCopy();
+    edit(dir, "books/01/plan/04.md", "stages: [ivo-sabine/changed-entry]", "stages: []");
+    expect(errorCodes(check(dir))).toContain("stage-unplaced");
+    edit(dir, "books/01/plan/06.md", "stages: [ivo-sabine/reeves-door]", "stages: [ivo-sabine/reeves-door, ivo-sabine/changed-entry]");
+    expect(errorCodes(check(dir))).toContain("stage-wrong-act");
+    edit(dir, "books/01/plan/06.md", "ivo-sabine/changed-entry", "ivo-sabine/no-such-stage");
+    expect(check(dir)).toContainEqual(expect.objectContaining({ code: "unknown-stage", file: "books/01/plan/06.md", path: "stages.1" }));
+    dir = fixtureCopy();
+    edit(dir, "books/01/plan/01.md", "characters: [ivo, sabine]", "characters: [ivo]");
+    expect(codes(dir)).toContain("warn stage-cast books/01/plan/01.md");
+  });
+
+  test("a relationship with no stage, or with only closer stages, is a warning", () => {
+    const dir = fixtureCopy();
+    edit(dir, REL, "shift: apart", "shift: closer");
+    expect(codes(dir)).toContain(`warn relationship-flat ${REL}`);
+    edit(dir, REL, /stages:\n(  .*\n)+/, "");
+    for (const p of ["01", "04", "06"]) edit(dir, `books/01/plan/${p}.md`, /stages: \[.*\]\n/, "");
+    expect(codes(dir)).toContain(`warn relationship-static ${REL}`);
+  });
+
+  test("two main characters together in 2 or more chapters need a relationship file", () => {
+    const dir = fixtureCopy();
+    rmSync(join(dir, REL));
+    for (const p of ["01", "04", "06"]) edit(dir, `books/01/plan/${p}.md`, /stages: \[.*\]\n/, "");
+    expect(check(dir)).toContainEqual(expect.objectContaining({ code: "relationship-missing", severity: "warn", message: expect.stringContaining("ivo and sabine are main characters together in 4 chapters") }));
+  });
+});
+
+describe("bonding chapters", () => {
+  const codes = (dir: string) => check(dir).map((i) => `${i.severity} ${i.code} ${i.file}`);
+  const bonding = (dir: string, ch: string) => edit(dir, `books/01/plan/${ch}.md`, "pov: ivo", "pov: ivo\nbonding: true");
+
+  test("a bonding chapter at the book's lowest tension, with a relationship in its cast, is clean", () => {
+    const dir = fixtureCopy();
+    bonding(dir, "01");
+    expect(codes(dir).filter((c) => c.includes("bonding"))).toEqual([]);
+  });
+
+  test("a bonding chapter above the lowest tension, or with no relationship in its cast", () => {
+    const dir = fixtureCopy();
+    bonding(dir, "02");
+    expect(codes(dir)).toEqual(expect.arrayContaining(["warn bonding.tension books/01/plan/02.md", "warn bonding.cast books/01/plan/02.md"]));
+    edit(dir, "books/01/plan/02.md", "scenes:", "exceptions:\n  - { rule: bonding.cast, reason: Ivo bonds with his new crew. }\nscenes:");
+    expect(codes(dir)).not.toContain("warn bonding.cast books/01/plan/02.md");
+  });
+
+  test("two in a row, two in one act, and one next to the climax", () => {
+    let dir = fixtureCopy();
+    bonding(dir, "01");
+    bonding(dir, "02");
+    expect(check(dir)).toContainEqual(expect.objectContaining({ code: "bonding.rate", file: "books/01/plan/02.md", message: expect.stringContaining("two in a row") }));
+    dir = fixtureCopy();
+    bonding(dir, "03");
+    edit(dir, "books/01/plan/03.md", "tension: 3", "tension: 2");
+    edit(dir, "books/01/plan/04.md", "pov: ivo", "pov: ivo\nbonding: true");
+    const issues = codes(dir);
+    expect(issues).toContain("warn bonding.rate books/01/plan/04.md");
+    expect(issues).toContain("warn bonding.climax books/01/plan/04.md");
+    expect(issues).not.toContain("warn bonding.climax books/01/plan/03.md");
+  });
+});
+
 describe("windows: off", () => {
   test("needs no status window and no window template", () => {
     const dir = fixtureCopy();

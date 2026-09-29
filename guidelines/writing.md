@@ -238,6 +238,12 @@ chapters still has a conflict.
 - **The events make the tension, not the words.** A high level comes from time, danger and cost.
   It does not come from inflated emotion, from a narrator who says that the moment is tense, or
   from a character who shouts what they feel. Sections 4, 5 and 6 still apply at level 5.
+- **A bonding chapter rests the reader, and still moves.** A chapter plan with `bonding: true` puts
+  characters together with no clock and no enemy that acts: a meal, a repair, a walk, a game, a
+  night on watch. Its value shift is in a relationship: at the end, the two stand in a different
+  place (a first trust, a joke that is now theirs, a door that stays closed). Its conflict is small
+  and inside the relationship: a secret almost said, a joke that touches a wound, an offer that is
+  refused. The outside plot stays in the background, and nobody explains the relationship aloud.
 - **Some scenes are lost.** The `result` of a scene in the plan (`win`, `loss` or `mixed`) is the
   target. A `loss` stays a loss on the page: the character does not get the goal back in the next
   paragraph.

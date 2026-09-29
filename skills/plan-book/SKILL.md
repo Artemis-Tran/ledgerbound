@@ -1,6 +1,6 @@
 ---
 name: plan-book
-description: Chapter and scene plans for the next LitRPG book to write - each chapter's job, tension and stakes, threads, arc beats, ending type and scenes with their results, plus threads.yaml. Use after the character arcs are approved, or when `lb status` names plan-book.
+description: Chapter and scene plans for the next LitRPG book to write - each chapter's job, tension and stakes, threads, arc beats, relationship stages, bonding chapters, ending type and scenes with their results, plus threads.yaml. Use after the character arcs are approved, or when `lb status` names plan-book.
 ---
 
 # plan-book
@@ -11,11 +11,12 @@ Only the next book to write gets chapter plans: for phase 1 that is book 1. File
 
 1. Run `lb gate character-arcs`. If it is BLOCKED, stop and tell the user why.
 
-2. Read `bible.md` (with its `draws`), the lore entries in `lore/`, `books/NN/plan.md` for this book (with the draws it delivers), `targets.yaml`, `facts.yaml` and every `characters/*.md`.
+2. Read `bible.md` (with its `draws`), the lore entries in `lore/`, `books/NN/plan.md` for this book (with the draws it delivers), `targets.yaml`, `facts.yaml`, every `characters/*.md` and every `relationships/*.md`.
 
 3. **Chapter count and act ranges.** From `chapter_words` in `project.yaml` and the scope of the book plan, decide the number of chapters and which chapters each act gets. Write down the act ranges before any chapter.
    Give a chapter its own `words` when its scenes need a different length: a set-piece fight longer, a quiet turn shorter. Keep the total of the book near the number of chapters × `chapter_words`.
-   **Tension curve.** Choose the climax chapters in the last act first: 2 or more chapters in a row. The first one gets `b${N}/climax-start` in its `anchors`. The last one gets `b${N}/climax`: there the protagonist decides the climax by its `choice`, at the book's highest tension. Give each chapter between them a tension of at least the book's `max` minus 1, and give each one its own part of the event: a new danger, a lost option, a turn. The chapter after the climax is lower. Then give each chapter a `tension` inside the book plan's `tension` range (the levels are in §13 of `${CLAUDE_PLUGIN_ROOT}/guidelines/writing.md`). Let the curve rise from act to act, with drops: a quiet chapter after a peak, and never 4 chapters in a row at one level. When the book plan has no `climax` or `tension` (a plan from an earlier version), add them by step 4 of `${CLAUDE_PLUGIN_ROOT}/skills/plan-series/SKILL.md`, set the book plan to `status: draft`, and name them in the summary of step 8: the user approves them with the chapter plans (also run `lb approve book-plan`).
+   **Tension curve.** Choose the climax chapters in the last act first: 2 or more chapters in a row. The first one gets `b${N}/climax-start` in its `anchors`. The last one gets `b${N}/climax`: there the protagonist decides the climax by its `choice`, at the book's highest tension. Give each chapter between them a tension of at least the book's `max` minus 1, and give each one its own part of the event: a new danger, a lost option, a turn. The chapter after the climax is lower. Then give each chapter a `tension` inside the book plan's `tension` range (the levels are in §13 of `${CLAUDE_PLUGIN_ROOT}/guidelines/writing.md`). Let the curve rise from act to act, with drops: a quiet chapter after a peak, and never 4 chapters in a row at one level.
+   **Bonding chapters.** Where a drop after a peak needs a rest, you can make it a bonding chapter (`bonding: true`): the characters together with no clock and no enemy that acts, at the book's lowest tension. Its job is a value shift in a relationship (for example, `trust: Vey keeps her reasons from Aren → Vey lets Aren see the scar`), and its conflict is small and inside the relationship. Put it after a peak, at most one in an act, and never in the climax or in the chapter just before it. Its cast has the two characters of a relationship file, and it often places a stage of that relationship. A book with no bonding chapter is fine; the user can ask for more or fewer. When the book plan has no `climax` or `tension` (a plan from an earlier version), add them by step 4 of `${CLAUDE_PLUGIN_ROOT}/skills/plan-series/SKILL.md`, set the book plan to `status: draft`, and name them in the summary of step 8: the user approves them with the chapter plans (also run `lb approve book-plan`).
 
 4. **Threads.** List every setup, mystery, subplot, promise and relationship that the book plan, the arcs and the facts need, in `threads.yaml`: each with a `plant`, the `beats` where it moves, and a `payoff` (a point in this book, or an anchor in a later book or `series/end` for a thread that the handoff carries on).
 
@@ -24,6 +25,8 @@ Only the next book to write gets chapter plans: for phase 1 that is book 1. File
    - `tension`: the level from step 3;
    - `stakes`: what the POV character can lose in this chapter, and why it matters to them, in one or two sentences. Make it concrete and connect it to the character's `want`: "If the team loses, Aren goes back to the docks, and the Quiet Vaults stay closed to him" passes; "things get worse" fails. When a chapter's job is about a character's place, rank or life, the stakes say what the character gives up with it;
    - `arc_beats`: every arc beat of this book goes in exactly one chapter, inside its act;
+   - `stages`: every stage of a relationship in this book goes in exactly one chapter, inside its act, with both characters in `characters`. Show the stage through a scene where the two want something from each other;
+   - `bonding`: `true` only for a bonding chapter from step 3;
    - `threads`: exactly the plants, beats and payoffs that `threads.yaml` puts in this chapter;
    - `ending`: a type, and a `hook` that is the concrete last beat (a fact, a line, an arrival, a number that changed). Vary the types: never the same type twice in a row, and at most one `cliffhanger` in any three chapters;
    - `anchors`: the act ends and custom anchors that fall at the end of this chapter;
@@ -39,4 +42,4 @@ Only the next book to write gets chapter plans: for phase 1 that is book 1. File
 
 7. **Targets against the plan.** For each target at an anchor in this book, check that the chapters up to it show what produces it. The guidelines ask that power has a cost the reader saw: name the chapter where each rank or big gain is paid for. If a target cannot be earned in the chapters you have, change the plan or tell the user that the target must move.
 
-8. Run **the checkpoint loop** in `${CLAUDE_PLUGIN_ROOT}/reference/checkpoint-loop.md` for `chapter-plans`. In the summary, give a one-line table: chapter, job (from → to), tension, the results of its scenes, ending type. Mark the climax chapters. List each new lore entry and each new character too; when the user approves, also run `lb approve world` for the lore and `lb approve character-arcs` for the characters.
+8. Run **the checkpoint loop** in `${CLAUDE_PLUGIN_ROOT}/reference/checkpoint-loop.md` for `chapter-plans`. In the summary, give a one-line table: chapter, job (from → to), tension, the results of its scenes, ending type. Mark the climax chapters and the bonding chapters, and name the stages of each chapter. List each new lore entry and each new character too; when the user approves, also run `lb approve world` for the lore and `lb approve character-arcs` for the characters.

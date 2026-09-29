@@ -7,7 +7,20 @@ import { dirname, join } from "node:path";
 import { stringify } from "yaml";
 import { buildPlanIndex, climaxSpan, comparePos, type Pos } from "./anchors.ts";
 import { splitFrontmatter } from "./frontmatter.ts";
-import { changesBefore, characterEntry, charactersNamedIn, characterText, entryText, firstSentence, loreEntry, loreNamedIn, nameParts, lastSeen } from "./entries.ts";
+import {
+  changesBefore,
+  characterEntry,
+  charactersNamedIn,
+  characterText,
+  entryText,
+  firstSentence,
+  loreEntry,
+  loreNamedIn,
+  nameParts,
+  lastSeen,
+  relationshipsOf,
+  relationshipText,
+} from "./entries.ts";
 import { pad2, type Project } from "./project.ts";
 import { chapterPath, fold, type RecordFiles, type State } from "./record.ts";
 
@@ -120,10 +133,13 @@ export function buildBrief(project: Project, rec: RecordFiles, book: number, cha
           ? `This chapter is the end of the climax (chapters ${span[0]}–${span[1]}): the protagonist decides it here, by the climax's \`choice\`.`
           : `This chapter is part ${chapter - span[0] + 1} of the climax (chapters ${span[0]}–${span[1]}): raise the stakes toward chapter ${span[1]}, where the protagonist decides it, and do not decide it here.`
         : "";
+    const bonding = plan.data.bonding
+      ? "This is a bonding chapter (guidelines/writing.md §13): the characters together, relaxed, with no clock and no enemy that acts. The value shift is in a relationship (see the `Relationship:` sections), and the conflict is small and inside it: a secret almost said, a joke that touches a wound, an offer that is refused."
+      : "";
     sections.push({
       title: `This act${act ? ` (${act.id}, chapters ${range![1][0]}–${range![1][1]})` : ""} and the book`,
       text: [
-        [level, stakes, climax].filter(Boolean).join("\n\n"),
+        [level, stakes, climax, bonding].filter(Boolean).join("\n\n"),
         yaml({
           book: { promise: bookPlan.promise, ...(bookPlan.climax ? { climax: bookPlan.climax } : {}) },
           ...(act ? { act: { id: act.id, promise: act.promise, question: act.question, ending_state: act.ending_state } } : {}),
@@ -215,6 +231,16 @@ export function buildBrief(project: Project, rec: RecordFiles, book: number, cha
       ...(namedCast.includes(c.data.id) ? { drop: 300 - i } : {}),
     });
   });
+  // 6b. The relationships between two characters of the cast: how the two are together at this chapter. One with a
+  // character that the plan only names can go when the brief is too long, before that character.
+  const castIds = cast.map((c) => c.data.id);
+  relationshipsOf(project, castIds).forEach(([id, r], i) => {
+    sections.push({
+      title: `Relationship: ${id} (the prose never contradicts it)`,
+      text: relationshipText(project, id, r, book, chapter),
+      ...(r.data.between.some((c) => namedCast.includes(c)) ? { drop: 250 - i } : {}),
+    });
+  });
   // The other characters, one line each, so that the writer knows who the story already has. When the brief is
   // too long, the index keeps only the names and IDs.
   const offstage = project.characters.filter((c) => !cast.includes(c));
@@ -296,7 +322,8 @@ export function buildBrief(project: Project, rec: RecordFiles, book: number, cha
   }
 
   // Keep the brief under the limit: drop the oldest summaries first, then the farthest next plans, then shorten
-  // the lore index and the cast index, then shorten the lore entries and drop the characters that the plan only names.
+  // the lore index and the cast index, then shorten the lore entries, then drop the relationships and the characters
+  // that the plan only names.
   const render = (ss: Section[]) => `# Context brief: book ${book}, chapter ${chapter}\n\n${ss.map((s) => `## ${s.title}\n\n${s.text}`).join("\n\n")}\n`;
   const limit = project.config.brief_chars;
   const kept = [...sections];

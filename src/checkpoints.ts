@@ -70,7 +70,11 @@ function owned(project: Project, cp: Checkpoint, book: number): Owned {
       };
     }
     case "character-arcs":
-      return { approvable: project.characters, owns: ["characters/"], missing: project.characters.length === 0 ? "characters/ is empty" : undefined };
+      return {
+        approvable: [...project.characters, ...project.relationships.values()],
+        owns: ["characters/", "relationships/"],
+        missing: project.characters.length === 0 ? "characters/ is empty" : undefined,
+      };
     case "chapter-plans": {
       const chapters = project.chapters.get(book) ?? [];
       return {
@@ -89,8 +93,8 @@ function owned(project: Project, cp: Checkpoint, book: number): Owned {
     case "replan": {
       // The plan files that a replan can change. They are drafts again until the user approves the replan.
       const planned = [...project.chapters.keys()].map((b) => `${bookDir(b)}/plan/`);
-      const approvable = [...(project.series ? [project.series] : []), ...project.books.values(), ...[...project.chapters.values()].flat(), ...project.characters, ...project.lore.values()];
-      return { approvable, owns: ["series.md", "books/", ...planned, "characters/", "threads.yaml", "targets.yaml", "lore/"] };
+      const approvable = [...(project.series ? [project.series] : []), ...project.books.values(), ...[...project.chapters.values()].flat(), ...project.characters, ...project.relationships.values(), ...project.lore.values()];
+      return { approvable, owns: ["series.md", "books/", ...planned, "characters/", "relationships/", "threads.yaml", "targets.yaml", "lore/"] };
     }
   }
 }

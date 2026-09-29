@@ -413,6 +413,24 @@ describe("lb brief", () => {
     expect(section(text, "Cast: Ivo Marsh")).toContain("Last seen: 1.01.");
   });
 
+  test("has the relationship of two characters in the cast, with its stages up to this chapter", () => {
+    const rel = section(briefText(fixtureCopy(), 4), "Relationship: ivo-sabine");
+    expect(rel).toContain("Between Ivo Marsh and Sabine Rook. They were at the well school");
+    expect(rel).toContain("- **Sabine Rook hides from Ivo Marsh** (show it only in what they avoid): Her own father's debt");
+    expect(rel).toContain("- Book 1, act1 (apart): She finds his name in the red pages");
+    expect(rel).toContain("- **This chapter** (closer): She changes one entry");
+    expect(rel).toContain("Where they stand at the start of this chapter: She knows his debt and hides it");
+    expect(rel).not.toContain("reeve's door");
+    expect(briefText(fixtureCopy(), 5)).not.toContain("## Relationship:");
+  });
+
+  test("tells the writer when the chapter is a bonding chapter", () => {
+    const dir = fixtureCopy();
+    expect(briefText(dir, 1)).not.toContain("This is a bonding chapter");
+    edit(dir, "books/01/plan/01.md", "pov: ivo", "pov: ivo\nbonding: true");
+    expect(section(briefText(dir, 1), "This act")).toContain("This is a bonding chapter (guidelines/writing.md §13)");
+  });
+
   test("has a cast index with one line for each character that is not in the cast", () => {
     const index = section(briefText(fixtureCopy(), 5), "Cast index");
     expect(index).toContain("- **Sabine Rook** (`sabine`, main): The reeve's clerk, who enters every tithe token in the ledger at the counting table by the lean-to. Last seen 1.01.");

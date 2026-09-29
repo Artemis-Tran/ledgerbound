@@ -10,7 +10,7 @@ A good draw is specific: "a magic academy, with real focus on classes and exams"
 - Structure: time loop (with real variation between loops) · reincarnation or second life · isekai · a tournament arc · series-spanning mysteries · many POV characters
 - Progression: weak to strong · slow, earned progression · non-LitRPG progression (no status windows) · crunchy stats and builds · a detailed magic system with spell construction · crafting (smithing, alchemy, enchanting) · a class or skill system with hidden rules · a dungeon core or a monster protagonist
 - Protagonist: an intelligent protagonist who plans · a protagonist who is not the smartest in the room · a morally grey protagonist · a non-human protagonist · an older or working-class protagonist
-- Relationships: found family · a rival of equal skill · a party that grows together · a mentor with their own agenda
+- Relationships: found family · a rival of equal skill · a party that grows together · a mentor with their own agenda · a slow-burn romance · a romance subplot that does not take over
 
 ## Excludes
 

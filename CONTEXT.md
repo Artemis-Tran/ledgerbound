@@ -119,6 +119,22 @@ _Avoid_: Character sheet, profile
 **Character change**:
 How a character changes in the story (loses an eye, becomes crew boss), with the point or plan anchor after which it is true. It works the same as a lore change.
 
+**Relationship file**:
+`relationships/<id>.md`: how two characters are together. It gives what each one wants from the other, the friction between them, what each one hides from the other, how they talk together and what they never say to each other, and its stages. At least one of the two is a protagonist or main character. The brief includes the file when both characters are in the cast. The record holds a relationship value that changes (trust, a debt); the relationship file holds how the two are together.
+_Avoid_: Bond, pairing, ship
+
+**Stage**:
+One step of a relationship, mapped to an act like an arc beat: the event on the page, its shift (`closer` or `apart`), and where the two stand after it. A chapter plan places each stage of its book. A relationship can get worse, so its stages are not all `closer`.
+_Avoid_: Relationship beat, milestone
+
+**Romance**:
+A relationship file with `romance: true`. It also has an obstacle (why the two are not together now, from the lies of both) and an on-page limit (how much the prose shows). A story whose draws exclude romance has none.
+_Avoid_: Love interest, ship
+
+**Bonding chapter**:
+A relaxed chapter of characters together, at the book's lowest tension, with no clock and no enemy that acts. Its job is a value shift in a relationship, and its conflict is small and inside the relationship. At most one in an act, and never in or just before the climax.
+_Avoid_: Filler, breather, downtime
+
 **Cast**:
 The characters of one chapter: the POV character, the ones that the chapter plan lists in `characters` or names, and the ones that a target names. The brief gives each one in full.
 _Avoid_: Cast list (for all the characters of the story), side characters
@@ -207,7 +223,7 @@ _Avoid_: Recap, summary
 The part of rolling memory that lists similes, notable images, character gestures and ending types, so that none repeats.
 
 **Context brief**:
-The one input that a chapter-writing subagent gets: the prose decisions, the chapter plan and the next plans, the fold at the chapter start, the targets, the lore, the cast and the cast index, the voice samples, the relevant rolling memory, the phrase log, the open threads and the last words of the previous chapter.
+The one input that a chapter-writing subagent gets: the prose decisions, the chapter plan and the next plans, the fold at the chapter start, the targets, the lore, the cast and the cast index, the relationships in the cast, the voice samples, the relevant rolling memory, the phrase log, the open threads and the last words of the previous chapter.
 _Avoid_: Prompt, context pack
 
 ### Publishing

@@ -6,7 +6,7 @@
 import { stringify } from "yaml";
 import { comparePos, type PlanIndex } from "./anchors.ts";
 import { type Loaded, pad2, type Project } from "./project.ts";
-import type { Character, LoreEntry } from "./schemas.ts";
+import type { Character, LoreEntry, Relationship } from "./schemas.ts";
 
 export interface NamedEntry {
   id: string;
@@ -143,6 +143,54 @@ export function characterText(project: Project, index: PlanIndex, c: Loaded<Char
     changes.length
       ? `Changes in the story so far (each one wins over what it contradicts above, the voice card included):\n${changes.map((ch) => `- Since ${ch.label}: ${ch.text}`).join("\n")}`
       : "",
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+}
+
+/** The relationships between two characters of a cast, in ID order. */
+export function relationshipsOf(project: Project, cast: string[]): [string, Loaded<Relationship>][] {
+  return [...project.relationships].filter(([, r]) => r.data.between.every((id) => cast.includes(id)));
+}
+
+/**
+ * The stages of a relationship up to this chapter, in story order: every stage of an earlier book, and each stage that a
+ * chapter plan of this book places at or before this chapter. A later stage stays out, the same as a later arc beat.
+ */
+export function stagesSoFar(project: Project, id: string, r: Loaded<Relationship>, book: number, chapter: number) {
+  const placed = new Map<string, number>();
+  for (const p of project.chapters.get(book) ?? []) for (const ref of p.data.stages) placed.set(ref, p.data.chapter);
+  return r.data.stages
+    .flatMap((s) => {
+      if (s.book < book) return [{ ...s, at: 0, now: false }];
+      const at = placed.get(`${id}/${s.id}`);
+      return s.book === book && at !== undefined && at <= chapter ? [{ ...s, at, now: at === chapter }] : [];
+    })
+    .sort((a, b) => a.book - b.book || a.at - b.at);
+}
+
+/** A relationship as the writer of a chapter must know it: what each wants and hides, how they talk, and where they stand now. */
+export function relationshipText(project: Project, id: string, r: Loaded<Relationship>, book: number, chapter: number): string {
+  const d = r.data;
+  const name = (c: string) => project.characters.find((x) => x.data.id === c)?.data.name ?? c;
+  const [a, b] = d.between;
+  const other = (c: string) => (c === a ? b : a);
+  const stages = stagesSoFar(project, id, r, book, chapter);
+  const before = stages.filter((s) => !s.now).at(-1);
+  const lines = [
+    ...Object.entries(d.wants).map(([c, w]) => `- **${name(c)} wants from ${name(other(c))}**: ${w}`),
+    `- **Friction**: ${d.friction}`,
+    ...Object.entries(d.hides).map(([c, h]) => `- **${name(c)} hides from ${name(other(c))}** (show it only in what they avoid): ${h}`),
+    `- **How they talk together**: ${d.talk}`,
+    d.never_says.length ? `- **They never say to each other**: ${d.never_says.join("; ")}` : "",
+    d.obstacle ? `- **Obstacle** (why they are not together now): ${d.obstacle}` : "",
+    d.on_page ? `- **On the page** (how much the prose shows; never more): ${d.on_page}` : "",
+  ].filter(Boolean);
+  return [
+    `Between ${name(a)} and ${name(b)}${d.romance ? " (a romance)" : ""}. ${r.body.trim()}`.trim(),
+    lines.join("\n"),
+    stages.length ? `Stages so far:\n${stages.map((s) => `- ${s.now ? "**This chapter**" : `Book ${s.book}, ${s.act}`} (${s.shift}): ${s.beat} After it: ${s.state}`).join("\n")}` : "",
+    `Where they stand at the start of this chapter: ${before ? before.state : "as the body above says; no stage has moved them yet."}`,
   ]
     .filter(Boolean)
     .join("\n\n");
