@@ -6,7 +6,7 @@
 import { stringify } from "yaml";
 import { comparePos, type PlanIndex } from "./anchors.ts";
 import { type Loaded, pad2, type Project } from "./project.ts";
-import type { Character, LoreEntry, Relationship } from "./schemas.ts";
+import { APPEARANCE_PARTS, type Character, type LoreEntry, type Relationship } from "./schemas.ts";
 
 export interface NamedEntry {
   id: string;
@@ -121,8 +121,38 @@ export function beatsSoFar(project: Project, c: Loaded<Character>, book: number,
 }
 
 /**
- * A character as the writer of a chapter must know them: who they are, the arc so far, the voice card, then each
- * change so far. A change comes last because it wins over the text above it, the voice card included.
+ * How a character looks at the start of a chapter: the appearance of the file, with each part that a change so far
+ * replaced. `since` names the point of the change that set the part.
+ */
+export function appearanceAt(index: PlanIndex, c: Loaded<Character>, book: number, chapter: number) {
+  const parts = new Map<string, { text: string; since?: string }>();
+  const a = c.data.appearance;
+  for (const p of APPEARANCE_PARTS) if (a?.[p]) parts.set(p, { text: a[p] });
+  const byFrom = new Map(changesBefore(index, characterEntry(c), book, chapter).map((ch) => [ch.from, ch.label]));
+  for (const ch of c.data.changes) {
+    const label = byFrom.get(ch.from);
+    if (!label || !ch.appearance) continue;
+    for (const p of APPEARANCE_PARTS) if (ch.appearance[p]) parts.set(p, { text: ch.appearance[p], since: label });
+  }
+  return { parts: APPEARANCE_PARTS.flatMap((p) => (parts.has(p) ? [{ part: p, ...parts.get(p)! }] : [])), signature: a?.signature ?? [] };
+}
+
+/** The appearance as the brief gives it: one line per part, then the signature details. Empty when the file has none. */
+function appearanceText(index: PlanIndex, c: Loaded<Character>, book: number, chapter: number): string {
+  const { parts, signature } = appearanceAt(index, c, book, chapter);
+  if (!parts.length && !signature.length) return "";
+  return [
+    "Appearance now (show 1–2 details at a time, never the full list; the prose never contradicts it):",
+    ...parts.map((p) => `- **${p.part}**${p.since ? ` (since ${p.since})` : ""}: ${p.text}`),
+    signature.length ? `- **Signature** (a reader knows them by these; bring one back when they come back): ${signature.join("; ")}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+/**
+ * A character as the writer of a chapter must know them: who they are, how they look now, the arc so far, the voice
+ * card, then each change so far. A change comes last because it wins over the text above it, the voice card included.
  */
 export function characterText(project: Project, index: PlanIndex, c: Loaded<Character>, book: number, chapter: number): string {
   const d = c.data;
@@ -137,6 +167,7 @@ export function characterText(project: Project, index: PlanIndex, c: Loaded<Char
   const changes = changesBefore(index, characterEntry(c), book, chapter);
   return [
     c.body.trim(),
+    appearanceText(index, c, book, chapter),
     inner.join("\n"),
     beats.length ? `Arc beats so far:\n${beats.map((b) => `- ${b.now ? "**This chapter**" : `Book ${b.book}, ${b.act}`}: ${b.beat}`).join("\n")}` : "",
     `Voice card:\n\n\`\`\`yaml\n${stringify(d.voice, { lineWidth: 0 }).trimEnd()}\n\`\`\``,

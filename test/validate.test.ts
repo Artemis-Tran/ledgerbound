@@ -143,6 +143,35 @@ describe("the cast", () => {
     expect(depth[0].message).not.toContain("contradiction");
   });
 
+  test("a main character with a thin appearance or no signature is a warning; a supporting one needs none", () => {
+    const dir = fixtureCopy();
+    expect(check(dir).map((i) => i.code)).not.toContain("character-appearance");
+    const sabine = readFileSync(join(dir, "characters/sabine.md"), "utf8");
+    writeFileSync(join(dir, "characters/sabine.md"), sabine.replace(/^ {2}(age|build|face|eyes|hair|signature): .*\n/gm, ""));
+    const thin = check(dir).filter((i) => i.code === "character-appearance");
+    expect(thin).toEqual([expect.objectContaining({ severity: "warn", file: "characters/sabine.md", path: "appearance" })]);
+    expect(thin[0].message).toContain("5 or more parts of `appearance` (it has 4) and 1–3 `appearance.signature` details");
+  });
+
+  test("an appearance part must be one of the list", () => {
+    const dir = fixtureCopy();
+    edit(dir, "characters/hale.md", "  build:", "  height: Tall.\n  build:");
+    expect(check(dir)).toContainEqual(expect.objectContaining({ code: "format", file: "characters/hale.md" }));
+  });
+
+  test("a new detail about how a character looks must be in that part of the appearance, or of the change from its chapter", () => {
+    const dir = fixtureCopy();
+    edit(dir, "books/01/memory/01.md", "appeared:", "character_added:\n  - { character: hale, fact: Hale has a grey beard., part: hair }\nappeared:");
+    expect(check(dir)).toContainEqual(expect.objectContaining({ code: "character-appearance-missing", path: "character_added.0.part" }));
+    edit(dir, "characters/hale.md", "  dress:", "  hair: A grey beard, cut square.\n  dress:");
+    expect(errorCodes(check(dir))).toEqual([]);
+    edit(dir, "books/01/memory/01.md", "{ character: hale, fact: Hale has a grey beard., part: hair }", "{ character: hale, fact: Hale shaves his beard., part: hair, change: true }");
+    edit(dir, "characters/hale.md", "aliases: [the warden]", "aliases: [the warden]\nchanges:\n  - { from: 1.01, text: Hale shaves his beard. }");
+    expect(check(dir)).toContainEqual(expect.objectContaining({ code: "character-appearance-missing", path: "character_added.0.part" }));
+    edit(dir, "characters/hale.md", "text: Hale shaves his beard. }", "text: Hale shaves his beard., appearance: { hair: Clean-shaven. } }");
+    expect(errorCodes(check(dir))).toEqual([]);
+  });
+
   test("a voice state needs a state, a speech and a tell", () => {
     const dir = fixtureCopy();
     edit(dir, "characters/ivo.md", ", tell: Checks a knot that he checked already.", "");

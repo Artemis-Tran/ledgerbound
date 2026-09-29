@@ -8,6 +8,17 @@ need: To trust one person outside the ledger.
 lie: Numbers do not lie, so the people who keep them cannot be lying.
 wound: At eleven she read her father's tithe entry aloud to him when he swore he had paid it. The ledger was right; he had spent the token at the Drowned Goat.
 contradiction: She is exact about every token, but she burns lamp oil when the sky is light enough to read by, and she will not say why.
+appearance:
+  age: Twenty.
+  build: Small and straight-backed, as if the counting table set her height.
+  face: Narrow and pale from the lamp, with a pen crease on her lower lip.
+  eyes: Dark, and nearly always on the page.
+  hair: Black, in one plait pinned up out of the ink.
+  marks: Ink on the side of her right hand, to the wrist.
+  dress: A clerk's grey gown with the cuffs turned back twice, and a rag at her belt that was a shirt once.
+  carries: The reeve's ledger with its brass corners, and a capped pen.
+  moves: Squares everything to the edge of the table. Does not look up when she takes a token.
+  signature: [Ink to the wrist, The capped pen]
 voice:
   vocabulary: Clerk's terms (margin, carry, entry, rate). Dry, exact.
   sentence_length: Clipped. Answers a question with a procedure.

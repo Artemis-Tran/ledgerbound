@@ -249,6 +249,46 @@ export const ArcBeat = z.strictObject({ id: Slug, book: z.number().int().min(1),
 /** How a character speaks in one emotional state (angry, afraid, lying, close): what changes, and one body tell. */
 export const VoiceState = z.strictObject({ state: Text, speech: Text, tell: Text });
 
+/** The parts of a character's appearance, in the order of the brief. A change can replace a part from its point. */
+export const APPEARANCE_PARTS = ["age", "build", "face", "eyes", "hair", "skin", "marks", "dress", "carries", "moves"] as const;
+/** A main character with fewer parts than this gets the warning `character-appearance`. */
+export const APPEARANCE_MIN_PARTS = 5;
+
+const AppearanceParts = {
+  /** How old they look. */
+  age: Text.optional(),
+  /** Height, weight, shape, and how the work or the class shaped the body. */
+  build: Text.optional(),
+  face: Text.optional(),
+  eyes: Text.optional(),
+  hair: Text.optional(),
+  skin: Text.optional(),
+  /** Scars, burns, tattoos, class or rank marks, a missing finger. */
+  marks: Text.optional(),
+  /** What they wear, and what it shows about their work or status. */
+  dress: Text.optional(),
+  /** What they always carry or wear on the body: a tool, a weapon, a ring. */
+  carries: Text.optional(),
+  /** How they stand, walk and use their hands. */
+  moves: Text.optional(),
+};
+
+/** How a character looks at the start of the story. The writer shows 1–2 details at a time, never the full list. */
+export const Appearance = z.strictObject({
+  ...AppearanceParts,
+  /** 1–3 details that a reader knows the character by. The prose brings one back when the character comes back. */
+  signature: TextList,
+});
+export type Appearance = z.infer<typeof Appearance>;
+
+/**
+ * A character change can also replace parts of the appearance from its point (a lost eye, a rank mark, new clothes).
+ * The brief gives the appearance with each change so far.
+ */
+export const CharacterChanges = z
+  .array(z.strictObject({ from: PosRef, text: Text, appearance: z.strictObject(AppearanceParts).optional() }))
+  .default([]);
+
 export const Character = z
   .strictObject({
     status: Status,
@@ -264,6 +304,8 @@ export const Character = z
     wound: Text.optional(),
     /** One trait that goes against the character's type, so that they are not one note. */
     contradiction: Text.optional(),
+    /** How the character looks at the start of the story. The body says who they are; this says what a reader sees. */
+    appearance: Appearance.optional(),
     voice: z.strictObject({
       vocabulary: Text,
       sentence_length: Text,
@@ -276,7 +318,7 @@ export const Character = z
     }),
     arc_beats: z.array(ArcBeat).default([]),
     /** How the character changes in the story (a lost eye, a new post). The markdown body is who the character is. */
-    changes: Changes,
+    changes: CharacterChanges,
   })
   .superRefine((c, ctx) => {
     if (c.role === "supporting") return;
@@ -532,8 +574,13 @@ export const RollingMemory = z.strictObject({
   lore_added: z.array(z.strictObject({ entry: Slug, fact: Text, change: z.boolean().default(false) })).default([]),
   /** The characters on the page in this chapter: for "last seen" in later briefs. */
   appeared: z.array(Slug).default([]),
-  /** Details about a character that this chapter adds, the same as `lore_added`. Each one is also in `characters/<character>.md`. */
-  character_added: z.array(z.strictObject({ character: Slug, fact: Text, change: z.boolean().default(false) })).default([]),
+  /**
+   * Details about a character that this chapter adds, the same as `lore_added`. Each one is also in `characters/<character>.md`.
+   * `part`: the fact is how the character looks, and it is in that part of the file's `appearance` (or of its change from this chapter).
+   */
+  character_added: z
+    .array(z.strictObject({ character: Slug, fact: Text, change: z.boolean().default(false), part: z.enum(APPEARANCE_PARTS).optional() }))
+    .default([]),
   phrase_log: z
     .strictObject({
       similes: TextList,

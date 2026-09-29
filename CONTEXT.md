@@ -112,8 +112,16 @@ _Avoid_: Backstory, trauma
 One trait of a character that goes against their type, so that they are not one note.
 _Avoid_: Quirk, flaw
 
+**Appearance**:
+How a character looks at the start of the story, in parts (age, build, face, eyes, hair, skin, marks, dress, what they carry, how they move), with 1–3 signature details. A character change can replace a part from its point, so the brief gives the appearance as it is at the chapter. The prose shows 1–2 details at a time, never the full list.
+_Avoid_: Description, looks, physical profile
+
+**Signature detail**:
+One detail of an appearance that a reader knows the character by (split knuckles, ink to the wrist). The prose brings one back when the character comes back.
+_Avoid_: Tag, trademark
+
 **Character file**:
-`characters/<id>.md`: who one character is at the start of the story (the body), its voice card, its aliases and its character changes, and for a main character its arc, wound and contradiction. The record holds its state; the character file holds what stays true. A chapter's brief includes the file of each character in its cast. The memory writer makes the file of a character who speaks, or who is on the page in a second chapter.
+`characters/<id>.md`: who one character is at the start of the story (the body), its appearance, its voice card, its aliases and its character changes, and for a main character its arc, wound and contradiction. The record holds its state; the character file holds what stays true. A chapter's brief includes the file of each character in its cast. The memory writer makes the file of a character who speaks, or who is on the page in a second chapter.
 _Avoid_: Character sheet, profile
 
 **Character change**:

@@ -135,6 +135,12 @@ text: some things are said at an angle, and some are said plainly.
 - **Do not explain the meaning of a scene** after it happens. Trust the reader.
 - **No hedges**: somehow, seemed to, almost as if, a sort of.
 - **Specific, not generic**: "a chipped enamel mug", not "a cup". Use the setting's own words and objects.
+- **Show how a character looks.** When a character comes on the page for the first time in the book,
+  or comes back after a long gap, show 1–2 details from their `appearance`: what the POV character
+  notices, or what the character does ("ink to the wrist as she took the token"). Never a list of
+  looks, and never a mirror. Show the POV character through what their body does and feels. When a
+  character comes back, bring back one `signature` detail, but not in every scene. After a change of
+  the appearance (a new scar, a rank mark), show it the first time the POV character sees it.
 - **No tidy resolution**: characters make wrong choices, and some scenes end worse than they started.
 
 ## 7. LitRPG specifics

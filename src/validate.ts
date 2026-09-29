@@ -11,7 +11,7 @@ import { allEntries, chapterKey, fold, loadRecord, stagedPath } from "./record.t
 import { RULE_IDS } from "./rules.ts";
 import { checkValue, fieldDef, type Kind, numericRange } from "./fields.ts";
 import { checkPublish } from "./export/epub.ts";
-import { BELIEFS, type ChapterPlan, REQUIRED_DECISIONS, VOICE_KINDS, type Target } from "./schemas.ts";
+import { APPEARANCE_MIN_PARTS, APPEARANCE_PARTS, BELIEFS, type ChapterPlan, REQUIRED_DECISIONS, VOICE_KINDS, type Target } from "./schemas.ts";
 
 export function validateProject(project: Project): Issue[] {
   const issues: Issue[] = [];
@@ -698,7 +698,15 @@ function checkCast(project: Project, index: PlanIndex, characterIds: Set<string>
         c.data.voice.states.length < 2 && "2 or more `voice.states`",
       ].filter(Boolean);
       if (missing.length) warn("character-depth", c.file, `a ${c.data.role} character needs ${missing.join(", ")}: without them the character has one note`);
+      const a = c.data.appearance;
+      const parts = APPEARANCE_PARTS.filter((p) => a?.[p]).length;
+      const thin = [
+        parts < APPEARANCE_MIN_PARTS && `${APPEARANCE_MIN_PARTS} or more parts of \`appearance\` (it has ${parts})`,
+        !a?.signature.length && "1–3 `appearance.signature` details",
+      ].filter(Boolean);
+      if (thin.length) warn("character-appearance", c.file, `a ${c.data.role} character needs ${thin.join(" and ")}: without them the writer makes up how they look, and the chapters do not agree`, "appearance");
     }
+    if ((c.data.appearance?.signature.length ?? 0) > 3) warn("character-appearance", c.file, "give at most 3 signature details: a reader remembers a character by one or two", "appearance.signature");
     checkChanges(c.data.changes, c.file, "character-change-order", index, err);
   }
   for (const plans of project.chapters.values()) {
@@ -716,14 +724,22 @@ function checkCast(project: Project, index: PlanIndex, characterIds: Set<string>
         if (!known.has(id)) return err("character-unknown", m.file, `'${id}' is not a character entity or file`, `appeared.${i}`);
         seenIn.set(id, (seenIn.get(id) ?? 0) + 1);
       });
-      m.data.character_added.forEach(({ character, change }, i) => {
+      m.data.character_added.forEach(({ character, change, part }, i) => {
         const c = project.characters.find((x) => x.data.id === character);
         if (!c) return err("character-added-unknown", m.file, `there is no characters/${character}.md: write the fact into it`, `character_added.${i}.character`);
-        const here = c.data.changes.some((x) => {
+        const here = c.data.changes.filter((x) => {
           const r = index.resolve(x.from);
           return !("error" in r) && r.book === m.data.book && r.chapter === m.data.chapter;
         });
-        if (change && !here) err("character-change-missing", m.file, `characters/${character}.md has no change from ${m.data.book}.${pad2(m.data.chapter)}: add it to its \`changes\``, `character_added.${i}`);
+        const point = `${m.data.book}.${pad2(m.data.chapter)}`;
+        if (change && !here.length) err("character-change-missing", m.file, `characters/${character}.md has no change from ${point}: add it to its \`changes\``, `character_added.${i}`);
+        if (!part) return;
+        if (change && here.length && !here.some((x) => x.appearance?.[part])) {
+          err("character-appearance-missing", m.file, `the change from ${point} in characters/${character}.md does not set \`appearance.${part}\`: add it to the change`, `character_added.${i}.part`);
+        }
+        if (!change && !c.data.appearance?.[part]) {
+          err("character-appearance-missing", m.file, `characters/${character}.md has no \`appearance.${part}\`: write the fact into it`, `character_added.${i}.part`);
+        }
       });
     }
   }

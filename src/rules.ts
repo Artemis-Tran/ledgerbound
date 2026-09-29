@@ -61,6 +61,7 @@ export const RULES: Rule[] = [
   { id: "emotion.explained", section: "6", check: ["judge"], summary: "Do not explain the meaning of a scene." },
   { id: "emotion.hedges", section: "6", check: ["lint"], summary: "No hedges (somehow, seemed to, almost as if, a sort of)." },
   { id: "emotion.generic", section: "6", check: ["judge"], summary: "Specific, setting-owned nouns, not generic ones.", max: "warn" },
+  { id: "looks.shown", section: "6", check: ["judge"], summary: "A character new to the book, back after a long gap, or with a changed appearance gets 1–2 details of how they look; never a list of looks or a mirror.", max: "warn" },
   { id: "emotion.tidy", section: "6", check: ["judge"], summary: "No tidy resolution." },
   { id: "litrpg.status-windows", section: "7", check: ["judge"], summary: "Status windows only where a change matters; show the delta; use the window template." },
   { id: "windows.off", section: "7", check: ["lint"], summary: "With `windows: off` in project.yaml, no status window: the prose shows progression." },

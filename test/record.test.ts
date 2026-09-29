@@ -461,6 +461,20 @@ describe("lb brief", () => {
     expect(section(briefText(dir, 2), "Cast: Warden Hale")).toContain("- **Wants** (chases on the page): A full tithe");
   });
 
+  test("gives the appearance of each character in the cast, with each part that a change so far replaced", () => {
+    const dir = fixtureCopy();
+    const ivo = section(briefText(dir, 3), "Cast: Ivo Marsh");
+    expect(ivo).toContain("Appearance now (show 1–2 details at a time");
+    expect(ivo).toContain("- **build**: Tall and narrow at the hips");
+    expect(ivo).toContain("- **Signature** (a reader knows them by these; bring one back when they come back): Split knuckles; His father's coat");
+    expect(ivo.indexOf("Appearance now")).toBeLessThan(ivo.indexOf("- **Wants**"));
+    edit(dir, "characters/ivo.md", "  - { from: 1.06, text: The lamp shatters", "  - { from: 1.02, text: The lamp shatters");
+    expect(section(briefText(dir, 2), "Cast: Ivo Marsh")).toContain("- **marks**: Split knuckles on both hands");
+    const later = section(briefText(dir, 3), "Cast: Ivo Marsh");
+    expect(later).toContain("- **marks** (since 1.02): Split knuckles, and a star of glass");
+    expect(later).not.toContain("never close before the next haul");
+  });
+
   test("gives a voice change of the arc after its anchor, below the voice card", () => {
     const dir = fixtureCopy();
     expect(section(briefText(dir, 4), "Cast: Sabine Rook")).not.toContain("in the margin");
