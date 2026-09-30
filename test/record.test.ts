@@ -336,6 +336,20 @@ describe("lb brief", () => {
     expect(r.over).toBe(true);
   });
 
+  test("an earlier book gives its ending state and handoff in place of the summaries of its chapters", () => {
+    const dir = fixtureCopy();
+    const b1 = join(dir, "books", "01");
+    for (const c of [2, 3, 4]) writeFileSync(join(b1, "memory", `0${c}.md`), readFileSync(join(b1, "memory", "01.md"), "utf8").replace("chapter: 1", `chapter: ${c}`));
+    mkdirSync(join(dir, "books", "02", "plan"), { recursive: true });
+    writeFileSync(join(dir, "books", "02", "plan.md"), readFileSync(join(b1, "plan.md"), "utf8").replace("book: 1", "book: 2").replace("title: The Tithe Well", "title: The Red Pages"));
+    writeFileSync(join(dir, "books", "02", "plan", "01.md"), readFileSync(join(b1, "plan", "01.md"), "utf8").replace("book: 1", "book: 2"));
+    const text = readFileSync(join(dir, buildBrief(load(dir), loadRecord(dir), 2, 1).file), "utf8");
+    expect(text).toContain("## Book 1: The Tithe Well (how it ended)\n\nIvo is iron rank");
+    expect(text).toContain("Left open for later books:\n- What the Duke does with two hundred stolen levels");
+    expect(text).not.toContain("## Memory 1.01 (summary)");
+    expect(text).toContain("## Memory 1.04");
+  });
+
   const briefText = (dir: string, chapter: number) => readFileSync(join(dir, buildBrief(load(dir), loadRecord(dir), 1, chapter).file), "utf8");
 
   test("has the act, the climax, the tension and the stakes of the chapter", () => {

@@ -262,15 +262,27 @@ export function buildBrief(project: Project, rec: RecordFiles, book: number, cha
   // 7. The voice samples.
   for (const v of project.voiceSamples) sections.push({ title: `Voice sample: ${v.data.kind} (copy its voice; its lines, gestures, objects and events are its own)`, text: v.body.trim() });
 
-  // 8. Rolling memory: the last 3 chapters in full, the summary of older ones.
+  // 8. Rolling memory: the last 3 chapters in full, the summary of older ones. An earlier book gives its ending state
+  // and handoff from its plan in place of the summaries of its chapters, so the brief does not grow with each book.
   const earlier = [...project.memory.entries()]
     .sort(([a], [b]) => a - b)
     .flatMap(([, ms]) => ms)
     .filter((m) => m.data.book < book || (m.data.book === book && m.data.chapter < chapter));
   const full = earlier.slice(-3);
-  earlier.slice(0, -3).forEach((m, i) => {
-    sections.push({ title: `Memory ${m.data.book}.${pad2(m.data.chapter)} (summary)`, text: m.data.summary, drop: i });
-  });
+  const older = earlier.slice(0, -3);
+  for (const b of new Set(older.map((m) => m.data.book))) {
+    const p = b < book ? project.books.get(b)?.data : undefined;
+    if (!p) continue;
+    sections.push({
+      title: `Book ${b}${p.title ? `: ${p.title}` : ""} (how it ended)`,
+      text: [p.ending_state, ...(p.handoff.length ? ["", "Left open for later books:", ...p.handoff.map((h) => `- ${h}`)] : [])].join("\n"),
+    });
+  }
+  older
+    .filter((m) => m.data.book === book || !project.books.get(m.data.book))
+    .forEach((m, i) => {
+      sections.push({ title: `Memory ${m.data.book}.${pad2(m.data.chapter)} (summary)`, text: m.data.summary, drop: i });
+    });
   // The lore and character details of a memory file are in the lore entries and character files already.
   for (const m of full) {
     const { phrase_log: _, lore_added: _l, character_added: _c, ...rest } = m.data;
