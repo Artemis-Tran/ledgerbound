@@ -4,7 +4,7 @@ A Claude Code plugin that plans and writes LitRPG / progression-fantasy novels (
 
 - Terms: [`CONTEXT.md`](CONTEXT.md)
 - Design: [`docs/design.md`](docs/design.md), decisions in [`docs/adr/`](docs/adr/)
-- File formats: [`reference/formats.md`](reference/formats.md), worked example in [`examples/tiny-standalone/`](examples/tiny-standalone/)
+- File formats: [`reference/formats.md`](reference/formats.md), worked examples in [`examples/tiny-standalone/`](examples/tiny-standalone/) and, for a series whose book 1 was written without Ledgerbound, [`examples/tiny-imported/`](examples/tiny-imported/)
 - Writing rules: [`guidelines/writing.md`](guidelines/writing.md) (`lb init` copies it into each novel repo)
 
 ## Install (once)
@@ -32,6 +32,8 @@ claude
 ```
 
 Then run `/ledgerbound:start-project` followed by what you have (plot, style, POV, characters, setting, stat system). With only a one- or two-sentence idea, run `/ledgerbound:develop-idea <idea>` instead: it offers three premises, develops the one you pick into `pitch.md`, and hands over to `start-project`.
+
+When you already wrote book 1 of the series without Ledgerbound, run `/ledgerbound:import-book` instead. It splits your manuscript (Markdown or plain text) into chapters with `lb import`, reads the book, and makes the story bible, the schema, the rolling memory, the lore and the characters from it. Book 1 stays as you wrote it: the tool plans and writes book 2 and later, in your voice, from where book 1 ends.
 
 At any time, two commands tell you where you are:
 
@@ -97,7 +99,7 @@ Both skills do the same steps for each chapter. `lb run` finds the stage of each
 
 | Stop | Why | What you do | In autopilot |
 |---|---|---|---|
-| `chapter-1` checkpoint | Chapter 1.01 is the first time that the voice runs at full length. | Read `books/01/chapters/01.md`. Approve it, or say what to change: the reviser changes it, and it is verified again. | No stop. |
+| `chapter-1` checkpoint | Chapter 1.01 (or 2.01 after an imported book 1) is the first time that the voice runs at full length. | Read `books/01/chapters/01.md`. Approve it, or say what to change: the reviser changes it, and it is verified again. | No stop. |
 | `blocked` | A chapter still has an open error after 3 rounds. | The skill shows the errors. Say how to fix them, or accept a replan when they are about the plan. | No stop: a replan and one more round, or a commit with the open errors. |
 | **REPLAN NEEDED** | After a commit, a later target can no longer be reached (for example, Ivo is already past the rank that a target expects). | The `replan` skill proposes changes. You approve them. | No stop, unless the replan must change a `locked` decision or a draw. |
 | `replan` from the writer or the reviser | The chapter cannot do its plan inside the rules of the record. | The same as above. | The same as above. |
@@ -228,6 +230,7 @@ Restart Claude Code after the update.
 
 ```
 lb init [dir] --title T [--format series|standalone]
+lb import <manuscript> [--book N] [--heading REGEX] [--dry-run]
 lb status | validate | gate <cp> | approve <cp> | lint <file...> | lore <file>|<id> --at <point> | who <file>|<id> --at <point> | rules | where
 lb run | brief <point> | delta <point> | fold [point] | claims <point> <file> | commit <point>
 lb export [--book N] [--draft] [--out FILE]

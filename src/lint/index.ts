@@ -75,6 +75,12 @@ export function lintFile(path: string, opts: FileLintOptions = {}): LintResult &
   };
   const now = readBody(abs);
   const result = lintBody(now, opts.lines);
+  // A voice sample from an imported book is the author's own prose: its findings are warnings, and the chapters that
+  // the tool writes are still compared with it for repeats.
+  const imported = voiceSample && root ? importedSource(root, abs) : undefined;
+  if (imported) {
+    result.findings = result.findings.map((f) => (f.severity === "error" ? { ...f, severity: "warn" as const, message: `${f.message} (a warning only: the sample is the author's prose from ${imported})` } : f));
+  }
   if (opts.before) result.findings.push(...added(lintBody(readBody(opts.before)).findings, opts.lines ? lintBody(now).findings : result.findings));
   // A re-check of a line range does not judge the length of the whole chapter.
   if (chapterMatch && config?.success && !opts.lines) {
@@ -101,6 +107,17 @@ function added(before: Finding[], after: Finding[]): Finding[] {
     const first = fs.find((f) => !old.some((o) => o.text === f.text)) ?? fs[0];
     return [{ rule, severity: "error" as const, line: first.line, text: first.text, message: `the revision added ${rule} findings: ${old.length} before, ${fs.length} now. Fix it without a new one` }];
   });
+}
+
+/** The point of a voice sample's `source` (for example "1.03, scene 2") when that chapter is from an imported book. */
+function importedSource(root: string, abs: string): string | undefined {
+  const source = (splitFrontmatter(readFileSync(abs, "utf8")).data as { source?: unknown } | undefined)?.source;
+  const m = typeof source === "string" ? /^(\d+)\.(\d+)\b/.exec(source) : null;
+  if (!m) return undefined;
+  const chapter = join(root, "books", m[1].padStart(2, "0"), "chapters", `${m[2].padStart(2, "0")}.md`);
+  if (!existsSync(chapter)) return undefined;
+  const data = splitFrontmatter(readFileSync(chapter, "utf8")).data as { source?: unknown } | undefined;
+  return data?.source === "imported" ? `${Number(m[1])}.${m[2].padStart(2, "0")}` : undefined;
 }
 
 /** How far a chapter can be from its target length before a warning. */

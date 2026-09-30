@@ -7,7 +7,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { briefPath } from "./brief.ts";
-import { isOn } from "./checkpoints.ts";
+import { firstPlannedBook, isOn } from "./checkpoints.ts";
 import { pad2, bookDir, type Project } from "./project.ts";
 import { chapterKey, chapterPath, LEDGER, stagedPath } from "./record.ts";
 
@@ -133,8 +133,8 @@ export function runReport(project: Project, book: number): RunReport {
     briefed: `Run the chapter-writer agent for ${key} (generate-chapter). A staged delta from an earlier try is its to replace.`,
     drafted: `Run verify-chapter for ${key}.`,
     verified:
-      book === 1 && first?.chapter === 1 && isOn(project, "chapter-1")
-        ? "Checkpoint chapter-1: show the user chapter 1.01 and the check results. When they approve, run `lb approve chapter-1`."
+      book === firstPlannedBook(project) && first?.chapter === 1 && isOn(project, "chapter-1")
+        ? `Checkpoint chapter-1: show the user chapter ${key} and the check results. When they approve, run \`lb approve chapter-1\`.`
         : `Run \`lb commit ${key}\`.`,
     approved: `Run the memory-writer agent for ${key}.`,
     remembered: `Commit to git: \`Book ${book}, chapter ${first?.chapter}: <title>\`.`,

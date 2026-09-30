@@ -6,7 +6,7 @@ import { approve, gate, status } from "../src/checkpoints.ts";
 import { initProject } from "../src/init.ts";
 import { loadProject } from "../src/project.ts";
 import { validateProject } from "../src/validate.ts";
-import { edit, fixtureCopy } from "./helpers.ts";
+import { edit, fixtureCopy, importedCopy } from "./helpers.ts";
 
 function load(dir: string) {
   const { project, issues } = loadProject(dir);
@@ -145,5 +145,27 @@ describe("status", () => {
     edit(dir, "characters/sabine.md", "status: approved", "status: draft");
     const { project, issues } = load(dir);
     expect(status(project, issues).next).toContain("lb approve character-arcs");
+  });
+});
+
+describe("an import project", () => {
+  test("book 2 is the current book, and generation starts at 2.01", () => {
+    const { project, issues } = load(importedCopy());
+    const s = status(project, issues);
+    expect(s.book).toBe(2);
+    expect(s.checkpoints.find((g) => g.checkpoint === "chapter-1")?.reason).toBe("chapter 2.01 is not written yet");
+    expect(s.next).toBe("Run the generate-book skill (or generate-chapter for 2.01).");
+  });
+
+  test("names import-book until the bible is cleared, so an import that stopped continues", () => {
+    const dir = importedCopy();
+    const next = () => {
+      const { project, issues } = load(dir);
+      return status(project, issues).next;
+    };
+    edit(dir, "bible.md", "status: approved", "status: draft");
+    expect(next()).toContain("import-book");
+    rmSync(join(dir, "bible.md"));
+    expect(next()).toContain("import-book");
   });
 });

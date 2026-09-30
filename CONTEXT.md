@@ -22,6 +22,10 @@ _Avoid_: Outline, synopsis, treatment
 The output of intake: every story decision (plot, prose style, POV, tense, characters, setting, stat system), each one marked `locked` or `open`.
 _Avoid_: Bible doc, world doc, setup
 
+**Imported book**:
+A book of the story that the author wrote without Ledgerbound, before the first planned book. Its prose is canon: the system does not plan, write or check it, and the record starts after it.
+_Avoid_: Prior book, published book, legacy book, book 0
+
 **Locked decision**:
 A story-bible decision that the user chose. Only the user can change it.
 _Avoid_: Fixed, final
@@ -90,12 +94,12 @@ The change of one character across the story: want, need, the lie they believe, 
 _Avoid_: Using "arc" for a thread or a plot line
 
 **Lore entry**:
-One piece of setting knowledge in `lore/<id>.md`: a place, a faction, an event of the history, a custom, a law, a creature, or how the System works in the world. World planning (`plan-world`, the `world` checkpoint) writes the entries after the story bible. A chapter's brief includes the entries that its plan lists or names, and a one-line index of the others; the prose never contradicts an entry. A setting detail that an approved chapter adds goes into its entry through the rolling memory.
+One piece of setting knowledge in `lore/<id>.md`: a place, a faction, an event of the history, a custom, a law, a creature, or how the System works in the world. World planning (`plan-world`, the `world` checkpoint) writes the entries after the story bible. A chapter's brief includes the entries that its plan lists or names, and a one-line index of the others; the prose never contradicts an entry. A setting detail that an approved chapter adds goes into its entry through the rolling memory. The record holds what changes; a lore entry holds what stays true.
+_Avoid_: Wiki page, codex, glossary
 
 **Lore change**:
 How a lore entry changes in the story (a law ends, a place burns), with the point or plan anchor after which it is true. A brief gives only the changes before its chapter, so the writer never sees a later state of the world.
-_Avoid_: Update, revision, event The record holds what changes; a lore entry holds what stays true.
-_Avoid_: Wiki page, codex, glossary
+_Avoid_: Update, revision, event
 
 **Voice card**:
 The rules for how one character speaks: vocabulary, sentence length, verbal habits, what they never say, how they joke (humour), and their voice states. A character change can change the voice card when the arc moves the character.

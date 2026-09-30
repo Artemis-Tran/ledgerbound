@@ -9,7 +9,7 @@ The output is a **story bible**: the draws and every story decision, each marked
 
 ## Steps
 
-1. **Repo.** If there is no `project.yaml`, run `lb init . --title "<title>" --format series` (use `--format standalone` only when the user says standalone; with a `pitch.md`, take the title and format from its frontmatter). If `lb` is not found, tell the user to run `npm link` once in the Ledgerbound repo.
+1. **Repo.** When the user already wrote book 1 of the series without Ledgerbound, start the `import-book` skill and stop here: it makes the bible from that book. If there is no `project.yaml`, run `lb init . --title "<title>" --format series` (use `--format standalone` only when the user says standalone; with a `pitch.md`, take the title and format from its frontmatter). If `lb` is not found, tell the user to run `npm link` once in the Ledgerbound repo.
 
 2. **Thin material.** If there is no `pitch.md` and the user's material fixes fewer than three of the eight required decisions (a one- or two-sentence idea, for example), offer the `develop-idea` skill first: it gives three complete premises that fit together, where this skill would ask about each gap on its own. If the user says yes, start `develop-idea` and stop here; it comes back to this skill. If they say no, continue.
 

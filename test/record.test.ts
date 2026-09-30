@@ -8,7 +8,7 @@ import { compareClaims, unplaced } from "../src/claims.ts";
 import { loadProject, type Project } from "../src/project.ts";
 import { checkDelta, commitChapter, fold, loadRecord, parsePoint, unreachableTargets } from "../src/record.ts";
 import { runReport } from "../src/run.ts";
-import { check, edit, errorCodes, fixtureCopy } from "./helpers.ts";
+import { check, edit, errorCodes, fixtureCopy, importedCopy } from "./helpers.ts";
 
 const CLI = join(import.meta.dirname, "..", "src", "cli.ts");
 const lb = (args: string[], cwd: string) => spawnSync("node", [CLI, ...args], { cwd, encoding: "utf8" });
@@ -601,5 +601,30 @@ describe("lb run", () => {
     expect(readFileSync(join(dir, "ledger.jsonl"), "utf8").trim().split("\n")).toHaveLength(5);
     expect(lb(["gate", "chapter-1"], dir).status).toBe(0);
     expect(runReport(load(dir), 1).next.step).toContain("lb brief 1.02");
+  });
+});
+
+describe("imported books: the record starts after book 1", () => {
+  test("the first delta of book 2 needs no committed chapter of book 1, and starts from the state at its end", () => {
+    const dir = importedCopy();
+    mkdirSync(join(dir, "books/02/deltas"), { recursive: true });
+    writeFileSync(join(dir, "books/02/deltas/01.jsonl"), `${JSON.stringify({ entity: "ivo", field: "location", op: "set", value: "the warden's stair", cause: "He climbs out of the vault." })}\n`);
+    const c = checkDelta(load(dir), loadRecord(dir), 2, 1);
+    expect(c.issues.filter((i) => i.severity === "error")).toEqual([]);
+    expect(c.before.entities.ivo.fields).toMatchObject({ level: 3, rank: "unranked", location: "the tithe vault" });
+    expect(c.after.entities.ivo.fields.location).toBe("the warden's stair");
+  });
+
+  test("chapter 2.01 is the chapter-1 checkpoint: lb commit refuses it, and lb run asks for the user's approval", () => {
+    const dir = importedCopy();
+    const r = lb(["commit", "2.01"], dir);
+    expect(r.status).toBe(2);
+    expect(r.stderr).toContain("chapter 2.01 needs the user's approval");
+
+    mkdirSync(join(dir, "books/02/chapters"), { recursive: true });
+    writeFileSync(join(dir, "books/02/chapters/01.md"), "---\nstatus: draft\nbook: 2\nchapter: 1\ntitle: Red Wax\n---\n\nIvo climbed.\n");
+    mkdirSync(join(dir, "runs/verify"), { recursive: true });
+    writeFileSync(join(dir, "runs/verify/02-01.json"), JSON.stringify({ round: 1, verdict: "pass", open: [] }));
+    expect(runReport(load(dir), 2).next.step).toContain("Checkpoint chapter-1: show the user chapter 2.01");
   });
 });

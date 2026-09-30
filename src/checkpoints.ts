@@ -29,9 +29,22 @@ export function isOn(project: Project, cp: Checkpoint): boolean {
   return project.config.checkpoints[cp] ?? true;
 }
 
-/** The book that plan-book works on: the highest book with chapter plans, or else book 1. */
+/**
+ * The first book that the tool plans and writes: the book after the last imported book, or else book 1. Its chapter 1
+ * is the first chapter that the tool writes, so the checkpoint `chapter-1` is that chapter.
+ */
+export function firstPlannedBook(project: Project): number {
+  return 1 + Math.max(0, ...[...project.books].filter(([, p]) => p.data.imported).map(([b]) => b));
+}
+
+/** A project whose first book was written without Ledgerbound: a book plan says `imported: true`, or a chapter says `source: imported`. */
+export function isImportProject(project: Project): boolean {
+  return [...project.books.values()].some((p) => p.data.imported) || [...project.prose.values()].flat().some((c) => c.data.source === "imported");
+}
+
+/** The book that plan-book works on: the highest book with chapter plans, or else the first planned book. */
 export function currentBook(project: Project): number {
-  return Math.max(1, ...project.chapters.keys());
+  return Math.max(firstPlannedBook(project), ...project.chapters.keys());
 }
 
 interface Owned {
@@ -86,9 +99,15 @@ function owned(project: Project, cp: Checkpoint, book: number): Owned {
     case "voice-sample":
       return { approvable: project.voiceSamples, owns: ["voice/"], missing: project.voiceSamples.length === 0 ? "voice/ has no voice samples" : undefined };
     case "chapter-1": {
-      // Chapter 1 of book 1 only. Its approval also commits its delta (see `lb approve chapter-1`).
-      const ch = project.prose.get(1)?.find((c) => c.data.chapter === 1);
-      return { approvable: ch ? [ch] : [], owns: ["books/01/chapters/01.md", "books/01/deltas/01.jsonl"], missing: ch ? undefined : "chapter 1.01 is not written yet" };
+      // Chapter 1 of the first planned book only (1.01, or 2.01 after an imported book 1). Its approval also commits its
+      // delta (see `lb approve chapter-1`).
+      const first = firstPlannedBook(project);
+      const ch = project.prose.get(first)?.find((c) => c.data.chapter === 1);
+      return {
+        approvable: ch ? [ch] : [],
+        owns: [`${bookDir(first)}/chapters/01.md`, `${bookDir(first)}/deltas/01.jsonl`],
+        missing: ch ? undefined : `chapter ${first}.01 is not written yet`,
+      };
     }
     case "replan": {
       // The plan files that a replan can change. They are drafts again until the user approves the replan.
@@ -165,20 +184,25 @@ export function status(project: Project, issues: Issue[]): StatusReport {
   if (blocked < 0) next = "Run `lb run` for the next generation step.";
   else {
     const g = checkpoints[blocked];
-    const skill = WORKFLOW[blocked].skill;
+    // In an import project, import-book makes the bible from the imported book.
+    const imported = isImportProject(project);
+    const skill = imported && g.checkpoint === "bible" ? "import-book" : WORKFLOW[blocked].skill;
+    const first = `${firstPlannedBook(project)}.01`;
     next =
-      g.state === "missing" && g.checkpoint === "bible"
+      g.checkpoint === "bible" && imported
+        ? "Run the import-book skill: it continues the import of book 1 from the files that exist, and ends with the bible checkpoint."
+        : g.state === "missing" && g.checkpoint === "bible"
         ? existsSync(join(project.root, "pitch.md"))
           ? "Run the start-project skill. It reads pitch.md."
           : "Run the start-project skill (bible.md is missing). For an idea of only one or two sentences, run develop-idea first."
         : g.state === "missing" && g.checkpoint === "chapter-1"
-          ? "Run the generate-book skill (or generate-chapter for 1.01)."
+          ? `Run the generate-book skill (or generate-chapter for ${first}).`
         : g.state === "missing"
         ? `Run the ${skill} skill (${g.reason}).`
         : g.state === "invalid"
           ? `Fix the errors (run \`lb validate\`), then continue with the ${skill} skill.`
           : g.checkpoint === "chapter-1"
-            ? "Run `lb run`: chapter 1.01 needs verify-chapter, then the user's approval (`lb approve chapter-1`)."
+            ? `Run \`lb run\`: chapter ${first} needs verify-chapter, then the user's approval (\`lb approve chapter-1\`).`
             : `Show the ${g.checkpoint} output to the user. When they approve it, run \`lb approve ${g.checkpoint}\`.`;
   }
   return { mode: project.config.mode, book, checkpoints, next };

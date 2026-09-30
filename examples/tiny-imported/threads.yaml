@@ -1,0 +1,17 @@
+- id: red-pages
+  kind: mystery
+  summary: The back pages of the tithe ledger have red rules and a column of diggers' names.
+  plant: 1.01
+  payoff: 2.02
+- id: sabine-debt
+  kind: relationship
+  summary: Sabine copies the warden's numbers because her own father's debt is in the same book.
+  plant: 1.02
+  beats: [2.02]
+  payoff: 2.04
+- id: cracked-lamp
+  kind: setup
+  summary: Ivo's miner's lamp cracks on the warden's stair, and the crack lets the well pull at a level.
+  plant: 2.01
+  beats: [2.03]
+  payoff: 2.04

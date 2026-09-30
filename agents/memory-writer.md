@@ -10,7 +10,7 @@ The point (for example `1.07`) gives the paths, where NN is the book and MM the 
 
 ## Steps
 
-1. Read the chapter, the memory file of the chapter before it (its `open_questions`), each lore entry in `lore/` and each character file in `characters/`. Run `lb who books/NN/chapters/MM.md` to see the characters that the chapter names as they are at its start. A change in an entry's `changes` is true only after the chapter of its `from` (`lb lore <id> --at <point>` prints the entry as it is at the start of this chapter). Run `lb fold <point>.0 --json` and `lb fold <point> --json` to see the record at the chapter start and end.
+1. Read the chapter, the memory file of the chapter before it (its `open_questions`), each lore entry in `lore/` and each character file in `characters/`. Run `lb who books/NN/chapters/MM.md` to see the characters that the chapter names as they are at its start. A change in an entry's `changes` is true only after the chapter of its `from` (`lb lore <id> --at <point>` prints the entry as it is at the start of this chapter). Run `lb fold <point>.0 --json` and `lb fold <point> --json` to see the record at the chapter start and end. For a chapter with `source: imported` (a book that the author wrote without Ledgerbound), the record starts after its book, so both folds give the state at the end of that book: take the record changes from the prose, and read the record values in `lb who` as where the character ends up, not where they are in this chapter.
 
 2. Write the memory file. Frontmatter only, no body:
    - `summary`: 3–5 sentences of facts: what happened, in order. No judgment of the prose, no themes.

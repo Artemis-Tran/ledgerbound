@@ -6,11 +6,22 @@ import { loadProject } from "../src/project.ts";
 import { validateProject } from "../src/validate.ts";
 
 export const FIXTURE = join(import.meta.dirname, "..", "examples", "tiny-standalone");
+export const IMPORTED_FIXTURE = join(import.meta.dirname, "..", "examples", "tiny-imported");
 
 /** A fresh copy of the fixture novel in a temp folder. */
 export function fixtureCopy(): string {
   const dir = mkdtempSync(join(tmpdir(), "lb-test-"));
   cpSync(FIXTURE, dir, { recursive: true });
+  return dir;
+}
+
+/**
+ * A fresh copy of the imported example: book 1 is an imported book (four chapters that the author wrote without
+ * Ledgerbound), the record starts after it, and book 2 is planned.
+ */
+export function importedCopy(): string {
+  const dir = mkdtempSync(join(tmpdir(), "lb-test-"));
+  cpSync(IMPORTED_FIXTURE, dir, { recursive: true });
   return dir;
 }
 

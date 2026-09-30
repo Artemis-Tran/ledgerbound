@@ -85,9 +85,12 @@ function checkDraws(project: Project, totalBooks: number, err: Report) {
       delivered.add(id);
     });
   }
-  // Only when every book plan exists: before that, a later book can still deliver the draw.
+  // Only when every book plan exists: before that, a later book can still deliver the draw. An imported book delivers
+  // nothing, so a project with only imported books waits for its first planned book.
   for (let b = 1; b <= totalBooks; b++) if (!project.books.has(b)) return;
-  const first = project.books.get(Math.min(...project.books.keys()))!;
+  const planned = [...project.books.keys()].filter((b) => !project.books.get(b)!.data.imported);
+  if (planned.length === 0) return;
+  const first = project.books.get(Math.min(...planned))!;
   for (const d of draws) {
     if (d.kind === "gives" && !delivered.has(d.id)) err("draw-undelivered", first.file, `no book plan delivers the draw '${d.id}' (${d.text})`, "draws");
   }
@@ -161,6 +164,10 @@ function checkLevels(project: Project, err: Report, warn: Report): number {
     if (plan.data.question.answers.length === 0) err("no-answer", plan.file, "each book must resolve at least one main question", "question.answers");
     if (!standalone && b < total && plan.data.handoff.length === 0) err("no-handoff", plan.file, "a book before the last one needs a handoff", "handoff");
     for (const d of duplicates(plan.data.acts, (a) => a.id)) err("duplicate-id", plan.file, `act '${d}' is defined twice`, "acts");
+    if (!plan.data.imported) continue;
+    if (project.chapters.has(b)) err("imported-planned", plan.file, `book ${b} is imported, so it has no chapter plans: remove ${bookDir(b)}/plan/`, "imported");
+    const before = [...project.books].filter(([k, p]) => k < b && !p.data.imported).map(([k]) => k);
+    if (before.length) err("imported-order", plan.file, `book ${b} is imported, but book ${before[0]} before it is planned: only the books before the first planned book can be imported`, "imported");
   }
   return total;
 }
@@ -181,10 +188,11 @@ function checkCharacters(project: Project, index: PlanIndex, characterIds: Set<s
     c.data.arc_beats.forEach((beat, i) => {
       if (totalBooks > 0 && beat.book > totalBooks) err("unknown-book", c.file, `book ${beat.book} is not in the plan`, `arc_beats.${i}.book`);
       const plan = project.books.get(beat.book);
-      if (plan && !plan.data.acts.some((a) => a.id === beat.act)) err("unknown-act", c.file, `book ${beat.book} has no act '${beat.act}'`, `arc_beats.${i}.act`);
+      if (plan && !plan.data.imported && !plan.data.acts.some((a) => a.id === beat.act)) err("unknown-act", c.file, `book ${beat.book} has no act '${beat.act}'`, `arc_beats.${i}.act`);
     });
     if (c.data.role !== "supporting") {
       for (const b of project.books.keys()) {
+        if (index.imported.has(b)) continue;
         if (!c.data.arc_beats.some((beat) => beat.book === b)) warn("no-arc-beat", c.file, `${c.data.id} has no arc beat in book ${b}`, "arc_beats");
       }
     }
@@ -244,7 +252,7 @@ function checkRelationships(project: Project, index: PlanIndex, totalBooks: numb
     d.stages.forEach((s, i) => {
       if (totalBooks > 0 && s.book > totalBooks) err("unknown-book", r.file, `book ${s.book} is not in the plan`, `stages.${i}.book`);
       const plan = project.books.get(s.book);
-      if (plan && !plan.data.acts.some((a) => a.id === s.act)) err("unknown-act", r.file, `book ${s.book} has no act '${s.act}'`, `stages.${i}.act`);
+      if (plan && !plan.data.imported && !plan.data.acts.some((a) => a.id === s.act)) err("unknown-act", r.file, `book ${s.book} has no act '${s.act}'`, `stages.${i}.act`);
     });
     if (d.stages.length === 0) warn("relationship-static", r.file, "the relationship has no stages: nothing on the page changes how the two are together", "stages");
     else if (d.stages.length >= 3 && d.stages.every((s) => s.shift === "closer")) {
@@ -340,6 +348,7 @@ function checkChapters(project: Project, index: PlanIndex, characterIds: Set<str
 
 function checkTension(project: Project, index: PlanIndex, err: Report, warn: Report) {
   for (const plan of project.books.values()) {
+    if (plan.data.imported) continue;
     if (!plan.data.tension) warn("tension-missing", plan.file, "the book plan has no `tension` range, so nothing checks the tension of its chapters", "tension");
     if (!plan.data.climax) warn("climax-missing", plan.file, "the book plan has no `climax`: a book needs one big event in its last act", "climax");
   }
@@ -505,6 +514,7 @@ function checkTargets(project: Project, index: PlanIndex, characterIds: Set<stri
     if (chapter === undefined) return undefined;
     let n = chapter;
     for (let b = 1; b < book; b++) {
+      if (index.imported.has(b)) continue;
       const cs = project.chapters.get(b);
       if (!cs) return undefined;
       n += cs.length;
@@ -522,6 +532,10 @@ function checkTargets(project: Project, index: PlanIndex, characterIds: Set<stri
     const r = index.resolve(t.anchor);
     if ("error" in r) {
       err("unknown-anchor", file, r.error, `${i}.anchor`);
+      return;
+    }
+    if (index.imported.has(r.book)) {
+      err("target-imported", file, `${t.anchor} is in imported book ${r.book}, and the record starts after it: put the state at its end in the start values of schema.yaml`, `${i}.anchor`);
       return;
     }
     const sample = (value: unknown): Sample => ({ pos: r.pos, chapterIndex: globalChapter(r.book, r.chapter), value, reset: t.reset, where: t.anchor });
@@ -599,6 +613,7 @@ function checkTargets(project: Project, index: PlanIndex, characterIds: Set<stri
   if (project.targets.data.length > 0 || project.books.size > 0) {
     const targeted = new Set(project.targets.data.map((t) => t.anchor));
     for (const [book, plan] of project.books) {
+      if (plan.data.imported) continue;
       for (const id of [...plan.data.acts.map((a) => `b${book}/${a.id}/end`), `b${book}/end`]) {
         if (!targeted.has(id)) warn("target-missing", file, `the ending state at ${id} has no target`);
       }
@@ -783,10 +798,12 @@ function checkGeneration(project: Project, issues: Issue[], err: Report, warn: R
   // The committed ledger must replay with no error. The staged deltas are for `lb delta`.
   for (const i of fold(project, rec, undefined, { staged: false }).issues) if (i.severity === "error") issues.push({ ...i, code: `ledger.${i.code}` });
 
+  const imported = (book: number) => project.books.get(book)?.data.imported === true;
   const approved = (book: number, chapter: number) => project.prose.get(book)?.find((c) => c.data.chapter === chapter)?.data.status === "approved";
   for (const k of new Set(rec.ledger.map((l) => chapterKey(l.at.book, l.at.chapter)))) {
     const [b, c] = k.split(".").map(Number);
-    if (!approved(b, c)) err("ledger-unapproved", "ledger.jsonl", `the ledger has entries for chapter ${k}, but that chapter is not approved`);
+    if (imported(b)) err("ledger-imported", "ledger.jsonl", `the ledger has entries for chapter ${k}, but book ${b} is imported: the record starts after it`);
+    else if (!approved(b, c)) err("ledger-unapproved", "ledger.jsonl", `the ledger has entries for chapter ${k}, but that chapter is not approved`);
   }
   for (const k of rec.staged.keys()) {
     const [b, c] = k.split(".").map(Number);
@@ -795,6 +812,10 @@ function checkGeneration(project: Project, issues: Issue[], err: Report, warn: R
 
   for (const [book, files] of project.prose) {
     for (const f of files) {
+      if (imported(book) !== (f.data.source === "imported")) {
+        err("imported-source", f.file, imported(book) ? `book ${book} is imported, so each chapter has source: imported` : `book ${book} is not imported, so the chapter has no source: imported`, "source");
+      }
+      if (imported(book)) continue;
       if (!project.chapters.get(book)?.some((p) => p.data.chapter === f.data.chapter)) err("no-plan", f.file, `there is no chapter plan for ${chapterKey(book, f.data.chapter)}`);
     }
   }

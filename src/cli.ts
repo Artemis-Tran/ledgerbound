@@ -7,9 +7,10 @@ import { buildBrief, phraseLog } from "./brief.ts";
 import { changedRanges } from "./changed.ts";
 import { parseArgs } from "node:util";
 import { buildPlanIndex } from "./anchors.ts";
-import { approve, currentBook, gate, isOn, status } from "./checkpoints.ts";
+import { approve, currentBook, firstPlannedBook, gate, isOn, status } from "./checkpoints.ts";
 import { Claims, compareClaims, unplaced } from "./claims.ts";
 import { buildEpub } from "./export/epub.ts";
+import { importBook } from "./import.ts";
 import { initProject } from "./init.ts";
 import { splitFrontmatter } from "./frontmatter.ts";
 import { formatIssues, hasErrors, type Issue } from "./issues.ts";
@@ -43,6 +44,9 @@ const HELP = `lb: the Ledgerbound CLI. Run it inside a novel repo (or pass --dir
   lb phrases <file|point> [--json]      the phrase log of the book before a chapter: the similes, images,
                                          gestures and ending types that the chapter must not use again
   lb where                               the ledgerbound folder (reference/, examples/)
+  lb import <manuscript> [--book N] [--heading REGEX] [--dry-run] [--json]
+                                         split the Markdown or plain-text manuscript of a book written
+                                         without Ledgerbound into books/NN/chapters/ (default book 1)
 
 Generation (a point is 1.07 = book 1, chapter 7):
   lb run [--book N] [--json]             the stage of each chapter, and the next step
@@ -79,6 +83,8 @@ const { values, positionals } = parseArgs({
     draft: { type: "boolean", default: false },
     out: { type: "string" },
     at: { type: "string" },
+    heading: { type: "string" },
+    "dry-run": { type: "boolean", default: false },
     help: { type: "boolean", short: "h", default: false },
   },
 });
@@ -143,6 +149,30 @@ switch (command) {
     break;
   }
 
+  case "import": {
+    if (!args[0]) fail("give the manuscript: lb import book-1.md");
+    if (!existsSync(args[0])) fail(`'${args[0]}' does not exist`);
+    let heading: RegExp | undefined;
+    try {
+      heading = values.heading ? new RegExp(values.heading, "i") : undefined;
+    } catch {
+      fail(`--heading '${values.heading}' is not a valid regular expression`);
+    }
+    const { project } = load();
+    const book = values.book ? Number(values.book) : 1;
+    if (!Number.isInteger(book) || book < 1) fail("--book must be a book number like 1");
+    const r = importBook(project, book, readFileSync(args[0], "utf8"), { heading, dryRun: values["dry-run"] });
+    const rows = r.chapters.map((c) => `  ${c.file}  ${String(c.words).padStart(6)} words  ${c.heading}${c.title && c.title !== c.heading ? ` → title "${c.title}"` : ""}`);
+    const human = [
+      r.ok ? `${values["dry-run"] ? "Would import" : "Imported"} book ${book}: ${r.chapters.length} chapter(s).` : `NOT imported:\n${r.errors.map((e) => `  ERROR ${e}`).join("\n")}`,
+      rows.join("\n"),
+      r.warnings.map((w) => `WARN ${w}`).join("\n"),
+      r.next ? `Next: ${r.next}` : "",
+    ];
+    out(human.filter(Boolean).join("\n"), r);
+    process.exit(r.ok ? 0 : 1);
+  }
+
   case "validate": {
     const { issues } = load();
     const scope = args[0] ?? "all";
@@ -173,7 +203,7 @@ switch (command) {
   case "approve": {
     const cp = checkpointArg();
     const { project, issues } = load();
-    if (cp === "chapter-1") commit(project, 1, 1);
+    if (cp === "chapter-1") commit(project, firstPlannedBook(project), 1);
     const g = approve(project, issues, cp, bookArg(project));
     const ok = g.state === "approved";
     out(ok ? `Approved ${cp}.` : `NOT approved ${cp}: ${g.reason}${g.errors.length ? `\n${formatIssues(g.errors)}` : ""}`, g);
@@ -373,7 +403,7 @@ switch (command) {
   case "commit": {
     const { book, chapter } = chapterArg();
     const { project } = load();
-    if (book === 1 && chapter === 1 && isOn(project, "chapter-1")) fail("chapter 1.01 needs the user's approval: run `lb approve chapter-1` after they approve");
+    if (book === firstPlannedBook(project) && chapter === 1 && isOn(project, "chapter-1")) fail(`chapter ${book}.01 needs the user's approval: run \`lb approve chapter-1\` after they approve`);
     commit(project, book, chapter);
     break;
   }

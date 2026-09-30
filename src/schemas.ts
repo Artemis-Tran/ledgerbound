@@ -223,23 +223,41 @@ export const Climax = z.strictObject({
   choice: Text,
 });
 
-export const BookPlan = z.strictObject({
-  status: Status,
-  book: z.number().int().min(1),
-  title: Text,
-  ...levelFields,
-  acts: z.array(Act).min(1),
-  /** The IDs of the `gives` draws that this book delivers. */
-  draws: z.array(Slug).default([]),
-  /** Custom plan anchors (`b1/<slug>`), each inside one act. */
-  anchors: z.array(z.strictObject({ id: z.string().regex(AnchorRe), act: Slug, note: z.string().optional() })).default([]),
-  /** The lowest and the highest chapter tension of this book. A cozy book keeps a low `max`; an early book can have a lower range than a late one. */
-  tension: z
-    .strictObject({ min: Tension, max: Tension })
-    .refine((t) => t.min <= t.max, "min must not be larger than max")
-    .optional(),
-  climax: Climax.optional(),
-});
+export const BookPlan = z
+  .strictObject({
+    status: Status,
+    book: z.number().int().min(1),
+    title: Text,
+    /**
+     * An imported book: the author wrote it without Ledgerbound, so its prose is canon and the tool does not plan it.
+     * Its plan has only the level fields, written from what the book is. The record starts after it (ADR 0003).
+     */
+    imported: z.boolean().default(false),
+    ...levelFields,
+    acts: z.array(Act).default([]),
+    /** The IDs of the `gives` draws that this book delivers. */
+    draws: z.array(Slug).default([]),
+    /** Custom plan anchors (`b1/<slug>`), each inside one act. */
+    anchors: z.array(z.strictObject({ id: z.string().regex(AnchorRe), act: Slug, note: z.string().optional() })).default([]),
+    /** The lowest and the highest chapter tension of this book. A cozy book keeps a low `max`; an early book can have a lower range than a late one. */
+    tension: z
+      .strictObject({ min: Tension, max: Tension })
+      .refine((t) => t.min <= t.max, "min must not be larger than max")
+      .optional(),
+    climax: Climax.optional(),
+  })
+  .superRefine((b, ctx) => {
+    if (!b.imported) {
+      if (b.acts.length === 0) ctx.addIssue({ code: "custom", path: ["acts"], message: "a book plan needs at least one act" });
+      return;
+    }
+    for (const key of ["acts", "draws", "anchors"] as const) {
+      if (b[key].length > 0) ctx.addIssue({ code: "custom", path: [key], message: `an imported book has no ${key}: the tool does not plan it` });
+    }
+    for (const key of ["tension", "climax"] as const) {
+      if (b[key]) ctx.addIssue({ code: "custom", path: [key], message: `an imported book has no ${key}: the tool does not plan it` });
+    }
+  });
 export type BookPlan = z.infer<typeof BookPlan>;
 
 // ---------- characters/<id>.md ----------
@@ -511,13 +529,21 @@ export type DeltaEntry = z.infer<typeof DeltaEntry>;
 
 // ---------- books/NN/chapters/MM.md ----------
 
-export const Chapter = z.strictObject({
-  /** `approved` only through `lb commit` or `lb approve chapter-1`, which also commit the delta. */
-  status: Status,
-  book: z.number().int().min(1),
-  chapter: z.number().int().min(1),
-  title: z.string().optional(),
-});
+export const Chapter = z
+  .strictObject({
+    /** `approved` only through `lb commit` or `lb approve chapter-1`, which also commit the delta, or through `lb import`. */
+    status: Status,
+    book: z.number().int().min(1),
+    chapter: z.number().int().min(1),
+    title: z.string().optional(),
+    /** `imported`: `lb import` made the chapter from the manuscript of an imported book. It is canon, so it is approved. */
+    source: z.literal("imported").optional(),
+  })
+  .superRefine((c, ctx) => {
+    if (c.source === "imported" && c.status !== "approved") {
+      ctx.addIssue({ code: "custom", path: ["status"], message: "an imported chapter is canon, so its status is approved" });
+    }
+  });
 export type Chapter = z.infer<typeof Chapter>;
 
 // ---------- books/NN/publish.yaml and books/NN/pages/<id>.md ----------

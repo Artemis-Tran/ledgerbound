@@ -1,7 +1,8 @@
-import { readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
-import { check, edit, errorCodes, fixtureCopy } from "./helpers.ts";
+import { BookPlan } from "../src/schemas.ts";
+import { check, edit, errorCodes, FIXTURE, fixtureCopy, importedCopy } from "./helpers.ts";
 
 describe("the fixture", () => {
   test("has no errors", () => {
@@ -210,6 +211,97 @@ describe("bible and schema", () => {
     const dir = fixtureCopy();
     edit(dir, "characters/ivo.md", 'beat: "He keeps a level the well tries to take, and pays for it with the lamp." }', "beat: He keeps a level, and pays. }");
     expect(check(dir)).toContainEqual(expect.objectContaining({ code: "format", file: "characters/ivo.md", path: "arc_beats.2" }));
+  });
+});
+
+describe("imported books: the formats", () => {
+  const importedPlan = {
+    book: 1,
+    title: "The First Book",
+    imported: true,
+    ending_state: "Ivo is iron rank.",
+    promise: "A digger climbs by paying.",
+    question: { raises: ["Where do the held levels go?"], answers: [] },
+    handoff: ["What the Duke does with the levels"],
+  };
+
+  test("an imported book plan needs only the level fields", () => {
+    const plan = BookPlan.parse(importedPlan);
+    expect(plan.imported).toBe(true);
+    expect(plan.acts).toEqual([]);
+  });
+
+  test("an imported book plan has no acts, draws, anchors, tension or climax", () => {
+    const dir = fixtureCopy();
+    edit(dir, "books/01/plan.md", "title: The Tithe Well", "title: The Tithe Well\nimported: true");
+    const paths = check(dir).filter((i) => i.code === "format" && i.file === "books/01/plan.md").map((i) => i.path);
+    expect(paths).toEqual(expect.arrayContaining(["acts", "draws", "anchors", "tension", "climax"]));
+  });
+
+  test("a book plan that is not imported needs an act", () => {
+    const result = BookPlan.safeParse({ ...importedPlan, imported: false });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].path).toEqual(["acts"]);
+  });
+
+  test("an imported chapter is approved", () => {
+    const dir = importedCopy();
+    edit(dir, "books/01/chapters/01.md", "status: approved", "status: draft");
+    expect(check(dir)).toContainEqual(expect.objectContaining({ code: "format", file: "books/01/chapters/01.md", path: "status" }));
+  });
+});
+
+describe("imported books: the validator", () => {
+  test("a project whose book 1 is imported has no issues", () => {
+    expect(check(importedCopy())).toEqual([]);
+  });
+
+  test("an imported book has no chapter plans", () => {
+    const dir = importedCopy();
+    mkdirSync(join(dir, "books/01/plan"));
+    cpSync(join(FIXTURE, "books/01/plan/01.md"), join(dir, "books/01/plan/01.md"));
+    expect(check(dir)).toContainEqual(expect.objectContaining({ code: "imported-planned", file: "books/01/plan.md" }));
+  });
+
+  test("only the books before the first planned book can be imported", () => {
+    const dir = fixtureCopy();
+    edit(dir, "project.yaml", "format: standalone", "format: series");
+    mkdirSync(join(dir, "books/02"));
+    cpSync(join(importedCopy(), "books/01/plan.md"), join(dir, "books/02/plan.md"));
+    edit(dir, "books/02/plan.md", "book: 1", "book: 2");
+    expect(check(dir)).toContainEqual(expect.objectContaining({ code: "imported-order", file: "books/02/plan.md" }));
+  });
+
+  test("each chapter of an imported book, and only of an imported book, has source: imported", () => {
+    const dir = importedCopy();
+    edit(dir, "books/01/chapters/01.md", "source: imported\n", "");
+    expect(check(dir)).toContainEqual(expect.objectContaining({ code: "imported-source", file: "books/01/chapters/01.md" }));
+
+    const planned = fixtureCopy();
+    edit(planned, "books/01/chapters/01.md", "title: Level Three", "title: Level Three\nsource: imported");
+    expect(errorCodes(check(planned))).toEqual(["imported-source"]);
+  });
+
+  test("a point in an imported book names a chapter of its prose", () => {
+    const dir = importedCopy();
+    edit(dir, "lore/old-gallery.md", "from: 1.04", "from: 1.05");
+    expect(check(dir)).toContainEqual(expect.objectContaining({ code: "bad-position", file: "lore/old-gallery.md", path: "changes.0.from" }));
+  });
+
+  test("the record starts after an imported book: no target and no ledger entry in it", () => {
+    const dir = importedCopy();
+    writeFileSync(join(dir, "targets.yaml"), "- anchor: b1/end\n  expect:\n    ivo.rank: iron\n");
+    writeFileSync(join(dir, "ledger.jsonl"), readFileSync(join(FIXTURE, "ledger.jsonl"), "utf8"));
+    const codes = errorCodes(check(dir));
+    expect(codes).toContain("target-imported");
+    expect(codes).toContain("ledger-imported");
+  });
+
+  test("an arc beat and a stage in an imported book are history: no act to check and no chapter to place them in", () => {
+    const dir = importedCopy();
+    edit(dir, "characters/ivo.md", "act: opening", "act: first-pages");
+    edit(dir, "relationships/ivo-sabine.md", "act: opening", "act: first-pages");
+    expect(check(dir)).toEqual([]);
   });
 });
 

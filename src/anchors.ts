@@ -6,6 +6,7 @@
  *   minor 1 = an end anchor at the end of the chapter.
  * - a book with no chapter plans yet: major = act index, minor = order of the custom anchor
  *   in the act, and act ends come after everything in their act.
+ * - an imported book: major = chapter of its prose, minor 0.5 = a point, minor 1 = the book end. It has no acts.
  */
 import type { Issue } from "./issues.ts";
 import { bookDir, type Project } from "./project.ts";
@@ -27,6 +28,8 @@ export interface PlanIndex {
   anchors: Map<string, AnchorInfo>;
   /** Books that have chapter plans. */
   planned: Set<number>;
+  /** Imported books: their prose is canon, and they have no acts and no chapter plans. */
+  imported: Set<number>;
   /** book → act id → chapter range [first, last]. Only for planned books. */
   actRanges: Map<number, Map<string, [number, number]>>;
   resolve(ref: string): { pos: Pos; book: number; chapter?: number } | { error: string };
@@ -46,6 +49,8 @@ export function climaxSpan(index: PlanIndex, book: number): [number, number] | u
 export function buildPlanIndex(project: Project, issues: Issue[]): PlanIndex {
   const anchors = new Map<string, AnchorInfo>();
   const planned = new Set<number>(project.chapters.keys());
+  const imported = new Set([...project.books].filter(([, p]) => p.data.imported).map(([b]) => b));
+  const importedChapters = (book: number) => (project.prose.get(book) ?? []).map((c) => c.data.chapter);
   const actRanges = new Map<number, Map<string, [number, number]>>();
 
   for (const [book, plan] of project.books) {
@@ -80,7 +85,9 @@ export function buildPlanIndex(project: Project, issues: Issue[]): PlanIndex {
         } else anchors.set(id, { id, book, act: acts[last].id, pos: [book, last, plan.data.anchors.length + k] });
       });
     }
-    anchors.set(`b${book}/end`, { id: `b${book}/end`, book, pos: [book, END, 0] });
+    // The end of an imported book is its last chapter of prose.
+    const last = imported.has(book) ? importedChapters(book).at(-1) : undefined;
+    anchors.set(`b${book}/end`, last === undefined ? { id: `b${book}/end`, book, pos: [book, END, 0] } : { id: `b${book}/end`, book, chapter: last, pos: [book, last, 1] });
   }
   anchors.set("series/end", { id: "series/end", book: Infinity, pos: [Infinity, 0, 0] });
 
@@ -155,6 +162,10 @@ export function buildPlanIndex(project: Project, issues: Issue[]): PlanIndex {
     if (p) {
       const book = Number(p[1]);
       const chapter = Number(p[2]);
+      if (imported.has(book)) {
+        if (!importedChapters(book).includes(chapter)) return { error: `imported book ${book} has no chapter ${chapter}` };
+        return { pos: [book, chapter, 0.5], book, chapter };
+      }
       if (!planned.has(book)) return { error: `${ref} is a point in book ${book}, which has no chapter plans yet; use a plan anchor` };
       if (!project.chapters.get(book)!.some((c) => c.data.chapter === chapter)) return { error: `book ${book} has no chapter ${chapter}` };
       return { pos: [book, chapter, 0.5], book, chapter };
@@ -166,5 +177,5 @@ export function buildPlanIndex(project: Project, issues: Issue[]): PlanIndex {
     return { pos: a.pos, book: a.book, chapter: a.chapter };
   }
 
-  return { anchors, planned, actRanges, resolve };
+  return { anchors, planned, imported, actRanges, resolve };
 }

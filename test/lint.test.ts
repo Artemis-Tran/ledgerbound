@@ -4,7 +4,7 @@ import { describe, expect, test } from "vitest";
 import { lintFile } from "../src/lint/index.ts";
 import { lintProse, type LintOptions } from "../src/lint/lint.ts";
 import { parseProse } from "../src/lint/text.ts";
-import { edit, FIXTURE, fixtureCopy } from "./helpers.ts";
+import { edit, FIXTURE, fixtureCopy, IMPORTED_FIXTURE, importedCopy } from "./helpers.ts";
 
 const lint = (text: string, opts: LintOptions = {}) => lintProse(text, 1, "ch.md", opts).findings;
 const rules = (text: string, opts?: LintOptions) => lint(text, opts).map((f) => f.rule);
@@ -30,6 +30,22 @@ describe("the parser", () => {
 describe("the voice samples of the fixture", () => {
   test.each(["dialogue", "action", "quiet"])("%s is clean, also against the other two", (kind) => {
     expect(lintFile(join(FIXTURE, "voice", `${kind}.md`)).findings).toEqual([]);
+  });
+
+  test.each(["dialogue", "action", "quiet"])("%s of the imported example is clean", (kind) => {
+    expect(lintFile(join(IMPORTED_FIXTURE, "voice", `${kind}.md`)).findings).toEqual([]);
+  });
+
+  test("a sample from an imported book is the author's prose: its findings are warnings", () => {
+    const staccato = "blew out the lamp.\n\nIt was cold. It was dark. It was late.";
+    const planned = fixtureCopy();
+    edit(planned, "voice/quiet.md", "blew out the lamp.", staccato);
+    expect(lintFile(join(planned, "voice/quiet.md")).findings).toContainEqual(expect.objectContaining({ rule: "rhythm.staccato", severity: "error" }));
+
+    const imported = importedCopy();
+    edit(imported, "voice/quiet.md", "blew out the lamp.", staccato);
+    const f = lintFile(join(imported, "voice/quiet.md")).findings.find((x) => x.rule === "rhythm.staccato");
+    expect(f).toMatchObject({ severity: "warn", message: expect.stringContaining("the author's prose from 1.03") });
   });
 });
 

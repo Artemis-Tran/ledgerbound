@@ -26,7 +26,7 @@ Done when it returns `pass`. When it returns `blocked` or `replan`, go to **Stop
 
 ## Approve
 
-- When `lb run` names the `chapter-1` checkpoint: show the user the chapter path, its word count and the open warnings from `runs/verify/01-01.json`, and ask: approve, or what to change? When they approve, run `lb approve chapter-1`. When they ask for changes, write their notes as findings to `runs/verify/01-01.findings.json` (rule `user`), start the `ledgerbound:reviser` agent with the point, the brief path and that file, delete `runs/verify/01-01.json`, and **verify** again.
+- When `lb run` names the `chapter-1` checkpoint: show the user the chapter path, its word count and the open warnings from `runs/verify/NN-01.json`, and ask: approve, or what to change? When they approve, run `lb approve chapter-1`. When they ask for changes, write their notes as findings to `runs/verify/NN-01.findings.json` (rule `user`), start the `ledgerbound:reviser` agent with the point, the brief path and that file, delete `runs/verify/NN-01.json`, and **verify** again.
 - Otherwise run `lb commit <point>`.
 
 Done when the command exits 0. When its output says **REPLAN NEEDED**, run the `replan` skill with those lines before the next chapter (in autopilot too: the skill then decides and logs).

@@ -11,6 +11,7 @@ This is the approved design for phase 1 (planning) and phase 2 (generation). The
 
 | Step | Skill | Writes | Checkpoint |
 |---|---|---|---|
+| 0 (optional) | `import-book`, in place of steps 0 and 1 when book 1 is already written | `books/01/chapters/*.md`, `books/01/memory/*.md`, `books/01/plan.md`, `bible.md`, `schema.yaml`, `facts.yaml`, `project.yaml`, `lore/*.md`, `characters/*.md` (see "Imported books") | `bible` |
 | 0 (optional) | `develop-idea` | `pitch.md` from the seed, via 3 premises (when none fits: an align step on what to include and exclude, then 3 new premises) | – (choosing a premise is the approval) |
 | 1 | `start-project` | `bible.md`, `schema.yaml`, `facts.yaml`, `project.yaml` | `bible` |
 | 2 | `plan-world` | `lore/*.md`: places, factions, history, customs, laws, creatures, and the System in the world | `world` |
@@ -49,6 +50,25 @@ This is the approved design for phase 1 (planning) and phase 2 (generation). The
 - A romance also needs `obstacle` and `on_page`. The skills keep a romance out of a story whose draws exclude it, and `prose-checker` judges `draws.excluded` on the page.
 - The record still tracks a relationship value that changes (trust, a debt) as a field, with targets. The relationship file tells the writer how the two are together.
 
+## Imported books
+
+An author can write book 2 and later books with Ledgerbound when book 1 was written without it. Book 1 is then an **imported book**: its prose is canon, and the tool does not plan, write or check it. See [ADR 0003](adr/0003-record-starts-after-imported-book.md).
+
+- `lb import <manuscript> --book 1` splits a Markdown or plain-text manuscript at its chapter headings into `books/01/chapters/MM.md`, with `status: approved` and `source: imported`. The manuscript is the source, so no check runs and no user approval is needed. The author converts a `.docx` or `.epub` file to Markdown first. Only a book before the first planned book can be imported.
+  - In Markdown, the chapters are the headings of the highest level that the manuscript uses 2 or more times, so a single `# Title` above the chapters is not one. In plain text, a chapter starts at a short line of its own that starts with "Chapter", "Prologue", "Epilogue" or "Interlude". `--heading <regex>` replaces both rules. The chapters are numbered in order from 1, whatever the headings say; the title is the heading without "Chapter 3:".
+  - The text before the first heading is not imported. The prose is written as it is: only the line ends and 3 or more blank lines change.
+  - Warnings: words before the first heading, a chapter under 300 words, and a gap in the chapter numbers of the headings. Each one can mean a wrong split, so the skill runs `--dry-run` first and shows the list to the author.
+  - It refuses a book with chapter plans, a book after a planned book, a book with chapter files already, and a book plan without `imported: true`. With no book plan yet, it writes the chapters and says to write the plan next.
+- The `import-book` skill is the intake of an imported project. The main session never reads the whole book. It runs `lb import`, then one `book-reader` agent for each range of about 25,000 words, all at the same time: each one writes notes in `runs/import/` (the chapters, the style with quotes, the characters, the setting, the System and the last status windows, the secrets, the state at the end, the open questions, the draws). From the notes, it writes the story bible, the lint profile, the schema, the facts and the book 1 plan. What book 1 shows is `locked`: the author chose it when they wrote the book. Only what book 1 leaves free is `open`. Then the `memory-writer` agent runs on each chapter in order, and the rolling memory, the lore entries and the character files come from the prose, as for a generated chapter; for an imported chapter, it takes the record changes from the prose, because the folds give the state at the end of the book. The skill sets the lore entries and the character files to `draft`, so that `plan-world` and `plan-arcs` add to them and the author approves them at their checkpoints. It ends with the `bible` checkpoint. Each step skips the work that exists, so an import that stops continues.
+- The record starts after the imported book: the `start` values in `schema.yaml`, and the beliefs in `start`, are the state at the end of book 1. When book 1 has status windows, the skill reads each value from the last window of each character. The author approves the values at the `bible` checkpoint.
+- `books/01/plan.md` has `imported: true` and the four level fields, written from what book 1 is. It has no acts, `tension`, `climax` or `draws`. Its `handoff` is the input of book 2. `lb validate` does not check an imported book for the tension curve, the climax, the draws it delivers, its targets, or the placement of arc beats and stages. A project with only imported books does not check the delivery of the draws: its first planned book is not there yet. Only the books before the first planned book can be imported (`imported-order`), and an imported book has no chapter plans (`imported-planned`). `lb import` refuses a book that has chapter plans.
+- The record starts after the imported book, so a target (`target-imported`) or a ledger entry (`ledger-imported`) in it is an error. The chapter count for `max_step` reachability starts at the first planned book.
+- An arc beat or a stage in an imported book is history: the brief of each later chapter gives it, as for any earlier book. Its `act` names a part of the book in any words; no chapter places it, and the validator does not check the act.
+- A point in an imported book is valid: a thread can have its plant or a beat in book 1, and a lore change or a character change can be from a point in book 1. The agreement of `threads.yaml` and the chapter plans applies only to chapters with plans.
+- The voice samples come from book 1: `plan-arcs` and `plan-book` run as usual for book 2, then `voice-sample` selects three passages of the kinds `dialogue`, `action` and `quiet`, with `source: <point>`, in place of writing them. `lb lint` gives only warnings for a sample from an imported book. The `repetition.*` rules still compare each new chapter with the samples, so a new chapter does not copy the author's phrases.
+- The author's own style has priority over `guidelines/writing.md`: the `prose-style` decision is `locked`, and `import-book` offers `lint` overrides in `project.yaml` for each rule that book 1 breaks often.
+- An **import project** has a book plan with `imported: true` or a chapter with `source: imported`. While its `bible` checkpoint is not cleared, `lb status` names `import-book`. Then the steps come in this order: `plan-world` (it adds to the entries from the memory), `plan-series` (book 1 stays as it is; the books after it get plans), `plan-arcs`, `plan-book` for book 2, `voice-sample`, then generation. The current book is the first planned book, and the `chapter-1` checkpoint is its chapter 1 (2.01): the first chapter that the tool writes. `publish-book` and `lb export` do not require an imported book; the previously page of book 2 uses its rolling memory.
+
 ## Verification
 
 - `lb lint` is deterministic. It returns JSON findings with a rule ID, a severity and a line. It exits 1 on any error that the chapter plan does not waive.
@@ -73,7 +93,7 @@ This is the approved design for phase 1 (planning) and phase 2 (generation). The
 | prose | `chapter-writer` agent | the brief, its delta | `books/01/chapters/07.md` (`status: draft`), then a `quote` on each delta entry |
 | check | `prose-checker` and `continuity-checker` agents, at the same time | paths only | findings (JSON) |
 | revise | `reviser` agent | the brief, the chapter, the findings | only the flagged spans, and the staged delta. Then check again; at most 3 rounds |
-| approve | the user for chapter 1 of book 1 (`lb approve chapter-1`), else `lb commit 1.07` after a clean check | – | `status: approved`, the delta appended to `ledger.jsonl` |
+| approve | the user for chapter 1 of the first planned book (`lb approve chapter-1`), else `lb commit 1.07` after a clean check | – | `status: approved`, the delta appended to `ledger.jsonl` |
 | memory | `memory-writer` agent | the approved chapter | `books/01/memory/07.md`, and the new setting details in `lore/*.md` |
 | git | the skill | – | one commit: `Book 1, chapter 7: <title>` |
 
@@ -104,7 +124,7 @@ A character file works the same way as a lore entry, through the same code: a na
 
 ### Checkpoints and replan
 
-- `chapter-1` is chapter 1 of book 1 only. Its approval commits the delta. Every other chapter is approved when its check passes.
+- `chapter-1` is chapter 1 of the first planned book only: 1.01, or 2.01 after an imported book 1. Its approval commits the delta. Every other chapter is approved when its check passes.
 - A replan starts when `verify-chapter` ends with an open error about the plan that a span revision cannot fix; when `lb commit` reports that a later target cannot be reached from the fold; or when the user asks. It changes only chapter plans that are not written yet, `threads.yaml`, `targets.yaml`, anchors and open decisions (locked ones only when the user says so). It always stops for the user.
 
 ### Runs

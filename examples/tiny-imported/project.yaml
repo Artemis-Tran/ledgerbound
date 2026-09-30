@@ -1,0 +1,10 @@
+title: "The Tithe Well"
+format: series
+chapter_words: 2500
+mode: normal
+checkpoints: {}
+lint:
+  banned_add: []
+  banned_remove: []
+  body_tells_add: {}
+  max_em_dash_per_1000: 3

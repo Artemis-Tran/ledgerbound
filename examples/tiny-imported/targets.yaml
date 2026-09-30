@@ -1,0 +1,17 @@
+# The record starts after the imported book 1: its end state is the start values in schema.yaml.
+- anchor: b2/act1/end
+  expect:
+    ivo.level: { min: 3 }
+  knowledge:
+    ivo: { father-debt: knows }
+- anchor: b2/act2/end
+  expect:
+    ivo.rank: copper
+    ivo.level: { min: 4 }
+    ivo.inventory: { has: [tithe-ledger] }
+    ivo.location: the manor gate
+  knowledge:
+    ivo: { warden-sells-tithes: knows }
+- anchor: b2/end
+  expect:
+    ivo.rank: copper

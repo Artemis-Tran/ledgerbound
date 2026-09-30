@@ -5,7 +5,7 @@ description: Chapter and scene plans for the next LitRPG book to write - each ch
 
 # plan-book
 
-Only the next book to write gets chapter plans: for phase 1 that is book 1. File formats: `${CLAUDE_PLUGIN_ROOT}/reference/formats.md`.
+Only the next book to write gets chapter plans: for phase 1 that is book 1, or the first book after an imported book (`lb status` names it). File formats: `${CLAUDE_PLUGIN_ROOT}/reference/formats.md`.
 
 ## Steps
 
@@ -18,7 +18,7 @@ Only the next book to write gets chapter plans: for phase 1 that is book 1. File
    **Tension curve.** Choose the climax chapters in the last act first: 2 or more chapters in a row. The first one gets `b${N}/climax-start` in its `anchors`. The last one gets `b${N}/climax`: there the protagonist decides the climax by its `choice`, at the book's highest tension. Give each chapter between them a tension of at least the book's `max` minus 1, and give each one its own part of the event: a new danger, a lost option, a turn. The chapter after the climax is lower. Then give each chapter a `tension` inside the book plan's `tension` range (the levels are in §13 of `${CLAUDE_PLUGIN_ROOT}/guidelines/writing.md`). Let the curve rise from act to act, with drops: a quiet chapter after a peak, and never 4 chapters in a row at one level.
    **Bonding chapters.** Where a drop after a peak needs a rest, you can make it a bonding chapter (`bonding: true`): the characters together with no clock and no enemy that acts, at the book's lowest tension. Its job is a value shift in a relationship (for example, `trust: Vey keeps her reasons from Aren → Vey lets Aren see the scar`), and its conflict is small and inside the relationship. Put it after a peak, at most one in an act, and never in the climax or in the chapter just before it. Its cast has the two characters of a relationship file, and it often places a stage of that relationship. A book with no bonding chapter is fine; the user can ask for more or fewer. When the book plan has no `climax` or `tension` (a plan from an earlier version), add them by step 4 of `${CLAUDE_PLUGIN_ROOT}/skills/plan-series/SKILL.md`, set the book plan to `status: draft`, and name them in the summary of step 8: the user approves them with the chapter plans (also run `lb approve book-plan`).
 
-4. **Threads.** List every setup, mystery, subplot, promise and relationship that the book plan, the arcs and the facts need, in `threads.yaml`: each with a `plant`, the `beats` where it moves, and a `payoff` (a point in this book, or an anchor in a later book or `series/end` for a thread that the handoff carries on).
+4. **Threads.** List every setup, mystery, subplot, promise and relationship that the book plan, the arcs and the facts need, in `threads.yaml`: each with a `plant`, the `beats` where it moves, and a `payoff` (a point in this book, or an anchor in a later book or `series/end` for a thread that the handoff carries on). A thread that an imported book left open has its `plant` at a point of that book, from its memory files.
 
 5. **Chapter plans**, `books/NN/plan/MM.md`, one per chapter. Each chapter has a **job**:
    - `job`: the value that shifts, and its state `from` → `to`. If nothing changes, the chapter has no reason to exist: merge it or give it a shift;
