@@ -228,10 +228,10 @@ The per-chapter files (summary, what changed, open questions, ending type, new l
 _Avoid_: Recap, summary
 
 **Phrase log**:
-The part of rolling memory that lists similes, notable images, character gestures and ending types, so that none repeats.
+The part of rolling memory that lists similes, notable images, character gestures and ending types, so that none repeats. The brief gives only the ending types and the gestures of the cast in the last chapters; the prose checker compares each chapter with the whole log of its book (`lb phrases`).
 
 **Context brief**:
-The one input that a chapter-writing subagent gets: the prose decisions, the chapter plan and the next plans, the fold at the chapter start, the targets, the lore, the cast and the cast index, the relationships in the cast, the voice samples, the relevant rolling memory, the phrase log, the open threads and the last words of the previous chapter.
+The one input that a chapter-writing subagent gets: the prose decisions, the chapter plan and the next plans, the fold at the chapter start, the targets, the lore, the cast and the cast index, the relationships in the cast, the voice samples, the relevant rolling memory, the ending types and the recent gestures of the phrase log, the open threads and the last words of the previous chapter.
 _Avoid_: Prompt, context pack
 
 ### Publishing

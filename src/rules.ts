@@ -93,6 +93,7 @@ export const RULES: Rule[] = [
   { id: "bonding.shift", section: "13", check: ["judge"], summary: "A bonding chapter is relaxed, with no clock and no enemy that acts; its value shift is in a relationship, and its small conflict is inside it.", max: "warn" },
   { id: "repetition.simile", section: "4, 8", check: ["lint"], summary: "The same simile never twice in a book." },
   { id: "repetition.phrase", section: "8", check: ["lint", "judge"], summary: "The same distinctive phrase never twice in a book, and never a phrase from a voice sample.", max: "warn" },
+  { id: "repetition.image", section: "8", check: ["judge"], summary: "No simile, image or gesture of the book's phrase log (`lb phrases`) again in the book, in the same words or in other words." },
   { id: "record.max-step", section: "rec", check: ["record"], summary: "A counter changes by at most its max_step in one chapter." },
   { id: "record.direction", section: "rec", check: ["record"], summary: "A counter or ladder changes only in its direction (a ladder only goes up)." },
   { id: "repetition.verbal-habit", section: "8", check: ["judge"], summary: "A character's verbal habit at most once every few chapters.", max: "warn" },

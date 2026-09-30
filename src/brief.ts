@@ -64,6 +64,31 @@ function tail(body: string, words: number): string {
   return out.join("\n\n");
 }
 
+/** The brief gives the gestures of the cast from this many chapters before it. */
+export const BRIEF_GESTURE_CHAPTERS = 5;
+
+export interface PhraseLog {
+  similes: string[];
+  images: string[];
+  /** character ID → gestures */
+  gestures: Record<string, string[]>;
+  /** `NN: <ending type>`, one for each chapter. */
+  ending_types: string[];
+}
+
+/** The phrase logs of the chapters of a book before a chapter, merged; with `last`, only the last chapters. */
+export function phraseLog(project: Project, book: number, chapter: number, last?: number): PhraseLog {
+  const log = { similes: new Set<string>(), images: new Set<string>(), gestures: {} as Record<string, Set<string>>, ending_types: [] as string[] };
+  const before = (project.memory.get(book) ?? []).filter((m) => m.data.chapter < chapter).sort((a, b) => a.data.chapter - b.data.chapter);
+  for (const m of last === undefined ? before : before.slice(-last)) {
+    m.data.phrase_log.similes.forEach((s) => log.similes.add(s));
+    m.data.phrase_log.images.forEach((s) => log.images.add(s));
+    for (const [who, gs] of Object.entries(m.data.phrase_log.gestures)) gs.forEach((g) => (log.gestures[who] ??= new Set()).add(g));
+    log.ending_types.push(`${pad2(m.data.chapter)}: ${m.data.ending_type}`);
+  }
+  return { similes: [...log.similes], images: [...log.images], gestures: Object.fromEntries(Object.entries(log.gestures).map(([k, v]) => [k, [...v]])), ending_types: log.ending_types };
+}
+
 interface Section {
   title: string;
   text: string;
@@ -289,19 +314,14 @@ export function buildBrief(project: Project, rec: RecordFiles, book: number, cha
     sections.push({ title: `Memory ${m.data.book}.${pad2(m.data.chapter)}`, text: yaml(rest) });
   }
 
-  // 9. The phrase log of the book.
-  const log = { similes: new Set<string>(), images: new Set<string>(), gestures: {} as Record<string, Set<string>>, ending_types: [] as string[] };
-  for (const m of project.memory.get(book) ?? []) {
-    if (m.data.chapter >= chapter) continue;
-    m.data.phrase_log.similes.forEach((s) => log.similes.add(s));
-    m.data.phrase_log.images.forEach((s) => log.images.add(s));
-    for (const [who, gs] of Object.entries(m.data.phrase_log.gestures)) gs.forEach((g) => (log.gestures[who] ??= new Set()).add(g));
-    log.ending_types.push(`${pad2(m.data.chapter)}: ${m.data.ending_type}`);
-  }
-  if (log.similes.size + log.images.size + log.ending_types.length) {
+  // 9. The phrase log: the ending types of the book, and the gestures of the cast in the last chapters. The similes
+  // and images of the whole book grow with each chapter, so the prose checker checks them instead (`lb phrases`).
+  const endings = phraseLog(project, book, chapter).ending_types;
+  const gestures = Object.fromEntries(Object.entries(phraseLog(project, book, chapter, BRIEF_GESTURE_CHAPTERS).gestures).filter(([who]) => castIds.includes(who)));
+  if (endings.length || Object.keys(gestures).length) {
     sections.push({
-      title: "Phrase log of this book (already used: use none of these again)",
-      text: yaml({ similes: [...log.similes], images: [...log.images], gestures: Object.fromEntries(Object.entries(log.gestures).map(([k, v]) => [k, [...v]])), ending_types: log.ending_types }),
+      title: `Phrase log of this book (the ending types, and the gestures of the cast in the last ${BRIEF_GESTURE_CHAPTERS} chapters: use none of these again)`,
+      text: yaml({ ending_types: endings, ...(Object.keys(gestures).length ? { gestures } : {}) }),
     });
   }
 

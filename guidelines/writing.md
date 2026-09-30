@@ -158,6 +158,8 @@ text: some things are said at an angle, and some are said plainly.
 
 ## 8. Repetition across the book [lint + review]
 - Keep a phrase log in memory: similes, notable images, character gestures, ending types.
+- A simile, image or gesture of the phrase log does not come back in the book, in the same words
+  or in other words. The prose checker compares each chapter with the whole log (`lb phrases`).
 - The same distinctive phrase must not occur twice in a book. A phrase or simile from a voice
   sample counts too: copy the voice of the samples, not their words.
 - A character's verbal habit is shown, but at most once every few chapters. It is a spice, not the meal.

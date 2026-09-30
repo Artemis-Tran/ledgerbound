@@ -33,7 +33,7 @@ The point (for example `1.07`) gives the paths, where NN is the book and MM the 
    - In a bonding chapter, keep the pressure low: no clock and no enemy that acts. Let the scenes breathe with the setting, the work and the jokes of the characters. The value shift happens between the characters, through a small conflict inside the relationship.
    - A character's `wound` stays under the page: it shows only in what they avoid or refuse. Show a `contradiction` once when a scene allows it, and do not explain it. Before a scene uses a character from the cast index, run `lb who <id> --at <point>`: it prints the character as it is at the start of this chapter. A character who was last seen long ago can show it (a greeting, a question about what changed).
    - When a new named character speaks, or can come back, add a `create` entry for it to the delta, with the entity type of the characters and a new ID. The memory writer then makes its character file. A person who is named once and does not speak needs no entry.
-   - Use the phrase log as the list of what is already used: find new images, gestures and similes.
+   - Give each character gestures that are not in the phrase log of the brief, and end the chapter with a different ending type from the last chapters. Make each simile and image new for this chapter, from the POV character's world: the prose checker compares them with the phrase log of the whole book.
    - Show each delta entry on the page, where it happens.
 
 4. **Quotes.** Add a `quote` to each entry: the exact words of the prose (at most 15) where the change happens. Keep the entries in the order of their quotes. Run `lb delta <point>`.

@@ -3,7 +3,7 @@
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { buildBrief } from "./brief.ts";
+import { buildBrief, phraseLog } from "./brief.ts";
 import { changedRanges } from "./changed.ts";
 import { parseArgs } from "node:util";
 import { buildPlanIndex } from "./anchors.ts";
@@ -40,6 +40,8 @@ const HELP = `lb: the Ledgerbound CLI. Run it inside a novel repo (or pass --dir
                                          part of the name, each as it is at the start of that chapter
   lb who <id> --at <point> [--json]      one character as it is at the start of a chapter: who it is,
                                          its arc so far, its voice card, its record state and the chapter it was last seen
+  lb phrases <file|point> [--json]      the phrase log of the book before a chapter: the similes, images,
+                                         gestures and ending types that the chapter must not use again
   lb where                               the ledgerbound folder (reference/, examples/)
 
 Generation (a point is 1.07 = book 1, chapter 7):
@@ -261,6 +263,30 @@ switch (command) {
     const characters = charactersNamedIn(project, body).flatMap((id) => view(id, book, chapter) ?? []);
     const at = `${book}.${String(chapter).padStart(2, "0")}`;
     out(`${args[0]} names ${characters.length} character(s).${characters.map((v) => `\n\n${human(v, at)}`).join("")}`, { file: args[0], characters });
+    break;
+  }
+
+  case "phrases": {
+    if (!args[0]) fail("give a prose file (lb phrases books/01/chapters/07.md) or a chapter (lb phrases 1.07)");
+    let at: { book: number; chapter: number };
+    if (existsSync(args[0])) {
+      const { book, chapter } = (splitFrontmatter(readFileSync(args[0], "utf8")).data ?? {}) as { book?: unknown; chapter?: unknown };
+      if (typeof book !== "number" || typeof chapter !== "number") fail(`${args[0]} has no book and chapter in its frontmatter`);
+      at = { book, chapter };
+    } else at = chapterArg();
+    const { project } = load();
+    const log = phraseLog(project, at.book, at.chapter);
+    const list = (title: string, xs: string[]) => `## ${title}\n\n${xs.length ? xs.map((x) => `- ${x}`).join("\n") : "(none)"}`;
+    out(
+      [
+        `# Phrase log of book ${at.book} before chapter ${at.chapter} (${log.ending_types.length} chapters)`,
+        list("Similes", log.similes),
+        list("Images", log.images),
+        ...Object.entries(log.gestures).map(([who, gs]) => list(`Gestures: ${who}`, gs)),
+        list("Ending types", log.ending_types),
+      ].join("\n\n"),
+      { book: at.book, chapter: at.chapter, ...log },
+    );
     break;
   }
 

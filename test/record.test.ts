@@ -350,6 +350,24 @@ describe("lb brief", () => {
     expect(text).toContain("## Memory 1.04");
   });
 
+  test("the phrase log of the brief has the ending types and the gestures of the cast in the last chapters, and no similes or images", () => {
+    const dir = fixtureCopy();
+    const b1 = join(dir, "books", "01");
+    const m1 = readFileSync(join(b1, "memory", "01.md"), "utf8");
+    // Chapter 1 has Hale's gesture, but only chapters 2-6 are in the last 5 before chapter 7.
+    writeFileSync(join(b1, "memory", "01.md"), m1.replace("sabine: [holds out her hand without looking up]", "sabine: [holds out her hand without looking up]\n    hale: [taps the bell rope twice]"));
+    writeFileSync(join(b1, "plan", "07.md"), readFileSync(join(b1, "plan", "01.md"), "utf8").replace("chapter: 1", "chapter: 7"));
+    for (const c of [2, 3, 4, 5, 6]) writeFileSync(join(b1, "memory", `0${c}.md`), m1.replace("chapter: 1", `chapter: ${c}`).replace("holds out her hand without looking up", `turns page ${c}`));
+    const log = section(briefText(dir, 7), "Phrase log of this book");
+    expect(log).toContain("06: decision");
+    expect(log).toContain("01: decision");
+    expect(log).toContain("turns page 6");
+    expect(log).toContain("turns page 2");
+    expect(log).not.toContain("holds out her hand");
+    expect(log).not.toContain("hale:");
+    expect(log).not.toContain("a slate token stained red-brown");
+  });
+
   const briefText = (dir: string, chapter: number) => readFileSync(join(dir, buildBrief(load(dir), loadRecord(dir), 1, chapter).file), "utf8");
 
   test("has the act, the climax, the tension and the stakes of the chapter", () => {

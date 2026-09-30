@@ -104,3 +104,15 @@ describe("lb who", () => {
     expect(r.characters[0].last_seen).toBeNull();
   });
 });
+
+describe("lb phrases", () => {
+  test("prints the whole phrase log of the book before a chapter, from a point or a prose file", () => {
+    const at = (arg: string) => JSON.parse(spawnSync("node", [CLI, "phrases", arg, "--json"], { cwd: FIXTURE, encoding: "utf8" }).stdout);
+    const log = at("1.02");
+    expect(log.images).toContain("a slate token stained red-brown by the bucket iron");
+    expect(log.gestures.sabine).toEqual(["holds out her hand without looking up"]);
+    expect(log.ending_types).toEqual(["01: decision"]);
+    expect(at("1.01").images).toEqual([]);
+    expect(at("books/01/chapters/01.md").ending_types).toEqual([]);
+  });
+});
