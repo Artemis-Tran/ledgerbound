@@ -70,10 +70,16 @@ function namePattern(name: string, anyCase = true): RegExp {
   return new RegExp(`(?<![\\p{L}\\p{N}])${words}(?:s|es)?(?![\\p{L}\\p{N}])`, anyCase ? "iu" : "u");
 }
 
-/** The IDs of the entries that the text names, in the order of the entries. */
+/**
+ * The IDs of the entries that the text names, in the order of the entries. A part that two entries share (a family
+ * name: Aren Hale, Lira Hale) names neither of them; their full names and aliases still do.
+ */
 export function namedIn(entries: NamedEntry[], text: string): string[] {
+  const owners = new Map<string, number>();
+  for (const e of entries) for (const p of new Set(e.parts)) owners.set(p, (owners.get(p) ?? 0) + 1);
+  const ownParts = (e: NamedEntry) => e.parts.filter((p) => owners.get(p) === 1);
   return entries
-    .filter((e) => entryNames(e).some((n) => namePattern(n).test(text)) || e.parts.some((p) => namePattern(p, false).test(text)))
+    .filter((e) => entryNames(e).some((n) => namePattern(n).test(text)) || ownParts(e).some((p) => namePattern(p, false).test(text)))
     .map((e) => e.id);
 }
 

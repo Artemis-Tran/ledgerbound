@@ -1,4 +1,5 @@
 import { spawnSync } from "node:child_process";
+import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
 import { charactersNamedIn, firstSentence, loreNamedIn, normalName } from "../src/entries.ts";
@@ -39,6 +40,21 @@ describe("lore names", () => {
     expect(charactersNamedIn(project, "Rook said nothing.")).toEqual(["sabine"]);
     expect(charactersNamedIn(project, "He went to find the warden.")).toEqual(["hale"]);
     expect(charactersNamedIn(project, "A rook sat on the rope, and nobody watched.")).toEqual([]);
+  });
+
+  test("a part of the name that two characters share names neither of them", () => {
+    const dir = fixtureCopy();
+    const hale = readFileSync(join(dir, "characters", "hale.md"), "utf8");
+    writeFileSync(
+      join(dir, "characters", "mara.md"),
+      hale.replace("id: hale", "id: mara").replace("name: Warden Hale", "name: Mara Rook").replace("aliases: [the warden]", "aliases: [Old Mara]"),
+    );
+    const project = load(dir);
+    expect(charactersNamedIn(project, "\"Rook,\" he said.")).toEqual([]);
+    expect(charactersNamedIn(project, "Sabine Rook wrote.")).toEqual(["sabine"]);
+    expect(charactersNamedIn(project, "Sabine wrote.")).toEqual(["sabine"]);
+    expect(charactersNamedIn(project, "Mara Rook wrote.")).toEqual(["mara"]);
+    expect(charactersNamedIn(project, "Old Mara wrote.")).toEqual(["mara"]);
   });
 
   test("the first sentence of an entry, cut when it is long", () => {
