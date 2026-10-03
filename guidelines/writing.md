@@ -79,10 +79,13 @@ eyebrow) at most twice per chapter. The same simile never twice in a book.
 
 ## 5. Dialogue
 
-AI dialogue fails in two directions. It is too complete, too articulate and too self-aware, and
+AI dialogue fails in three directions. It is too complete, too articulate and too self-aware, and
 everyone sounds the same. Or it is so quiet and indirect that the reader cannot see who the
-characters are, or if the scene is a joke, a fight or a threat. Good dialogue has subtext **and**
-text: some things are said at an angle, and some are said plainly.
+characters are, or if the scene is a joke, a fight or a threat. Or it is a chain of short, clever
+lines with nobody feeling anything: each character tops the line before, the POV character has no
+reaction, and the scene reads like a script. Good dialogue has subtext **and** text, and it has
+people in it: some things are said at an angle, some are said plainly, and the reader feels what
+each line does to the people who hear it.
 
 - **The tone is clear; the reason can stay hidden.** Subtext hides *why* a character says a line.
   It does not hide *how* they say it. By the third exchange, a reader can name the tone of the
@@ -116,17 +119,52 @@ text: some things are said at an angle, and some are said plainly.
   in one shared register. In a back-and-forth, each quip answers the previous line and raises the
   stakes, and the exchange ends when one character wins, loses or leaves. A scene that the plan
   marks as funny has jokes that land. A scene with no reason for a joke has none.
+- **Most talk is plain.** Banter and sparring belong to the characters whose voice card `humour` or
+  relationship `talk` asks for them, and only between those characters. Everyone else, and the same
+  characters with other people, talks in a natural way: they ask, answer, agree, worry, explain
+  badly, and change the subject. The dialogue voice sample shows one pair; its speech pattern is
+  theirs, not the book's.
+- **Quips are a spice.** After about four quick one-line exchanges in a row, something slows the
+  scene: a longer turn, a line that lands and hurts, a silence that the POV character feels, a
+  thought, a reaction in the body. Not every line is clever, and not every line tops the one
+  before. Most people answer plainly most of the time.
+- **People talk like people.** Speech is less tidy than narration. A character starts a sentence
+  and changes it, repeats a word, answers half a question, trails off, says "well" or "look" or
+  "I don't know" in their own voice, and talks over someone. Under strong feeling, speech breaks
+  first: it gets shorter, or it runs on.
 - **No "As you know"**: characters do not tell each other things they both know.
-- **No speeches**: in normal conversation, a turn is 1–3 sentences. Monologues need a reason in the
-  plan (a villain monologue needs a very good reason).
+- **Turn length follows the moment.** A quick exchange is 1–3 sentences a turn. A character who
+  is upset, pleading, confessing, persuading, telling what happened or thinking aloud can talk
+  longer, and the turn is less tidy: it stops, restarts and goes back. A lecture, an info-dump or
+  a monologue that the moment does not need is a speech: it needs a reason in the plan (a villain
+  monologue needs a very good reason).
 - **No wise aphorisms** from mentors ("Strength isn't in the blade, it's in the heart").
-- **Tags**: mostly "said" and "asked", or no tag. No adverbs on tags ("she said softly"). No fancy
-  verbs (hissed, growled, breathed) unless the sound is literal.
-- **Action beats**: not on every line. Do not follow each line with a gesture.
+- **Show how a line is said.** At the lines that matter, the reader hears the delivery: the voice
+  (it cracks, goes flat, gets too loud, goes careful), the face, the hands, the pause before the
+  answer, the look that does not meet the other's eyes. Put it in a beat or a short clause next
+  to the line, from what the POV character sees and hears. Each other character's feeling shows
+  on the outside: the reader can tell when someone is hurt, scared, pleased or angry, even when
+  their words hide it.
+- **Tags**: mostly "said" and "asked", or no tag. No adverbs on tags ("she said softly"): show the
+  delivery in a beat instead ("Her voice had gone very quiet."). No fancy verbs (hissed, growled,
+  breathed) unless the sound is literal.
+- **Action beats**: not on every line, and not a gesture with no meaning. A beat shows a feeling,
+  a change in the scene or who speaks. A scene with no beats and no reactions reads as a script.
 - **Names**: characters rarely say each other's names in conversation.
 - **Conflict is not resolved by one honest talk.** Agreement costs something or comes slowly.
 
 ## 6. Emotion and narration
+- **The POV character feels it, on the page.** At each turn that matters (a hit, a loss, a threat,
+  a kindness, a confession, a line that hurts), the reader knows how it lands in the POV
+  character: what their body does (the throat goes tight, the hands go cold, they cannot look
+  up), what they think in their own words, what they want to say and do not, a memory that rises
+  and is pushed down. Give it a sentence or a short paragraph, not an essay. A scene where the POV
+  character only observes and answers is flat, however good the lines are.
+- **Showing comes first; naming is not banned.** Show a feeling through the body, the voice, an
+  action and the POV character's thoughts. The POV character can name their own feeling in their
+  own words when it adds something ("He was afraid, and he hated that she could see it"). The
+  fault is a name that only repeats what the page already showed, or a label with no body in it
+  ("He felt sad.").
 - **The wound stays under the page.** A character's `wound` is for the writer. The prose shows it
   only in what the character avoids, refuses or cannot say: no flashback, no memory told in full,
   and no line that explains it. A plan that reveals the wound names it in an `exceptions` entry.
@@ -166,14 +204,18 @@ text: some things are said at an angle, and some are said plainly.
 
 ## 9. Voice [review]
 The three voice samples are the reference for the narration. Each chapter sounds like the same
-writer wrote it. Compare each scene with the sample of its kind (dialogue, action or quiet) on:
+writer wrote it. They are not the reference for how characters talk: each character speaks by their
+voice card, and each pair by their relationship's `talk`. Take from the dialogue sample how much
+feeling, delivery and reaction surround the lines, not the rhythm of its exchanges. Compare each scene with the sample of its kind (dialogue, action or quiet) on:
 - **Vocabulary and register**: the same kind of words, from the same world. No sudden literary,
   modern or formal words that the samples never use.
 - **Sentence rhythm**: sentence length and variety like the sample of that kind of scene.
-- **POV distance**: as close to the POV character's thoughts as the samples, and never closer
-  or further (no slip into another head, no narrator who knows more than the samples allow).
-- **How much the narration explains**: as much interior thought and explanation as the samples,
-  and no more.
+- **POV distance**: at least as close to the POV character's thoughts and body as the samples,
+  and closer at the turns of a scene. Never in another character's head, and never a narrator
+  who knows more than the POV character.
+- **How much the narration explains**: as much explanation of the world and the plot as the
+  samples, and no more. Interior thought and feeling are not explanation: §6 asks for them at
+  each turn that matters, even where a sample is sparse.
 
 ## 10. Revision rules
 - Fix only the flagged spans. A full rewrite brings in new tics.

@@ -371,7 +371,8 @@ switch (command) {
     const { project } = load();
     const parsed = Claims.safeParse(JSON.parse(readFileSync(args[1], "utf8")));
     if (!parsed.success) fail(`the claims file is not valid: ${parsed.error.issues.map((e) => `${e.path.join(".")}: ${e.message}`).join("; ")}`);
-    const c = checkDelta(project, loadRecord(project.root), book, chapter);
+    // An approved chapter (a revision) is checked against its committed entries.
+    const c = checkDelta(project, loadRecord(project.root), book, chapter, { committed: true });
     const chapterFile = join(project.root, chapterPath(book, chapter));
     const text = existsSync(chapterFile) ? readFileSync(chapterFile, "utf8") : undefined;
     const results = compareClaims(project, c, parsed.data, text);

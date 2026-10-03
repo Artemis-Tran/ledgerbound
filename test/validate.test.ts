@@ -727,3 +727,17 @@ describe("windows: off", () => {
     expect(errorCodes(check(dir))).toEqual([]);
   });
 });
+
+describe("a revised approved chapter", () => {
+  test("can change its prose when every committed quote stays", () => {
+    const dir = fixtureCopy();
+    edit(dir, "books/01/chapters/01.md", "He braced a boot on the iron lip", "He looked down once. He braced a boot on the iron lip");
+    expect(errorCodes(check(dir))).toEqual([]);
+  });
+
+  test("loses a committed quote", () => {
+    const dir = fixtureCopy();
+    edit(dir, "books/01/chapters/01.md", "He braced a boot on the iron lip", "He put a boot on the iron lip");
+    expect(check(dir)).toContainEqual(expect.objectContaining({ code: "ledger-quote-not-found", file: "books/01/chapters/01.md" }));
+  });
+});

@@ -2,12 +2,14 @@
  * The plan validator. It checks every file that exists, and the references between files.
  * Missing files are the business of checkpoints.ts, which knows which step is next.
  */
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { buildPlanIndex, climaxSpan, comparePos, type PlanIndex, type Pos } from "./anchors.ts";
 import type { Issue } from "./issues.ts";
 import { aiNamesIn } from "./lint/patterns.ts";
 import { characterEntries, entryNames, loreEntries, type NamedEntry, relationshipsOf } from "./entries.ts";
 import { bookDir, type Loaded, pad2, type Project } from "./project.ts";
-import { allEntries, chapterKey, fold, loadRecord, stagedPath } from "./record.ts";
+import { allEntries, chapterKey, chapterPath, fold, isCorrection, loadRecord, quoteLines, stagedPath } from "./record.ts";
 import { RULE_IDS } from "./rules.ts";
 import { checkValue, fieldDef, type Kind, numericRange } from "./fields.ts";
 import { checkPublish } from "./export/epub.ts";
@@ -804,6 +806,28 @@ function checkGeneration(project: Project, issues: Issue[], err: Report, warn: R
     const [b, c] = k.split(".").map(Number);
     if (imported(b)) err("ledger-imported", "ledger.jsonl", `the ledger has entries for chapter ${k}, but book ${b} is imported: the record starts after it`);
     else if (!approved(b, c)) err("ledger-unapproved", "ledger.jsonl", `the ledger has entries for chapter ${k}, but that chapter is not approved`);
+  }
+  // An approved chapter can be revised, but each committed quote stays in its prose, in order:
+  // the claims and the state at a line depend on them.
+  const committed = new Map<string, typeof rec.ledger>();
+  for (const l of rec.ledger) {
+    const k = chapterKey(l.at.book, l.at.chapter);
+    committed.set(k, [...(committed.get(k) ?? []), l]);
+  }
+  for (const [k, entries] of committed) {
+    const [b, c] = k.split(".").map(Number);
+    const file = chapterPath(b, c);
+    const path = join(project.root, file);
+    if (imported(b) || !approved(b, c) || !existsSync(path)) continue;
+    const quoted = entries.filter((l) => l.entry.quote && !isCorrection(l.entry));
+    const lines = quoteLines(readFileSync(path, "utf8"), quoted.map((l) => l.entry));
+    let prev = 0;
+    quoted.forEach((l, i) => {
+      const at = lines[i];
+      if (at === undefined) err("ledger-quote-not-found", file, `the ledger entry ${l.entry.entity}.${l.entry.field ?? l.entry.op} of ${k} quotes words that are not in the chapter: "${l.entry.quote}"`);
+      else if (at < prev) warn("ledger-quote-order", file, `the ledger entry ${l.entry.entity}.${l.entry.field ?? l.entry.op} of ${k} quotes line ${at}, before the quote of the entry above it (line ${prev})`);
+      else prev = at;
+    });
   }
   for (const k of rec.staged.keys()) {
     const [b, c] = k.split(".").map(Number);

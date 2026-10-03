@@ -240,6 +240,17 @@ describe("the validator and the record", () => {
 });
 
 describe("claims", () => {
+  test("an approved chapter is checked against its committed entries", () => {
+    const dir = fixtureCopy();
+    const c = checkDelta(load(dir), loadRecord(dir), 1, 1, { committed: true });
+    const ledger = readFileSync(join(dir, "ledger.jsonl"), "utf8").split("\n").filter((l) => l.includes('"point":"1.01.'));
+    expect(c.entries).toHaveLength(ledger.length);
+    expect(c.lines.every((l) => l !== undefined)).toBe(true);
+    expect(c.issues.map((i) => i.code)).not.toContain("committed");
+    expect(c.issues.map((i) => i.code)).not.toContain("missing");
+    expect(checkDelta(load(dir), loadRecord(dir), 1, 1).issues.map((i) => i.code)).toContain("committed");
+  });
+
   test("each claim is compared with the fold at its line", () => {
     const dir = fixtureCopy();
     stage(dir, GOOD_DELTA);

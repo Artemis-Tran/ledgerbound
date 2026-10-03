@@ -39,27 +39,25 @@ Stonesense ... 12% → 19%
 
 "That was my point."
 
-He did the sum anyway, because she had not given him anything else to count. A level from copper, and a third of every level held down the shaft until harvest. Hale said the held levels came back with interest, the way grain came back from a mill.
+He did the sum anyway, because she had not given him anything else to count. A level from copper, and a third of every level held down the shaft until harvest.
 
 "If it drops to a quarter, I'm clear of the tithe in four seasons," he said. "Three, if the new gallery opens."
 
 "You're clear of the tithe when you're dead. Then they send the bill to your mother."
 
-She said it the way she read out a rate, and he waited for the dry end of it. There was no dry end. She closed the ledger on her thumb to keep the place.
+She said it the way she read out a rate, and he waited for the dry end of it. There was no dry end. His chest went tight, the way it did when the rope ran too fast through his hands. She closed the ledger on her thumb to keep the place.
 
-"Don't take copper this season."
+"Don't take copper this season." She looked up from the page when she said it. Her voice had gone flat and careful.
 
 "Why not?"
 
-"Because I asked you."
+"Because I asked you." Then she stopped talking.
 
-"You never ask for anything."
+He looked at her hands. The pen was in one of them, and it did not move. He did not know how to ask her what was in the book.
 
-"Then it should be easy to say yes." She wiped the pen on a rag that had been a shirt once and set it in the groove of the table, square with the edge.
+"It's four seasons," he said. "Four, at a quarter. If I wait, that's another season of. Mam takes in the manor's sheets now. The big ones. Her hands are worse than mine. Three with the gallery. That's the sum. You can check it."
 
-"Four seasons," he said. "That's the sum."
-
-"That's your sum. Go and eat something. You're shaking the table."
+"I checked it." She wiped the pen on a rag that had been a shirt once and set it in the groove of the table, square with the edge. "Go and eat something. You're shaking the table."
 
 He was not shaking the table. He took his hand off it all the same, and the brass corner of the ledger rattled once against the wood.
 

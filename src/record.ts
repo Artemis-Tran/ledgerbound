@@ -446,7 +446,11 @@ const isApproved = (project: Project, book: number, chapter: number) =>
   project.prose.get(book)?.find((c) => c.data.chapter === chapter)?.data.status === "approved";
 
 /** Every check of `lb delta`: the entries, the chapter limits, the targets, the order of chapters, and the quotes. */
-export function checkDelta(project: Project, rec: RecordFiles, book: number, chapter: number): DeltaCheck {
+/**
+ * With `committed`, the chapter is approved: its entries come from the ledger, so `lb claims` can check a revision
+ * of an approved chapter at each line. The staged-delta checks (missing file, already committed, order) do not apply.
+ */
+export function checkDelta(project: Project, rec: RecordFiles, book: number, chapter: number, opts: { committed?: boolean } = {}): DeltaCheck {
   const file = stagedPath(book, chapter);
   const issues: Issue[] = rec.issues.filter((i) => i.file === file);
   const err = (code: string, message: string, path?: string) => issues.push({ code, severity: "error", file, path, message });
@@ -454,12 +458,15 @@ export function checkDelta(project: Project, rec: RecordFiles, book: number, cha
 
   const plan = project.chapters.get(book)?.find((c) => c.data.chapter === chapter);
   if (!plan) err("no-plan", `book ${book} has no chapter plan ${pad2(chapter)}`);
-  const entries = rec.staged.get(chapterKey(book, chapter)) ?? [];
-  if (!existsSync(join(project.root, file))) err("missing", `${file} does not exist`);
-  if (isApproved(project, book, chapter)) err("committed", `chapter ${chapterKey(book, chapter)} is already approved and committed; a correction needs replan`);
+  const committed = opts.committed === true && isApproved(project, book, chapter);
+  const entries = committed
+    ? rec.ledger.filter((l) => l.at.book === book && l.at.chapter === chapter)
+    : (rec.staged.get(chapterKey(book, chapter)) ?? []);
+  if (!committed && !existsSync(join(project.root, file))) err("missing", `${file} does not exist`);
+  if (!committed && isApproved(project, book, chapter)) err("committed", `chapter ${chapterKey(book, chapter)} is already approved and committed; a correction needs replan`);
 
   // Every earlier chapter must be committed.
-  for (let b = 1; b <= book; b++) {
+  for (let b = 1; !committed && b <= book; b++) {
     const last = b < book ? (project.chapters.get(b)?.length ?? 0) : chapter - 1;
     for (let c = 1; c <= last; c++) {
       if (!isApproved(project, b, c)) {

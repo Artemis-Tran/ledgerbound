@@ -111,6 +111,10 @@ After a stop, or after a usage limit or a closed session, run `/ledgerbound:gene
 
 `/ledgerbound:replan` changes the part of the plan that is not written yet: chapter plans, `threads.yaml`, `targets.yaml`, anchors and open decisions. It changes a locked decision only when you say so. It never changes an approved chapter or the ledger. When the record is wrong about a written chapter, the replan adds a `Correction:` entry at the start of the next chapter's delta. A replan waits for your approval, also in `just-write-it` mode. Only `autopilot` mode lets it decide alone. You can also run it when you want to change the direction of the story.
 
+### Revise an approved chapter
+
+`/ledgerbound:revise-chapter` changes the prose of an approved chapter: for rules that you name (from `lb rules`), for your own notes, or both. The prose checker finds the spans (or a whole flat scene, which the reviser rewrites with the same plan, events and quotes), the reviser fixes them, and both checkers check the changed lines, for at most 3 rounds. The ledger does not change: each committed quote stays in the prose, word for word, and `lb validate` gives `ledger-quote-not-found` when one is gone. The memory writer then writes the chapter's rolling memory again. Run it once for each chapter of a range, in order.
+
 ### A series
 
 `plan-book` plans the chapters of one book at a time. When `generate-book` completes book 1, it reports the open questions (the handoff). Then run `plan-book` for book 2, and generate book 2 in the same way. The ledger continues across the books.
@@ -166,6 +170,17 @@ Use autopilot after the first chapters show that the voice and the plan work. Fo
 | `lb who books/01/chapters/07.md` | The characters that a chapter names, as they are at the start of the chapter. |
 | `lb who hale --at 1.07` | One character at the start of chapter 7: who it is, its arc so far, its voice card, its record and when it was last seen. |
 | `lb validate` | Every file and reference, and the ledger. |
+
+### A novel repo made before version 0.24.0
+
+Sections 5, 6 and 9 of `guidelines/writing.md` now ask for feeling on the page. Turn length follows the moment, so a turn under strong feeling can be longer and less tidy (`dialogue.speeches`). The new rules are:
+- `emotion.felt`: the POV character's reaction at each turn that matters.
+- `dialogue.delivery`: how a line is said.
+- `dialogue.quip-chain`: no long runs of one-line quips.
+- `dialogue.natural`: speech is less tidy than narration.
+- `dialogue.plain-talk`: banter only between characters whose voice card or relationship asks for it. The dialogue sample's speech pattern belongs to its pair.
+
+The voice samples set the minimum closeness to the POV character, not the maximum. The dialogue voice sample must show the felt reaction, the delivery and a longer turn: rewrite it when it is a chain of quips, and get the user's approval. `lb validate` now also checks that each committed quote of an approved chapter is still in its prose. `lb claims` checks an approved chapter against its committed entries, so the continuity checker can check a revision. Nothing in the ledger changes. To get the new text, copy `guidelines/writing.md` over your copy. To bring old chapters to the new rules, use `revise-chapter`.
 
 ### A novel repo made before version 0.16.0
 

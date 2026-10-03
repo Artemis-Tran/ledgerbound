@@ -9,7 +9,7 @@ The **voice samples** are three scenes of about 500 words each, in the chosen st
 
 | File | Kind | What it must show |
 |---|---|---|
-| `voice/dialogue.md` | `dialogue` | The protagonist and one other main character talking: voice cards and their `humour`, subtext and plain text, and a tone that a reader can name by the third exchange. |
+| `voice/dialogue.md` | `dialogue` | The protagonist and one other main character talking: voice cards and their `humour`, subtext and plain text, and a tone that a reader can name by the third exchange. The POV character's felt reaction at the turns, the delivery of the lines that matter, natural speech, and at least one longer turn under feeling: it is the reference for how much feeling a chapter shows, not for how every pair talks. |
 | `voice/action.md` | `action` | A fight or physical danger: clear geography, a changing situation, a cost, and a status window with the change it caused. |
 | `voice/quiet.md` | `quiet` | A scene with little or no dialogue: the setting's own objects, emotion shown and never named, an ending in motion. |
 
