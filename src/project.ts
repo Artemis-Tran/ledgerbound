@@ -17,6 +17,7 @@ import {
   ProjectConfig,
   Relationship,
   RollingMemory,
+  Review,
   Schema,
   SeriesPlan,
   Targets,
@@ -57,6 +58,8 @@ export interface Project {
   memory: Map<number, Loaded<RollingMemory>[]>;
   /** book number → books/NN/publish.yaml */
   publish: Map<number, Loaded<Publish>>;
+  /** book number → books/NN/review.md, the book review */
+  reviews: Map<number, Loaded<Review>>;
   /** book number → page ID → books/NN/pages/<id>.md */
   pages: Map<number, Map<string, Loaded<Page>>>;
 }
@@ -151,6 +154,7 @@ export function loadProject(root: string): { project?: Project; issues: Issue[] 
     prose: new Map(),
     memory: new Map(),
     publish: new Map(),
+    reviews: new Map(),
     pages: new Map(),
   };
 
@@ -186,6 +190,8 @@ export function loadProject(root: string): { project?: Project; issues: Issue[] 
     perChapter(RollingMemory, n, join("books", d, "memory"), project.memory);
     const publish = readYaml(Publish, join("books", d, "publish.yaml"));
     if (publish) project.publish.set(n, publish);
+    const review = opt(Review, join("books", d, "review.md"));
+    if (review) project.reviews.set(n, review);
     // A page can have no frontmatter: a dedication often has no title.
     const pages = mdFiles(join("books", d, "pages")).flatMap((p) => {
       const text = readFileSync(p, "utf8");

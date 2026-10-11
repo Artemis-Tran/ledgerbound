@@ -583,6 +583,47 @@ export const Page = z.strictObject({
 });
 export type Page = z.infer<typeof Page>;
 
+// ---------- books/NN/review.md ----------
+
+export const REVIEW_AREAS = ["enjoyment", "plot", "pacing", "characters", "prose"] as const;
+/** `keep`: a revision of the prose can fix it, and the ledger stays. `change`: the fix changes the record, so it needs a reopen. */
+export const REVIEW_RECORD = ["keep", "change"] as const;
+export const REVIEW_SIZES = ["span", "scene", "chapter"] as const;
+/** `open`: the user has not decided. `apply` and `skip`: the user's choice. `done`: the revision applied it. */
+export const REVIEW_DECISIONS = ["open", "apply", "skip", "done"] as const;
+
+const Score = z.number().int().min(1).max(10);
+
+export const ReviewFinding = z
+  .strictObject({
+    id: Slug,
+    area: z.enum(REVIEW_AREAS),
+    severity: z.enum(["major", "minor"]),
+    /** The chapters that the fix changes, as points. */
+    chapters: z.array(PosRef).min(1, "name at least one chapter"),
+    problem: Text,
+    /** Quotes from the prose that show the problem, each with the chapter it is in. */
+    evidence: z.array(z.strictObject({ point: PosRef, quote: Text })).default([]),
+    recommendation: Text,
+    record: z.enum(REVIEW_RECORD),
+    size: z.enum(REVIEW_SIZES),
+    decision: z.enum(REVIEW_DECISIONS).default("open"),
+    /** What the revision did, or why the user skipped it. */
+    note: Text.optional(),
+  })
+  .superRefine((f, ctx) => {
+    if (f.record === "change" && f.size === "span") ctx.addIssue({ code: "custom", path: ["size"], message: "a finding that changes the record rewrites at least a scene: use scene or chapter" });
+  });
+export type ReviewFinding = z.infer<typeof ReviewFinding>;
+
+/** The book review: a critic's judgment of one complete book, with findings that revise-book can apply. */
+export const Review = z.strictObject({
+  book: z.number().int().min(1),
+  scores: z.strictObject(Object.fromEntries(REVIEW_AREAS.map((a) => [a, Score])) as Record<(typeof REVIEW_AREAS)[number], typeof Score>),
+  findings: z.array(ReviewFinding).default([]),
+});
+export type Review = z.infer<typeof Review>;
+
 // ---------- books/NN/memory/MM.md ----------
 
 export const RollingMemory = z.strictObject({

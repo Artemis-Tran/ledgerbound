@@ -442,7 +442,7 @@ export interface DeltaCheck {
   entries: Located[];
 }
 
-const isApproved = (project: Project, book: number, chapter: number) =>
+export const isApproved = (project: Project, book: number, chapter: number) =>
   project.prose.get(book)?.find((c) => c.data.chapter === chapter)?.data.status === "approved";
 
 /** Every check of `lb delta`: the entries, the chapter limits, the targets, the order of chapters, and the quotes. */
@@ -579,3 +579,4 @@ export function commitChapter(project: Project, rec: RecordFiles, book: number, 
   const replan = unreachableTargets(project, buildPlanIndex(project, []), check.after, book, chapter);
   return { ok: true, issues, committed: lines.length, replan };
 }
+

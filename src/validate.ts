@@ -42,6 +42,7 @@ export function validateProject(project: Project): Issue[] {
   checkNames(project, err);
   checkGeneration(project, issues, err, warn);
   for (const book of project.publish.keys()) issues.push(...checkPublish(project, book));
+  checkReviews(project, err);
   return issues;
 }
 
@@ -849,5 +850,26 @@ function checkGeneration(project: Project, issues: Issue[], err: Report, warn: R
       const plan = project.chapters.get(book)?.find((p) => p.data.chapter === m.data.chapter);
       if (plan && plan.data.ending.type !== m.data.ending_type) warn("ending-type", m.file, `the chapter ends with '${m.data.ending_type}', but the plan says '${plan.data.ending.type}'`, "ending_type");
     }
+  }
+}
+
+// ---------- phase 2b: the book review ----------
+
+function checkReviews(project: Project, err: Report) {
+  for (const [book, r] of project.reviews) {
+    if (r.data.book !== book) err("file-name", r.file, `book is ${r.data.book}, but the folder is ${bookDir(book)}`, "book");
+    if (project.books.get(book)?.data.imported) {
+      err("review-imported", r.file, `book ${book} is imported: its prose is canon, so it has no review`);
+      continue;
+    }
+    for (const id of duplicates(r.data.findings, (f) => f.id)) err("review-duplicate", r.file, `two findings have the ID '${id}'`);
+    // A chapter plan, not the prose: a deep revision deletes a chapter while it writes it again.
+    const planned = new Set((project.chapters.get(book) ?? []).map((c) => chapterKey(book, c.data.chapter)));
+    r.data.findings.forEach((f, i) => {
+      const points = [...f.chapters.map((p, j) => [p, `findings.${i}.chapters.${j}`]), ...f.evidence.map((e, j) => [e.point, `findings.${i}.evidence.${j}.point`])];
+      for (const [p, path] of points) {
+        if (!planned.has(p)) err("review-chapter", r.file, `finding '${f.id}' names ${p}, which is not a chapter of book ${book}`, path);
+      }
+    });
   }
 }

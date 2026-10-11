@@ -18,6 +18,7 @@ import { findProjectRoot, lintFile } from "./lint/index.ts";
 import { characterText, charactersNamedIn, entryText, lastSeen, loreEntry, loreNamedIn } from "./entries.ts";
 import { loadProject, type Project } from "./project.ts";
 import { chapterPath, checkDelta, commitChapter, fold, loadRecord, parsePoint, type Where } from "./record.ts";
+import { reopenChapters } from "./reopen.ts";
 import { RULES } from "./rules.ts";
 import { readVerify, roundCopyPath, runReport, verifyPath } from "./run.ts";
 import { type Checkpoint, CHECKPOINTS } from "./schemas.ts";
@@ -59,6 +60,8 @@ Generation (a point is 1.07 = book 1, chapter 7):
                                          each claim moves to the line where its quote is now
   lb changed <point> [--json]            the lines that changed since the last verify round (runs/verify/NN-MM.rK.md)
   lb commit <point> [--json]             append a verified chapter's delta to the ledger and approve it
+  lb reopen <point> [--dry-run] [--json] a deep revision: the ledger entries of this chapter and of every later
+                                         chapter go back to staged deltas, and those chapters back to draft
 
 Publishing:
   lb export [--book N] [--draft] [--out FILE] [--json]
@@ -407,6 +410,22 @@ switch (command) {
     if (book === firstPlannedBook(project) && chapter === 1 && isOn(project, "chapter-1")) fail(`chapter ${book}.01 needs the user's approval: run \`lb approve chapter-1\` after they approve`);
     commit(project, book, chapter);
     break;
+  }
+
+  case "reopen": {
+    const { book, chapter } = chapterArg();
+    const { project } = load();
+    const r = reopenChapters(project, loadRecord(project.root), book, chapter, { dryRun: values["dry-run"] });
+    const verb = values["dry-run"] ? "Would reopen" : "Reopened";
+    const later = r.chapters.length - 1;
+    out(
+      r.ok
+        ? `${verb} ${r.chapters[0]}: ${r.entries} ledger entr${r.entries === 1 ? "y goes" : "ies go"} back to staged deltas, and ${r.chapters.length} chapter(s) back to draft: ${r.chapters.join(", ")}.` +
+            (later ? `\nThe ${later} later chapter(s) get the continuity check again, in order.` : "")
+        : `NOT reopened:\n${r.errors.map((e) => `  ERROR ${e}`).join("\n")}`,
+      r,
+    );
+    process.exit(r.ok ? 0 : 1);
   }
 
   case "export": {

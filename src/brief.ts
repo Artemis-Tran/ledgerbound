@@ -47,18 +47,20 @@ export function loreFor(project: Project, planText: string, listed: string[]): {
   return [...out].map(([id, listed]) => ({ id, listed }));
 }
 
-/** The last paragraphs of a chapter body, about `words` words, with no status windows. */
-function tail(body: string, words: number): string {
-  const paras = body
+/** The last paragraphs of a chapter body (or with `start`, the first ones), about `words` words, with no status windows. */
+function tail(body: string, words: number, start = false): string {
+  const all = body
     .replace(/```[\s\S]*?```/g, "")
     .split(/\n\s*\n/)
     .map((p) => p.trim())
     .filter((p) => p && !p.startsWith("#"));
+  const paras = start ? all.reverse() : all;
   const out: string[] = [];
   let n = 0;
   while (paras.length && n < words) {
     const p = paras.pop()!;
-    out.unshift(p);
+    if (start) out.push(p);
+    else out.unshift(p);
     n += p.split(/\s+/).length;
   }
   return out.join("\n\n");
@@ -351,6 +353,12 @@ export function buildBrief(project: Project, rec: RecordFiles, book: number, cha
   if (prev && existsSync(join(root, chapterPath(prev.book, prev.chapter)))) {
     const body = splitFrontmatter(readFileSync(join(root, chapterPath(prev.book, prev.chapter)), "utf8")).body;
     sections.push({ title: `The end of the previous chapter (${prev.book}.${pad2(prev.chapter)}), for continuity of texture only`, text: tail(body, 300) });
+  }
+  // 12. A rewrite after `lb reopen`: the next chapter is already written, and this one must lead into it.
+  const next = chapterPath(book, chapter + 1);
+  if (existsSync(join(root, next))) {
+    const body = splitFrontmatter(readFileSync(join(root, next), "utf8")).body;
+    sections.push({ title: `The start of the next chapter (${book}.${pad2(chapter + 1)}), already written: end this chapter so that it follows`, text: tail(body, 300, true) });
   }
 
   // Keep the brief under the limit: drop the oldest summaries first, then the farthest next plans, then shorten

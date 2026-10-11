@@ -115,6 +115,19 @@ After a stop, or after a usage limit or a closed session, run `/ledgerbound:gene
 
 `/ledgerbound:revise-chapter` changes the prose of an approved chapter: for rules that you name (from `lb rules`), for your own notes, or both. The prose checker finds the spans (or a whole flat scene, which the reviser rewrites with the same plan, events and quotes), the reviser fixes them, and both checkers check the changed lines, for at most 3 rounds. The ledger does not change: each committed quote stays in the prose, word for word, and `lb validate` gives `ledger-quote-not-found` when one is gone. The memory writer then writes the chapter's rolling memory again. Run it once for each chapter of a range, in order.
 
+### Review and revise a book (optional)
+
+When a book is complete, you can get a critic's review of it and revise it before you publish it.
+
+`/ledgerbound:review-book` reads the whole book in ranges, with one critic agent for each range, and writes `books/NN/review.md`. It judges what the check of one chapter cannot see: enjoyment, plot, pacing, characters, and prose patterns across the whole book. The review has a score for each area, a verdict, and up to 15 findings. Each finding has evidence from the page and one concrete recommendation. The criteria are in `reference/review.md`.
+
+`/ledgerbound:revise-book` applies the findings that you choose. Each finding is one of two kinds:
+
+- **Keep the record** (`record: keep`): the fix changes how the page tells the story, not what happens. `revise-chapter` applies it, and the ledger stays the same.
+- **Change the record** (`record: change`): the fix changes what happens, for example a fight with a different result. This is a **deep revision**. `lb reopen` takes the ledger back to the start of that chapter, a replan changes the plan, and the chapter or the scene is written again. Then every later chapter gets the continuity check again, in order. The cost grows with the number of later chapters, so the skill lists these findings apart, with the number of chapters each one reopens (`lb reopen <point> --dry-run`), and you choose.
+
+The skill commits to git before a reopen. If the run stops, run `revise-book` again: it continues from the decisions in the review. An imported book has no review.
+
 ### A series
 
 `plan-book` plans the chapters of one book at a time. When `generate-book` completes book 1, it reports the open questions (the handoff). Then run `plan-book` for book 2, and generate book 2 in the same way. The ledger continues across the books.
@@ -170,6 +183,11 @@ Use autopilot after the first chapters show that the voice and the plan work. Fo
 | `lb who books/01/chapters/07.md` | The characters that a chapter names, as they are at the start of the chapter. |
 | `lb who hale --at 1.07` | One character at the start of chapter 7: who it is, its arc so far, its voice card, its record and when it was last seen. |
 | `lb validate` | Every file and reference, and the ledger. |
+| `lb reopen 1.07 --dry-run` | The chapters that a deep revision of chapter 7 takes back to draft. |
+
+### A novel repo made before version 0.25.0
+
+Nothing changes. `review-book` and `revise-book` are new and optional, for a complete book.
 
 ### A novel repo made before version 0.24.0
 

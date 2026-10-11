@@ -172,7 +172,7 @@ All the deterministic story state: ledger, schema, targets, timeline and knowled
 _Avoid_: Story state, memory, canon
 
 **Ledger**:
-The append-only list of delta entries for a project.
+The append-only list of delta entries for a project. Only a reopen takes entries out of it.
 _Avoid_: Log, history
 
 **Delta entry**:
@@ -237,6 +237,27 @@ The part of rolling memory that lists similes, notable images, character gesture
 **Context brief**:
 The one input that a chapter-writing subagent gets: the prose decisions, the chapter plan and the next plans, the fold at the chapter start, the targets, the lore, the cast and the cast index, the relationships in the cast, the voice samples, the relevant rolling memory, the ending types and the recent gestures of the phrase log, the open threads and the last words of the previous chapter.
 _Avoid_: Prompt, context pack
+
+### Review and revision
+
+**Book review**:
+A critic's judgment of one complete book, in `books/NN/review.md`: a score for each area (enjoyment, plot, pacing, characters, prose), the review findings and the verdict. It judges the book as a whole, which no chapter check sees. An imported book has none.
+_Avoid_: Critique, report, feedback
+
+**Review finding**:
+One problem of a book review, with its evidence, a recommendation, and the user's decision (`open`, `apply`, `skip`, `done`). With `record: keep`, a prose revision applies it; with `record: change`, only a deep revision can.
+_Avoid_: Note, issue, comment
+
+**Prose revision**:
+A revision of an approved chapter that keeps the record: each committed quote stays in the prose (`revise-chapter`).
+
+**Deep revision**:
+A revision that changes what happens in an approved chapter, and so the record: a reopen, a replan, the rewrite of the chapter or a scene, and the continuity check of every later chapter, in order.
+_Avoid_: Rewrite (for the whole process), retcon
+
+**Reopen**:
+`lb reopen <point>`: the ledger entries of a chapter and of every later chapter go back to their staged deltas, and those chapters back to draft. The only exception to the append-only ledger.
+_Avoid_: Rollback, revert, uncommit
 
 ### Publishing
 

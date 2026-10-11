@@ -31,6 +31,8 @@ export interface VerifyRecord {
   extra_round?: boolean;
   /** The open errors are accepted: the chapter is committed with them (autopilot, or the user). */
   accepted?: boolean;
+  /** `lb reopen` took the chapter back to draft after an earlier chapter: its prose passed before, so the check starts with the record. */
+  reopened?: boolean;
 }
 
 export const maxRounds = (v: VerifyRecord) => MAX_ROUNDS + (v.extra_round ? 1 : 0);
@@ -120,7 +122,8 @@ export function runReport(project: Project, book: number): RunReport {
       if (verify && verify.round >= maxRounds(verify)) {
         return { chapter: n, stage: "blocked", note: `${verify.open.filter((f) => f.severity === "error").length} open error(s) after ${verify.round} rounds` };
       }
-      return { chapter: n, stage: "drafted", note: verify ? `round ${verify.round} failed` : undefined };
+      const note = verify?.reopened && verify.round === 0 ? "reopened: check the record again" : verify ? `round ${verify.round} failed` : undefined;
+      return { chapter: n, stage: "drafted", note };
     }
     if (has(stagedPath(book, n)) || has(briefPath(book, n))) return { chapter: n, stage: "briefed" };
     return { chapter: n, stage: "planned" };

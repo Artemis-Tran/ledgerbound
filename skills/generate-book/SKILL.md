@@ -23,4 +23,4 @@ Keep this session small: give the agents paths, and read their JSON results, nev
    - the open warnings of `lb run --json`, grouped by rule;
    - in autopilot: the chapters in `accepted` of `lb run --json` with their open errors (the user reads these first), and each replan from `runs/autopilot.md` in one line;
    - the `open_questions` of the last memory file: the handoff to the next book;
-   - for a series, the next step: the `plan-book` skill for the next book.
+   - the next steps: the optional `review-book` skill for a critic's review of the book and `revise-book` to apply it, then `publish-book`; for a series, also the `plan-book` skill for the next book.

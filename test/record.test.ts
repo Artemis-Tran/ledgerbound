@@ -317,6 +317,16 @@ describe("lb brief", () => {
     expect(text).toContain("## Draws");
     expect(text).toContain("- No romance and no romantic subplot.");
     expect(text).toContain("Window template");
+    expect(text).not.toContain("The start of the next chapter");
+  });
+
+  test("a rewrite after a reopen gets the start of the next chapter, which is already written", () => {
+    const dir = fixtureCopy();
+    writeChapter2(dir);
+    const text = readFileSync(join(dir, buildBrief(load(dir), loadRecord(dir), 1, 1).file), "utf8");
+    const start = text.split("## The start of the next chapter (1.02), already written: end this chapter so that it follows\n\n")[1];
+    expect(start.startsWith("He went into the flooded gallery")).toBe(true);
+    expect(start).not.toContain("TITHE PAID");
   });
 
   test("with windows: off, the brief has no window template", () => {
