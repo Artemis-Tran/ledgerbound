@@ -109,7 +109,21 @@ After a stop, or after a usage limit or a closed session, run `/ledgerbound:gene
 
 ### Replan
 
-`/ledgerbound:replan` changes the part of the plan that is not written yet: chapter plans, `threads.yaml`, `targets.yaml`, anchors and open decisions. It changes a locked decision only when you say so. It never changes an approved chapter or the ledger. When the record is wrong about a written chapter, the replan adds a `Correction:` entry at the start of the next chapter's delta. A replan waits for your approval, also in `just-write-it` mode. Only `autopilot` mode lets it decide alone. You can also run it when you want to change the direction of the story.
+`/ledgerbound:replan` changes the part of the plan that no approved chapter shows: from the series ending and the book plans down to the arcs, chapter plans, `threads.yaml`, `targets.yaml`, anchors and open decisions. It changes a locked decision only when you say so. It never changes an approved chapter or the ledger. When the record is wrong about a written chapter, the replan adds a `Correction:` entry at the start of the next chapter's delta. A replan waits for your approval, also in `just-write-it` mode. Only `autopilot` mode lets it decide alone.
+
+### Change the story
+
+`/ledgerbound:change-story` makes a big change that you ask for: a character who dies earlier, an arc that ends in a different place, a new climax or a new series ending. You can run it at any time, also in the middle of a book. Describe the change in your own words. The skill:
+
+1. Finds the highest level that the change touches (series, book, act, arc, relationship, chapter or scene), and the first approved chapter whose events must change.
+2. Gives you the cost, and recommends a strategy:
+   - **Forward**: every approved chapter stays, and the change starts at the next chapter. Only a replan runs. Use it when the old events can stay on the page.
+   - **Reopen**: `lb reopen` takes the record back to that chapter. Each later chapter is then **checked** against the new record (its prose stays), gets one **scene** written again, or is **discarded** and written again from the new plan (`lb discard`). For a drastic change, discard each chapter from that point on.
+3. Runs one replan, top down from the level of the change, for your approval.
+4. Writes and checks the reopened chapters in order, as `generate-book` does.
+5. Shows you each lore or character detail that only a discarded chapter stated: you decide whether it stays.
+
+The cost grows with the chapters after the change: `lb reopen <point> --dry-run` gives the chapters and their words. The skill commits to git before the reopen and after each step. If the run stops, run `change-story` again: it continues from `runs/change/`.
 
 ### Revise an approved chapter
 
@@ -124,9 +138,9 @@ When a book is complete, you can get a critic's review of it and revise it befor
 `/ledgerbound:revise-book` applies the findings that you choose. Each finding is one of two kinds:
 
 - **Keep the record** (`record: keep`): the fix changes how the page tells the story, not what happens. `revise-chapter` applies it, and the ledger stays the same.
-- **Change the record** (`record: change`): the fix changes what happens, for example a fight with a different result. This is a **deep revision**. `lb reopen` takes the ledger back to the start of that chapter, a replan changes the plan, and the chapter or the scene is written again. Then every later chapter gets the continuity check again, in order. The cost grows with the number of later chapters, so the skill lists these findings apart, with the number of chapters each one reopens (`lb reopen <point> --dry-run`), and you choose.
+- **Change the record** (`record: change`): the fix changes what happens, for example a fight with a different result. This is a **deep revision**, and `change-story` applies it: `lb reopen` takes the ledger back to the start of that chapter, a replan changes the plan, and the chapter or the scene is written again. Then every later chapter gets the continuity check again, in order. The cost grows with the number of later chapters, so the skill lists these findings apart, with the number of chapters each one reopens (`lb reopen <point> --dry-run`), and you choose.
 
-The skill commits to git before a reopen. If the run stops, run `revise-book` again: it continues from the decisions in the review. An imported book has no review.
+The skill commits to git before a reopen. If the run stops, run `revise-book` again: it continues from the decisions in the review and from `runs/change/`. An imported book has no review.
 
 ### A series
 
@@ -183,7 +197,12 @@ Use autopilot after the first chapters show that the voice and the plan work. Fo
 | `lb who books/01/chapters/07.md` | The characters that a chapter names, as they are at the start of the chapter. |
 | `lb who hale --at 1.07` | One character at the start of chapter 7: who it is, its arc so far, its voice card, its record and when it was last seen. |
 | `lb validate` | Every file and reference, and the ledger. |
-| `lb reopen 1.07 --dry-run` | The chapters that a deep revision of chapter 7 takes back to draft. |
+| `lb reopen 1.07 --dry-run` | The chapters that a deep revision of chapter 7 takes back to draft, and their words. |
+| `lb discard 1.09` | Deletes the prose of a draft chapter and the files made from it, so that it is written again from its plan. |
+
+### A novel repo made before version 0.26.0
+
+Nothing changes. `change-story` and `lb discard` are new. A deep revision of `revise-book` that stopped in version 0.25.0 kept its progress in `runs/review/revise-NN.json`: finish it with version 0.25.0, or `git reset` to the commit before its reopen and run `revise-book` again.
 
 ### A novel repo made before version 0.25.0
 

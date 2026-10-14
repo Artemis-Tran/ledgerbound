@@ -36,7 +36,7 @@ const ATX = /^(#{1,6})\s+(.*?)\s*#*\s*$/;
 const NUMBER_WORD = "(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred)";
 const NUMBERED = new RegExp(`^chapter\\s+(\\d+|${NUMBER_WORD}(?:[- ]${NUMBER_WORD})*)\\b\\s*[:.\\-–—]?\\s*(.*)$`, "i");
 
-const countWords = (text: string) => text.split(/\s+/).filter((w) => /\w/.test(w)).length;
+export const countWords = (text: string) => text.split(/\s+/).filter((w) => /\w/.test(w)).length;
 
 /**
  * Splits a Markdown or plain-text manuscript into chapters. In Markdown, the chapters are the headings of the highest

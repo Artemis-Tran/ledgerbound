@@ -251,9 +251,20 @@ _Avoid_: Note, issue, comment
 **Prose revision**:
 A revision of an approved chapter that keeps the record: each committed quote stays in the prose (`revise-chapter`).
 
+**Story change**:
+A change to what happens that the user asks for, at any level from a scene to the series, and at any time (`change-story`). It changes the plan top down from the highest level it touches, then goes forward or reopens. A `record: change` review finding becomes a story change too.
+_Avoid_: Retcon, rewrite, big change
+
+**Forward**:
+The strategy of a story change that keeps every approved chapter: only a replan, and the change starts at the next chapter that is not approved.
+
 **Deep revision**:
-A revision that changes what happens in an approved chapter, and so the record: a reopen, a replan, the rewrite of the chapter or a scene, and the continuity check of every later chapter, in order.
+A story change that changes what happens in an approved chapter, and so the record: a reopen, a replan, then a check or a discard of each reopened chapter, in order.
 _Avoid_: Rewrite (for the whole process), retcon
+
+**Discard**:
+`lb discard <point>`: the prose, staged delta, memory, brief and verify record of a chapter that is not approved are deleted, and its plan stays. The chapter-writer writes it again from its plan. In a deep revision, each reopened chapter is either checked against the new record or discarded.
+_Avoid_: Regenerate (for one chapter), delete
 
 **Reopen**:
 `lb reopen <point>`: the ledger entries of a chapter and of every later chapter go back to their staged deltas, and those chapters back to draft. The only exception to the append-only ledger.

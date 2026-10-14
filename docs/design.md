@@ -21,6 +21,7 @@ This is the approved design for phase 1 (planning) and phase 2 (generation). The
 | 6 | `voice-sample` | `voice/dialogue.md`, `voice/action.md`, `voice/quiet.md`, window template in `bible.md` | `voice-sample` |
 | 7 | `generate-chapter`, `verify-chapter` (or `generate-book` for all of them) | `books/NN/deltas/MM.jsonl`, `books/NN/chapters/MM.md`, `books/NN/memory/MM.md`, `ledger.jsonl` | `chapter-1` |
 | 7b (optional) | `review-book`, then `revise-book` | `books/NN/review.md`; the chapters that the user's chosen findings change (see "Phase 2b: review and revision") | – (the user chooses the findings in the skill); `replan` for a deep revision |
+| any time (optional) | `change-story` | the plan from the level of the change down, and the chapters that it reopens (see "Story changes") | `replan` |
 | 8 | `publish-book` | `books/NN/publish.yaml`, `books/NN/pages/*.md`, then `exports/NN-<title>.epub` through `lb export` | – (the user approves the pages in the skill) |
 | any time | `replan` | chapter plans not written yet, `threads.yaml`, `targets.yaml`, lore entries, open decisions | `replan` (on in every mode except `autopilot`) |
 
@@ -79,14 +80,24 @@ An author can write book 2 and later books with Ledgerbound when book 1 was writ
 
 ## Phase 2b: review and revision
 
-An optional phase between generation and publishing. See [ADR 0004](adr/0004-deep-revision-reopens-the-record.md).
+An optional phase between generation and publishing. See [ADR 0004](adr/0004-deep-revision-reopens-the-record.md) and [ADR 0005](adr/0005-story-change-from-the-user.md).
 
 - `review-book` reviews a complete book that is not imported. The main session never reads the prose: one `book-critic` agent for each range of about 25,000 words reads it and writes notes in `runs/review/`, all at the same time; then the `review-writer` agent makes `books/NN/review.md` from the notes, the plans and the rolling memory. The criteria are in `reference/review.md`. The review judges what a chapter check cannot see: the arcs, the threads, the pacing and the patterns of the whole book.
 - Each review finding has `record: keep` or `record: change`, and a `size` (`span`, `scene`, `chapter`; a `change` is at least a scene). `lb validate` checks the review: unique IDs, each named chapter in the chapter plans of the book (`review-chapter`), no review of an imported book (`review-imported`).
-- `revise-book` shows the findings, the `change` ones apart with their cost from `lb reopen --dry-run`, and the user sets `apply` or `skip` on each. The decisions in the review, and `runs/review/revise-NN.json` for a deep revision, are the state of the run, so it continues after a stop. In autopilot, it applies the `major` `keep` findings and leaves the `change` ones for the user.
-- A **deep revision** (the `apply` `change` findings) runs first: a git commit, `lb reopen` at the earliest chapter, one `replan` for all of them, then the `generate-book` loop over the reopened chapters. Before its step, each chapter of a finding is rewritten: a `chapter` finding deletes the prose and the staged delta, so the chapter-writer writes it again from the new plan (the brief has the start of the next chapter when it exists); a `scene` finding goes to the reviser, which rewrites the scene and its staged entries. The other reopened chapters have `reopened: true` in their verify record: round 1 runs only the continuity checker, and a revision deletes their memory so that it is written again.
+- `revise-book` shows the findings, the `change` ones apart with their cost from `lb reopen --dry-run`, and the user sets `apply` or `skip` on each. The decisions in the review, and `runs/change/<id>.json` for a deep revision, are the state of the run, so it continues after a stop. In autopilot, it applies the `major` `keep` findings and leaves the `change` ones for the user.
+- A **deep revision** (the `apply` `change` findings) runs first, as one story change (see "Story changes"): the reopen starts at the earliest chapter, a `chapter` finding discards its chapter, a `scene` finding rewrites its scene, and each other reopened chapter is checked.
 - `lb reopen <point>` refuses a chapter that is not approved or is imported. It moves the ledger entries from the chapter start on to the staged deltas (with no `point`), sets each approved chapter from there on to `draft`, deletes their briefs, deletes the memory and the verify record of the first chapter, and writes `{round: 0, verdict: fail, open: [], reopened: true}` for each later one.
 - A **prose revision** (the `apply` `keep` findings) runs `revise-chapter` once for each chapter, with the findings as the user's notes.
+
+## Story changes
+
+A story change is a change to what happens that the user asks for, at any level and at any time. See [ADR 0005](adr/0005-story-change-from-the-user.md).
+
+- `change-story` finds the highest level that the change touches and P, the first approved chapter whose events change. With no P, or when the old events can stay on the page, the strategy can be **forward**: only a replan. Else it is **reopen**: `lb reopen P`, and each reopened chapter gets an action, `check`, `scene` or `discard`. The user chooses the strategy and the actions in every mode, with the cost from `lb reopen --dry-run` (chapters and words).
+- The order is: a git commit, `lb reopen P`, one `replan` top down from the level of the change, `lb discard` for each `discard` chapter, then the `generate-book` loop over the reopened chapters. A `discard` chapter is `planned` again, and the chapter-writer writes it from the new plan (the brief has the start of the next chapter when it exists). A `scene` chapter goes to the reviser with one finding for the scene, and then gets the full check. A `check` chapter has `reopened: true` in its verify record: round 1 runs only the continuity checker, and a revision deletes its memory so that it is written again.
+- `runs/change/<id>.json` is the state of the run: `{change, findings, strategy, reopened, actions, scenes, old_details, steps}`. `old_details` holds the `lore_added` and `character_added` of each chapter that is written again, from its old memory file; at the end the user decides on each one that no approved chapter states.
+- A replan can change each part of the plan that no approved chapter shows: after a reopen, that includes the arcs, stages, acts, climax, later book plans and the series ending of the reopened part. A `locked` decision or a draw changes only when the user says so.
+- `lb discard <point>` refuses an approved chapter and an imported book. It deletes the chapter's prose, staged delta, memory, brief, verify record, findings and round copies, and keeps its plan.
 
 ## Phase 3: publishing
 

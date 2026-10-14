@@ -1,5 +1,7 @@
 # A deep revision reopens the record
 
+ADR 0005 extends this: a deep revision is a story change that the user can start at any time, with `change-story`, and a reopened chapter is checked or discarded.
+
 The ledger is append-only: a committed delta never changes, and a correction is a barrier entry in a later chapter. A book review can find a problem whose fix changes what happens in an approved chapter (a fight with a different result, an item that is never found). A correction in a later chapter cannot fix that: the old event stays on the page. So `lb reopen <point>` is the one way back into the committed record. It takes the ledger entries of the chapter and of every later chapter back to their staged deltas, and sets those chapters back to `draft`. The chapter is then rewritten from a new plan, and each later chapter is checked again in order, through the normal steps of generation: verify, commit, memory, git.
 
 We chose this because it uses the steps that already keep the record legal. After a reopen, the record is the same as in the middle of a generation run: the chapters before the point are committed, and the rest are drafts with staged deltas. `lb delta`, `lb claims` and `lb commit` need nothing new.

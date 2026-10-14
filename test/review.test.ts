@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { describe, expect, test } from "vitest";
 import { loadProject, type Project } from "../src/project.ts";
 import { checkDelta, commitChapter, loadRecord } from "../src/record.ts";
-import { reopenChapters } from "../src/reopen.ts";
+import { discardChapter, reopenChapters } from "../src/reopen.ts";
 import { runReport } from "../src/run.ts";
 import { check, edit, errorCodes, fixtureCopy, importedCopy } from "./helpers.ts";
 
@@ -83,6 +83,7 @@ describe("lb reopen", () => {
     const r = lb(["reopen", "1.01", "--dry-run", "--json"], dir);
     expect(r.status).toBe(0);
     expect(JSON.parse(r.stdout)).toMatchObject({ ok: true, chapters: ["1.01", "1.02"], entries: 9 });
+    expect(JSON.parse(r.stdout).words).toBeGreaterThan(40);
     expect(read(dir, "ledger.jsonl")).toBe(ledger);
     expect(read(dir, "books/01/chapters/01.md")).toContain("status: approved");
   });
@@ -130,5 +131,48 @@ describe("lb reopen", () => {
     expect(r.status).toBe(1);
     expect(r.stdout).toContain("not approved");
     expect(lb(["reopen", "1.01"], importedCopy()).stdout).toContain("imported");
+  });
+});
+
+describe("lb discard", () => {
+  test("deletes the prose and every file made from it; the plan stays, and the chapter is planned again", () => {
+    const dir = twoChapters();
+    // Chapter 2 is reopened after chapter 1, so it has a verify record.
+    expect(reopenChapters(load(dir), loadRecord(dir), 1, 1).ok).toBe(true);
+    mkdirSync(join(dir, "runs/briefs"), { recursive: true });
+    for (const f of ["runs/briefs/01-02.md", "runs/verify/01-02.findings.json", "runs/verify/01-02.r1.md", "runs/verify/01-02.r12.md", "runs/verify/01-01.r1.md", "books/01/memory/02.md"]) {
+      writeFileSync(join(dir, f), "old");
+    }
+
+    const dry = lb(["discard", "1.02", "--dry-run", "--json"], dir);
+    expect(dry.status).toBe(0);
+    expect(existsSync(join(dir, "books/01/chapters/02.md"))).toBe(true);
+
+    const r = discardChapter(load(dir), 1, 2);
+    expect(r).toEqual({ ok: true, errors: [], deleted: JSON.parse(dry.stdout).deleted });
+    expect(r.deleted).toEqual([
+      "books/01/chapters/02.md",
+      "books/01/deltas/02.jsonl",
+      "books/01/memory/02.md",
+      "runs/briefs/01-02.md",
+      "runs/verify/01-02.json",
+      "runs/verify/01-02.findings.json",
+      "runs/verify/01-02.r1.md",
+      "runs/verify/01-02.r12.md",
+    ]);
+    // The files of another chapter stay.
+    expect(existsSync(join(dir, "runs/verify/01-01.r1.md"))).toBe(true);
+    expect(existsSync(join(dir, "books/01/plan/02.md"))).toBe(true);
+    expect(errorCodes(check(dir))).toEqual([]);
+    expect(runReport(load(dir), 1).chapters[1]).toEqual({ chapter: 2, stage: "planned" });
+  });
+
+  test("refuses an approved chapter and a chapter of an imported book", () => {
+    const dir = twoChapters();
+    const r = lb(["discard", "1.02"], dir);
+    expect(r.status).toBe(1);
+    expect(r.stdout).toContain("lb reopen 1.02");
+    expect(existsSync(join(dir, "books/01/chapters/02.md"))).toBe(true);
+    expect(lb(["discard", "1.01"], importedCopy()).stdout).toContain("imported");
   });
 });

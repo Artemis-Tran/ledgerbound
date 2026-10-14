@@ -17,8 +17,8 @@ import { formatIssues, hasErrors, type Issue } from "./issues.ts";
 import { findProjectRoot, lintFile } from "./lint/index.ts";
 import { characterText, charactersNamedIn, entryText, lastSeen, loreEntry, loreNamedIn } from "./entries.ts";
 import { loadProject, type Project } from "./project.ts";
-import { chapterPath, checkDelta, commitChapter, fold, loadRecord, parsePoint, type Where } from "./record.ts";
-import { reopenChapters } from "./reopen.ts";
+import { chapterKey, chapterPath, checkDelta, commitChapter, fold, loadRecord, parsePoint, type Where } from "./record.ts";
+import { discardChapter, reopenChapters } from "./reopen.ts";
 import { RULES } from "./rules.ts";
 import { readVerify, roundCopyPath, runReport, verifyPath } from "./run.ts";
 import { type Checkpoint, CHECKPOINTS } from "./schemas.ts";
@@ -62,6 +62,9 @@ Generation (a point is 1.07 = book 1, chapter 7):
   lb commit <point> [--json]             append a verified chapter's delta to the ledger and approve it
   lb reopen <point> [--dry-run] [--json] a deep revision: the ledger entries of this chapter and of every later
                                          chapter go back to staged deltas, and those chapters back to draft
+  lb discard <point> [--dry-run] [--json]
+                                         delete the prose, staged delta, memory, brief and verify files of a
+                                         chapter that is not approved; its plan stays, and it is written again
 
 Publishing:
   lb export [--book N] [--draft] [--out FILE] [--json]
@@ -420,9 +423,25 @@ switch (command) {
     const later = r.chapters.length - 1;
     out(
       r.ok
-        ? `${verb} ${r.chapters[0]}: ${r.entries} ledger entr${r.entries === 1 ? "y goes" : "ies go"} back to staged deltas, and ${r.chapters.length} chapter(s) back to draft: ${r.chapters.join(", ")}.` +
+        ? `${verb} ${r.chapters[0]}: ${r.entries} ledger entr${r.entries === 1 ? "y goes" : "ies go"} back to staged deltas, and ${r.chapters.length} chapter(s) (${r.words} words) back to draft: ${r.chapters.join(", ")}.` +
             (later ? `\nThe ${later} later chapter(s) get the continuity check again, in order.` : "")
         : `NOT reopened:\n${r.errors.map((e) => `  ERROR ${e}`).join("\n")}`,
+      r,
+    );
+    process.exit(r.ok ? 0 : 1);
+  }
+
+  case "discard": {
+    const { book, chapter } = chapterArg();
+    const { project } = load();
+    const r = discardChapter(project, book, chapter, { dryRun: values["dry-run"] });
+    const verb = values["dry-run"] ? "Would delete" : "Deleted";
+    out(
+      r.ok
+        ? r.deleted.length
+          ? `${verb}: ${r.deleted.join(", ")}. The plan stays: \`lb run\` gives the chapter as planned.`
+          : `Chapter ${chapterKey(book, chapter)} has no files to delete.`
+        : `NOT discarded:\n${r.errors.map((e) => `  ERROR ${e}`).join("\n")}`,
       r,
     );
     process.exit(r.ok ? 0 : 1);
