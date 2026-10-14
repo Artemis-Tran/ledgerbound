@@ -19,7 +19,7 @@ import { characterText, charactersNamedIn, entryText, lastSeen, loreEntry, loreN
 import { loadProject, pad2, type Project } from "./project.ts";
 import { chapterKey, chapterPath, checkDelta, commitChapter, fold, loadRecord, parsePoint, type Where } from "./record.ts";
 import { discardChapter, reopenChapters } from "./reopen.ts";
-import { changeStructure, type StructureOp } from "./structure.ts";
+import { changeBooks, changeStructure, type StructureOp } from "./structure.ts";
 import { RULES } from "./rules.ts";
 import { readVerify, roundCopyPath, runReport, verifyPath } from "./run.ts";
 import { type Checkpoint, CHECKPOINTS } from "./schemas.ts";
@@ -68,6 +68,11 @@ Generation (a point is 1.07 = book 1, chapter 7):
   lb chapter move <point> <to> [--dry-run] [--json]
                                          in a story change: insert, remove or move a chapter that is not approved,
                                          and renumber the later chapters, their files and each point reference
+  lb book insert <N> [--dry-run] [--json]
+  lb book remove <N> [--dry-run] [--json]
+  lb book move <N> <to> [--dry-run] [--json]
+                                         in a story change: insert, remove or move a book with no approved
+                                         chapter, and renumber the later books, their folders and each reference
   lb discard <point> [--dry-run] [--json]
                                          delete the prose, staged delta, memory, brief and verify files of a
                                          chapter that is not approved; its plan stays, and it is written again
@@ -455,6 +460,32 @@ switch (command) {
           r.renumbered.length ? `${values["dry-run"] ? "Would renumber" : "Renumbered"}:\n${lines.join("\n")}` : "No chapter changes its number.",
           r.references.length ? `Point references: ${r.references.join(", ")}` : "",
           kind === "insert" ? `Write the plan of the new chapter: books/${pad2(book)}/plan/${pad2(chapter)}.md.` : "",
+          "Run `lb validate`.",
+        ]
+          .filter(Boolean)
+          .join("\n")
+      : `NOT changed:\n${r.errors.map((e) => `  ERROR ${e}`).join("\n")}`;
+    out(human, r);
+    process.exit(r.ok ? 0 : 1);
+  }
+
+  case "book": {
+    const kind = args[0];
+    if (kind !== "insert" && kind !== "remove" && kind !== "move") fail(`use \`lb book insert|remove|move <N>\`, not '${kind ?? ""}'`);
+    const num = (i: number) => {
+      const n = Number(args[i]);
+      if (!Number.isInteger(n) || n < 1) fail(`give a book number like 2, not '${args[i] ?? ""}'`);
+      return n;
+    };
+    const op: StructureOp = kind === "move" ? { kind, from: num(1), to: num(2) } : { kind, at: num(1) };
+    const { project } = load();
+    const r = changeBooks(project, op, { dryRun: values["dry-run"] });
+    const lines = r.renumbered.map((b) => `  book ${b.from} → ${b.to === null ? "removed" : `book ${b.to}`}`);
+    const human = r.ok
+      ? [
+          r.renumbered.length ? `${values["dry-run"] ? "Would renumber" : "Renumbered"}:\n${lines.join("\n")}` : "No book changes its number.",
+          r.references.length ? `References: ${r.references.join(", ")}` : "",
+          op.kind === "insert" ? `Write the plan of the new book: books/${pad2(op.at)}/plan.md.` : "",
           "Run `lb validate`.",
         ]
           .filter(Boolean)

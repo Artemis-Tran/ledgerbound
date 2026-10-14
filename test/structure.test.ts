@@ -5,8 +5,8 @@ import { describe, expect, test } from "vitest";
 import { loadProject, type Project } from "../src/project.ts";
 import { loadRecord } from "../src/record.ts";
 import { reopenChapters } from "../src/reopen.ts";
-import { changeStructure } from "../src/structure.ts";
-import { check, edit, fixtureCopy, importedCopy } from "./helpers.ts";
+import { changeBooks, changeStructure } from "../src/structure.ts";
+import { check, edit, fixtureCopy, IMPORTED_FIXTURE, importedCopy } from "./helpers.ts";
 
 const CLI = join(import.meta.dirname, "..", "src", "cli.ts");
 const lb = (args: string[], cwd: string) => spawnSync("node", [CLI, ...args], { cwd, encoding: "utf8" });
@@ -96,5 +96,62 @@ describe("lb chapter", () => {
     expect(r.status).toBe(1);
     expect(r.stdout).toContain("lb reopen 1.01");
     expect(lb(["chapter", "remove", "1.02"], importedCopy()).stdout).toContain("imported");
+  });
+});
+
+describe("lb book", () => {
+  const errors = (dir: string) => check(dir).filter((i) => i.severity === "error");
+
+  test("insert: the later books move up with their folders, and each reference follows them", () => {
+    const dir = importedCopy();
+    const r = lb(["book", "insert", "2"], dir);
+    expect(r.status).toBe(0);
+    expect(read(dir, "books/03/plan.md")).toMatch(/^book: 3$/m);
+    expect(read(dir, "books/03/plan/02.md")).toMatch(/^book: 3$/m);
+    expect(read(dir, "books/03/plan/02.md")).toContain("b3/");
+    expect(read(dir, "targets.yaml")).not.toContain("b2/");
+    expect(read(dir, "characters/ivo.md")).toContain("book: 3, act: act1");
+    expect(read(dir, "series.md")).toMatch(/^books: 3$/m);
+    expect(errors(dir).map((i) => `${i.code} ${i.file}`)).toEqual(["missing books/02/plan.md"]);
+  });
+
+  test("move: a move back gives the same files", () => {
+    const dir = importedCopy();
+    expect(changeBooks(load(dir), { kind: "insert", at: 2 }).ok).toBe(true);
+    expect(changeBooks(load(dir), { kind: "move", from: 3, to: 2 }).ok).toBe(true);
+    for (const f of ["threads.yaml", "targets.yaml", "characters/ivo.md", "relationships/ivo-sabine.md", "books/02/plan.md", "books/02/plan/02.md"]) {
+      expect(read(dir, f)).toBe(read(IMPORTED_FIXTURE, f));
+    }
+    expect(existsSync(join(dir, "books/03"))).toBe(false);
+  });
+
+  test("remove: refuses while another file names the book", () => {
+    const dir = importedCopy();
+    const r = lb(["book", "remove", "2", "--json"], dir);
+    expect(r.status).toBe(1);
+    const messages: string[] = JSON.parse(r.stdout).errors;
+    expect(messages.some((e) => e.startsWith("targets.yaml names b2/act1/end"))).toBe(true);
+    expect(messages.some((e) => e.startsWith("characters/ivo.md names book: 2") && e.includes("2.04"))).toBe(true);
+    expect(existsSync(join(dir, "books/02/plan.md"))).toBe(true);
+  });
+
+  test("refuses an imported book and a book with an approved chapter", () => {
+    expect(lb(["book", "insert", "1"], importedCopy()).stdout).toContain("book 1 is imported");
+    expect(lb(["book", "insert", "1"], fixtureCopy()).stdout).toContain("lb reopen 1.01");
+  });
+
+  test("a reopened book moves with its prose and staged deltas, and each chapter is checked again", () => {
+    const dir = fixtureCopy();
+    expect(reopenChapters(load(dir), loadRecord(dir), 1, 1).ok).toBe(true);
+    mkdirSync(join(dir, "runs/briefs"), { recursive: true });
+    writeFileSync(join(dir, "runs/briefs/01-02.md"), "old brief");
+    const delta = read(dir, "books/01/deltas/01.jsonl");
+
+    expect(changeBooks(load(dir), { kind: "insert", at: 1 }).ok).toBe(true);
+    expect(read(dir, "books/02/chapters/01.md")).toMatch(/^book: 2$/m);
+    expect(read(dir, "books/02/deltas/01.jsonl")).toBe(delta);
+    expect(existsSync(join(dir, "runs/briefs/01-02.md"))).toBe(false);
+    expect(JSON.parse(read(dir, "runs/verify/02-01.json"))).toMatchObject({ reopened: true });
+    expect(read(dir, "threads.yaml")).toContain("plant: 2.01");
   });
 });

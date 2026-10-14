@@ -1,4 +1,4 @@
-# The chapter structure changes only after a reopen, and each point reference follows its chapter
+# The chapter and book structure changes only after a reopen, and each reference follows its chapter or book
 
 A story change can need a new chapter, one chapter less, or chapters in a different order. A point (`1.07`) holds the chapter number, and many files hold points: the file names and the `chapter:` frontmatter of the plans, the prose and the memory, the staged deltas, `threads.yaml`, the `changes` of lore entries and character files, the review findings, and the progress files of a story change. A change of the structure by hand misses one of them, and `lb validate` cannot always find the miss: a thread that names the wrong chapter is still a legal thread.
 
@@ -23,3 +23,7 @@ Each command:
 - To insert a chapter before approved chapters, a story change reopens from there, and each later chapter is checked against the new record.
 - Points in free text (a summary that says "in 1.07") do not change. The structured fields are the record of the plan.
 - Adding a chapter at the end of a book needs no command: the replan writes its plan.
+
+## Books
+
+`lb book insert | remove | move` does the same for the books of a series, with the same rule: every book from the lowest number that changes on has no approved chapter, and is not imported. An imported book keeps its number, because its prose is canon (ADR 0003). The folder `books/NN/` moves with its book, through temporary names. In place, the command changes the `book:` of each file in the folder, of each arc beat and of each stage. It also changes the points (`2.04`) and the anchors (`b2/act1/end`) in the plans, threads, targets, changes and reviews, the points of the staged deltas, and a cover path in the folder. An insert adds 1 to `books:` in `series.md`, and a remove takes 1 away. A remove refuses while a file outside the folder names the book: an arc beat or a stage in it, a target at its anchor, a thread or a change at one of its points.

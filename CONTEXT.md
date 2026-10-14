@@ -252,7 +252,7 @@ _Avoid_: Note, issue, comment
 A revision of an approved chapter that keeps the record: each committed quote stays in the prose (`revise-chapter`).
 
 **Story change**:
-A change to what happens that the user asks for, at any level from a scene to the series, and at any time (`change-story`). It changes the plan top down from the highest level it touches, then goes forward or reopens. After a reopen it can insert, remove or move chapters (`lb chapter`). A `record: change` review finding becomes a story change too.
+A change to what happens that the user asks for, at any level from a scene to the series, and at any time (`change-story`). It changes the plan top down from the highest level it touches, then goes forward or reopens. After a reopen it can insert, remove or move chapters (`lb chapter`) and books (`lb book`). A `record: change` review finding becomes a story change too.
 _Avoid_: Retcon, rewrite, big change
 
 **Forward**:
