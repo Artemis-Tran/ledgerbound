@@ -135,10 +135,19 @@ When a book is complete, you can get a critic's review of it and revise it befor
 
 `/ledgerbound:review-book` reads the whole book in ranges, with one critic agent for each range, and writes `books/NN/review.md`. It judges what the check of one chapter cannot see: enjoyment, plot, pacing, characters, and prose patterns across the whole book. The review has a score for each area, a verdict, and up to 15 findings. Each finding has evidence from the page and one concrete recommendation. The criteria are in `reference/review.md`.
 
-`/ledgerbound:revise-book` applies the findings that you choose. Each finding is one of two kinds:
+Each finding has a **source**, which says where the fix starts:
 
-- **Keep the record** (`record: keep`): the fix changes how the page tells the story, not what happens. `revise-chapter` applies it, and the ledger stays the same.
-- **Change the record** (`record: change`): the fix changes what happens, for example a fight with a different result. This is a **deep revision**, and `change-story` applies it: `lb reopen` takes the ledger back to the start of that chapter, a replan changes the plan, and the chapter or the scene is written again. Then every later chapter gets the continuity check again, in order. The cost grows with the number of later chapters, so the skill lists these findings apart, with the number of chapters each one reopens (`lb reopen <point> --dry-run`), and you choose.
+- **Prose**: the problem is in one place, or a few. `revise-chapter` fixes it, and the ledger stays the same.
+- **Pattern**: the problem comes back across the book, for example a tic, an image or a gesture. The review names its **origin**, the file or rule that makes it (for example a gesture that a character file holds as a habit), and a **census**: the regexes that find each place, and a limit. `lb census --finding <id>` lists each place by chapter and line.
+- **Plan**: the prose did what the plan said, and the plan is wrong, for example a vow that the story never tests. A story change fixes it (`change-story`).
+
+`/ledgerbound:revise-book` applies the findings that you choose, in this order:
+
+1. The plan findings, and each finding that changes the record (`record: change`), as one story change. A fix that changes what happens in an approved chapter is a **deep revision**: `lb reopen` takes the ledger back to the start of that chapter, a replan changes the plan, the chapters are written again or checked again, in order. The skill shows you the cost of each one (`lb reopen <point> --dry-run`), and you choose.
+2. The pattern findings: the skill changes the origin first, so that the prose does not make the pattern again. Then it takes the census, revises each chapter of the census to the limit, and takes the census again.
+3. The prose findings, with `revise-chapter`.
+
+A later review of the same book first judges each old finding (fixed, partly, not fixed). Then it adds only new findings that pass a bar, and it says `ready` when no major finding is open. The earlier reviews stay in `books/NN/reviews/`. A review from before version 0.29.0 has no sources: run `review-book` again to get them.
 
 The skill commits to git before a reopen. If the run stops, run `revise-book` again: it continues from the decisions in the review and from `runs/change/`. An imported book has no review.
 
@@ -201,6 +210,10 @@ Use autopilot after the first chapters show that the voice and the plan work. Fo
 | `lb chapter insert 1.08 --dry-run` | The chapters that a new chapter 8 renumbers (also `remove 1.08`, `move 1.08 1.05`). They must be not approved. |
 | `lb book insert 2 --dry-run` | The books that a new book 2 renumbers (also `remove 2`, `move 3 2`). They must have no approved chapter. |
 | `lb discard 1.09` | Deletes the prose of a draft chapter and the files made from it, so that it is written again from its plan. |
+
+### A novel repo made before version 0.29.0
+
+A book review from an earlier version stays valid, and each of its findings is a prose finding. For a pattern fix and the plan route, run `review-book` again: the earlier review goes to `books/NN/reviews/r1.md`. If you kept old reviews in `runs/review/old-*/`, you can move the last one to `books/NN/reviews/r1.md`, so that the new review judges its findings. From now on, the memory writer puts a gesture into the phrase log, not into a character file. A gesture that a character file already holds as a habit stays there until a pattern fix changes it.
 
 ### A novel repo made before version 0.28.0
 

@@ -245,8 +245,36 @@ A critic's judgment of one complete book, in `books/NN/review.md`: a score for e
 _Avoid_: Critique, report, feedback
 
 **Review finding**:
-One problem of a book review, with its evidence, a recommendation, and the user's decision (`open`, `apply`, `skip`, `done`). With `record: keep`, a prose revision applies it; with `record: change`, only a deep revision can.
+One problem of a book review, with its evidence, a recommendation, its source, and the user's decision (`open`, `apply`, `skip`, `done`). With `record: keep`, a prose revision applies it; with `record: change`, only a deep revision can.
 _Avoid_: Note, issue, comment
+
+**Finding source**:
+Where the fix of a review finding starts: `prose` (one place, or a few: a prose revision), `pattern` (the problem comes back across the book: a pattern fix) or `plan` (an arc beat, a thread or a shape of the plan: a story change).
+_Avoid_: Cause, type, kind
+
+**Origin**:
+The files or rules that make a pattern: a character file, a voice card, a voice sample, a rule of the guidelines, or the lint lists. A pattern fix changes the origin first, so that the prose does not make the pattern again.
+_Avoid_: Root cause, source (a source is one of the three finding sources)
+
+**Pattern fix**:
+The fix of a `pattern` finding: change the origin, take a census, revise each chapter of the census to the limit, then take the census again. It is done when the second census is inside the limit.
+_Avoid_: Sweep, global fix
+
+**Census**:
+Each place of a pattern in a book, with its chapter and line: from `lb census` with the finding's regexes, or from checker agents for a pattern that a regex cannot find.
+_Avoid_: Count (for the list), search
+
+**Review verdict**:
+`ready` when no `major` finding of a book review is open, else `revise`. A later review first judges each old finding (`fixed`, `partly`, `not fixed`), and adds only new findings that pass its bar.
+_Avoid_: Pass, grade
+
+**Callback**:
+A place where a chapter refers back to an earlier point: an object, a promise, a gesture with a meaning. The memory file of the chapter that refers back lists it, so that a revision of the earlier chapter can find the later chapters that depend on it.
+_Avoid_: Reference, echo, setup (a setup is a thread)
+
+**Seam**:
+A break that a revision makes between a changed chapter and a chapter that refers to it: a callback to something that is no longer there, a beat told twice.
+_Avoid_: Continuity error (that word is for the record)
 
 **Prose revision**:
 A revision of an approved chapter that keeps the record: each committed quote stays in the prose (`revise-chapter`).

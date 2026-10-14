@@ -14,7 +14,7 @@ The main session coordinates and never reads the prose: the `book-critic` agents
 1. **Book.** Run `lb run --book N --json`, where N is the book the user names, else the current book.
    - The book plan has `imported: true`: stop, and tell the user that an imported book is canon, so the tool does not review it.
    - Chapters are open: tell the user which ones, and that `generate-book` completes them. Stop.
-   When `books/NN/review.md` exists, ask the user: keep it, or a new review? To keep it, go to step 4. For a new review, move it and the notes to `runs/review/old-<date>/`.
+   When `books/NN/review.md` exists, ask the user: keep it, or a new review? To keep it, go to step 4. For a new review, move the review to `books/NN/reviews/rK.md` (K one more than the highest there, else 1), and the notes and censuses of `runs/review/` to `runs/review/old-<date>/`. The new review is then a later review: it judges the old findings first, and adds only new findings that pass its bar.
    Done when the book is complete and has no review.
 
 2. **Read.** Skip the ranges that have notes in `runs/review/`. Split the chapters into ranges of about 25,000 words (`wc -w books/NN/chapters/*.md`), and start one `ledgerbound:book-critic` agent per range with the range, all at the same time.
@@ -24,9 +24,11 @@ The main session coordinates and never reads the prose: the `book-critic` agents
    Done when `lb validate` reports no error for `books/NN/review.md`.
 
 4. **Show.** Read the frontmatter of the review and its verdict. Show the user:
-   - the verdict and the five scores;
-   - the findings with `record: keep`, most important first: the ID, area, severity, chapters, the problem in one line, and the recommendation;
-   - the findings with `record: change`, apart from the others. For each one, run `lb reopen <its first chapter> --dry-run` and give the number of chapters it reopens: each of them gets the continuity check again, so it is the cost of the fix.
+   - the verdict (`ready` or `revise`) and the five scores; for a later review, also the old findings with their `earlier` status;
+   - the findings in three groups, most important first in each: the ID, area, severity, chapters, the problem in one line, and the recommendation.
+     - `plan`, and each finding with `record: change`: the story changes that fix them. For each one, give its cost: `lb reopen <its first chapter> --dry-run` (chapters and words), or "forward" when the change can start after the written chapters.
+     - `pattern`: the origin, and the census (`lb census --finding <id> --book N`: the places and the chapters, against the limit).
+     - `prose`.
    Tell the user the path of the review, and that `revise-book` applies the findings that they choose.
 
 5. **Git.** In the novel repo: `git add -A && git commit -m "Book <N>: review"`.

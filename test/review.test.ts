@@ -66,13 +66,51 @@ describe("the book review", () => {
   test("a finding that changes the record is at least a scene", () => {
     const dir = fixtureCopy();
     edit(dir, REVIEW, "record: change\n    size: scene", "record: change\n    size: span");
-    expect(check(dir)).toContainEqual(expect.objectContaining({ code: "format", file: REVIEW, path: "findings.2.size" }));
+    expect(check(dir)).toContainEqual(expect.objectContaining({ code: "format", file: REVIEW, path: "findings.3.size" }));
   });
 
   test("an imported book has no review", () => {
     const dir = importedCopy();
     writeFileSync(join(dir, REVIEW), read(fixtureCopy(), REVIEW));
     expect(errorCodes(check(dir))).toContain("review-imported");
+  });
+});
+
+describe("finding sources and the census", () => {
+  test("a pattern finding needs its origin and its census", () => {
+    const dir = fixtureCopy();
+    edit(dir, REVIEW, /    origin: \[.*\]\n/, "");
+    edit(dir, REVIEW, /    census: \{.*\}\n/, "");
+    expect(check(dir).filter((i) => i.severity === "error").map((i) => i.path)).toEqual([
+      expect.stringContaining("origin"),
+      expect.stringContaining("census"),
+    ]);
+  });
+
+  test("a census regex must compile, and only a pattern has a census", () => {
+    const dir = fixtureCopy();
+    edit(dir, REVIEW, "match: ['\\bthe rope\\b']", "match: ['(the rope']");
+    expect(check(dir).some((i) => i.severity === "error" && i.message.includes("not a regex"))).toBe(true);
+    const other = fixtureCopy();
+    edit(other, REVIEW, "    source: plan\n", "    source: plan\n    census: { look_for: the token, limit: { per_book: 1 } }\n");
+    expect(check(other).some((i) => i.severity === "error" && i.message.includes("only a pattern finding"))).toBe(true);
+  });
+
+  test("a ready verdict with an open major finding, and an old finding that points nowhere", () => {
+    const dir = fixtureCopy();
+    edit(dir, REVIEW, "verdict: revise", "verdict: ready\nearlier:\n  - { id: old-one, status: partly, finding: no-such-finding }");
+    expect(errorCodes(check(dir))).toEqual(["review-earlier", "review-verdict"]);
+  });
+
+  test("lb census gives each place by chapter and line, joins overlapping matches, and exits 1 over the limit", () => {
+    const dir = fixtureCopy();
+    const r = lb(["census", "--finding", "rope-in-every-beat", "--json"], dir);
+    expect(r.status).toBe(1);
+    expect(JSON.parse(r.stdout)).toMatchObject({ total: 5, over: ["1.01"], within: false });
+    const both = JSON.parse(lb(["census", "the rope", "rope", "--json"], dir).stdout);
+    expect(both.total).toBe(5);
+    expect(both.chapters[0].matches[0]).toMatchObject({ line: expect.any(Number), text: "the rope" });
+    expect(lb(["census", "the rope"], dir).status).toBe(0);
   });
 });
 

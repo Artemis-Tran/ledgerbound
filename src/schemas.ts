@@ -591,6 +591,35 @@ export const REVIEW_RECORD = ["keep", "change"] as const;
 export const REVIEW_SIZES = ["span", "scene", "chapter"] as const;
 /** `open`: the user has not decided. `apply` and `skip`: the user's choice. `done`: the revision applied it. */
 export const REVIEW_DECISIONS = ["open", "apply", "skip", "done"] as const;
+/** Where the fix starts (ADR 0007): `prose` a prose revision, `pattern` a pattern fix at its origin, `plan` a story change. */
+export const REVIEW_SOURCES = ["prose", "pattern", "plan"] as const;
+/** A later review's judgment of a finding of the review before it. */
+export const EARLIER_STATUS = ["fixed", "partly", "not-fixed"] as const;
+export const REVIEW_VERDICTS = ["ready", "revise"] as const;
+
+/** Each place of a pattern in a book: `lb census` finds the `match` regexes, else checker agents look for `look_for`. */
+export const Census = z
+  .strictObject({
+    /** One regex for each form of the pattern. Case does not matter. */
+    match: z.array(Text).default([]),
+    /** What checker agents look for, when no regex finds the pattern. */
+    look_for: Text.optional(),
+    /** How many places the book may keep. The pattern fix is done when the census is inside it. */
+    limit: z
+      .strictObject({ per_chapter: z.number().int().min(0).optional(), per_book: z.number().int().min(0).optional() })
+      .refine((l) => l.per_chapter !== undefined || l.per_book !== undefined, "give per_chapter, per_book or both"),
+  })
+  .superRefine((c, ctx) => {
+    if (c.match.length === 0 && !c.look_for) ctx.addIssue({ code: "custom", path: ["match"], message: "give the regexes in match, or what to look for in look_for" });
+    c.match.forEach((m, i) => {
+      try {
+        new RegExp(m, "giu");
+      } catch (e) {
+        ctx.addIssue({ code: "custom", path: ["match", i], message: `not a regex: ${(e as Error).message}` });
+      }
+    });
+  });
+export type Census = z.infer<typeof Census>;
 
 const Score = z.number().int().min(1).max(10);
 
@@ -599,8 +628,12 @@ export const ReviewFinding = z
     id: Slug,
     area: z.enum(REVIEW_AREAS),
     severity: z.enum(["major", "minor"]),
-    /** The chapters that the fix changes, as points. */
+    /** Each chapter where the problem is, as points. */
     chapters: z.array(PosRef).min(1, "name at least one chapter"),
+    source: z.enum(REVIEW_SOURCES).default("prose"),
+    /** For a pattern: the files or rules that make it (a character file, a voice card, a voice sample, a guideline, the lint lists). */
+    origin: TextList,
+    census: Census.optional(),
     problem: Text,
     /** Quotes from the prose that show the problem, each with the chapter it is in. */
     evidence: z.array(z.strictObject({ point: PosRef, quote: Text })).default([]),
@@ -613,6 +646,9 @@ export const ReviewFinding = z
   })
   .superRefine((f, ctx) => {
     if (f.record === "change" && f.size === "span") ctx.addIssue({ code: "custom", path: ["size"], message: "a finding that changes the record rewrites at least a scene: use scene or chapter" });
+    if (f.source === "pattern" && f.origin.length === 0) ctx.addIssue({ code: "custom", path: ["origin"], message: "a pattern finding names its origin: the files or rules that make it" });
+    if (f.source === "pattern" && !f.census) ctx.addIssue({ code: "custom", path: ["census"], message: "a pattern finding has a census: its regexes or what to look for, and its limit" });
+    if (f.source !== "pattern" && f.census) ctx.addIssue({ code: "custom", path: ["census"], message: "only a pattern finding has a census" });
   });
 export type ReviewFinding = z.infer<typeof ReviewFinding>;
 
@@ -621,6 +657,10 @@ export const Review = z.strictObject({
   book: z.number().int().min(1),
   scores: z.strictObject(Object.fromEntries(REVIEW_AREAS.map((a) => [a, Score])) as Record<(typeof REVIEW_AREAS)[number], typeof Score>),
   findings: z.array(ReviewFinding).default([]),
+  /** `ready` when no major finding is open, else `revise`. A review from before version 0.29.0 has none. */
+  verdict: z.enum(REVIEW_VERDICTS).optional(),
+  /** A later review: its judgment of each finding of the review before it, with the new finding when it is not fixed. */
+  earlier: z.array(z.strictObject({ id: Slug, status: z.enum(EARLIER_STATUS), finding: Slug.optional(), note: Text.optional() })).default([]),
 });
 export type Review = z.infer<typeof Review>;
 

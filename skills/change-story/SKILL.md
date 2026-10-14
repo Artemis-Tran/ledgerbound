@@ -18,7 +18,7 @@ The progress file `runs/change/<id>.json` is the state of the run, so the skill 
 ## Steps
 
 1. **Start.** When a file in `runs/change/` exists, a story change stopped: tell the user its `change`, and continue at the first step that it does not mark done. Else run `lb validate` and fix each error, and commit any open change in the novel repo.
-   Write the change in the user's words. When `revise-book` started this skill, the change is its `apply` `change` findings: their IDs, problems and recommendations.
+   Write the change in the user's words. When `revise-book` started this skill, the change is its `apply` `plan` and `change` findings: their IDs, problems and recommendations.
    Done when you have the change, `lb validate` reports no error, and `git status` is clean.
 
 2. **Level.** Find the highest level that the change touches, from the top: the series ending (`series.md`), a book plan (`books/NN/plan.md`: its acts, its climax, its tension range), an arc or a relationship (`characters/*.md`, `relationships/*.md`), the chapter plans, a scene. Read the memory files of the approved chapters, and find the first approved chapter whose events must change: P. A change that needs a `locked` decision or a draw to change: show the user which one, and continue only after they say so. A change in an imported book cannot be made: its prose is canon (ADR 0003).

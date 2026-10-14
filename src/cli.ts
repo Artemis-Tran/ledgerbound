@@ -18,11 +18,12 @@ import { findProjectRoot, lintFile } from "./lint/index.ts";
 import { characterText, charactersNamedIn, entryText, lastSeen, loreEntry, loreNamedIn } from "./entries.ts";
 import { loadProject, pad2, type Project } from "./project.ts";
 import { chapterKey, chapterPath, checkDelta, commitChapter, fold, loadRecord, parsePoint, type Where } from "./record.ts";
+import { takeCensus } from "./census.ts";
 import { discardChapter, reopenChapters } from "./reopen.ts";
 import { changeBooks, changeStructure, type StructureOp } from "./structure.ts";
 import { RULES } from "./rules.ts";
 import { readVerify, roundCopyPath, runReport, verifyPath } from "./run.ts";
-import { type Checkpoint, CHECKPOINTS } from "./schemas.ts";
+import { type Census, type Checkpoint, CHECKPOINTS } from "./schemas.ts";
 import { validateProject } from "./validate.ts";
 
 const HELP = `lb: the Ledgerbound CLI. Run it inside a novel repo (or pass --dir).
@@ -73,6 +74,11 @@ Generation (a point is 1.07 = book 1, chapter 7):
   lb book move <N> <to> [--dry-run] [--json]
                                          in a story change: insert, remove or move a book with no approved
                                          chapter, and renumber the later books, their folders and each reference
+  lb census <regex>... [--book N] [--json]
+  lb census --finding <id> [--book N] [--json]
+                                         each place of a pattern in the prose of a book, by chapter and line (case
+                                         does not matter); --finding takes the regexes and the limit of a review
+                                         finding, and exits 1 while the census is over its limit
   lb discard <point> [--dry-run] [--json]
                                          delete the prose, staged delta, memory, brief and verify files of a
                                          chapter that is not approved; its plan stays, and it is written again
@@ -102,6 +108,7 @@ const { values, positionals } = parseArgs({
     at: { type: "string" },
     heading: { type: "string" },
     "dry-run": { type: "boolean", default: false },
+    finding: { type: "string" },
     help: { type: "boolean", short: "h", default: false },
   },
 });
@@ -493,6 +500,33 @@ switch (command) {
       : `NOT changed:\n${r.errors.map((e) => `  ERROR ${e}`).join("\n")}`;
     out(human, r);
     process.exit(r.ok ? 0 : 1);
+  }
+
+  case "census": {
+    const { project } = load();
+    const book = bookArg(project);
+    let match = args;
+    let limit: Census["limit"] | undefined;
+    if (values.finding) {
+      const f = project.reviews.get(book)?.data.findings.find((x) => x.id === values.finding);
+      if (!f) fail(`book ${book} has no review finding '${values.finding}'`);
+      if (!f.census?.match.length) fail(`finding '${f.id}' has no census regexes: checker agents take its census (look_for)`);
+      match = f.census.match;
+      limit = f.census.limit;
+    }
+    if (!match.length) fail("give one regex or more, or --finding <id>");
+    for (const m of match) {
+      try {
+        new RegExp(m, "giu");
+      } catch (e) {
+        fail(`not a regex: ${m} (${(e as Error).message})`);
+      }
+    }
+    const r = takeCensus(project, book, match, limit);
+    const lines = r.chapters.flatMap((c) => [`${c.point}: ${c.count}${r.over.includes(c.point) ? " (over the limit)" : ""}`, ...c.matches.map((m) => `  line ${m.line}: ${m.text}`)]);
+    const lim = limit ? ` Limit: ${[limit.per_chapter !== undefined ? `${limit.per_chapter} per chapter` : "", limit.per_book !== undefined ? `${limit.per_book} in the book` : ""].filter(Boolean).join(", ")}: ${r.within ? "inside" : "OVER"}.` : "";
+    out([...lines, `Total: ${r.total} in ${r.chapters.length} chapter(s) of book ${book}.${lim}`].join("\n"), r);
+    process.exit(r.within ? 0 : 1);
   }
 
   case "discard": {

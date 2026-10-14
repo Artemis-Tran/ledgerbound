@@ -871,5 +871,11 @@ function checkReviews(project: Project, err: Report) {
         if (!planned.has(p)) err("review-chapter", r.file, `finding '${f.id}' names ${p}, which is not a chapter of book ${book}`, path);
       }
     });
+    const ids = new Set(r.data.findings.map((f) => f.id));
+    r.data.earlier.forEach((e, i) => {
+      if (e.finding && !ids.has(e.finding)) err("review-earlier", r.file, `the old finding '${e.id}' points to '${e.finding}', which is not a finding of this review`, `earlier.${i}.finding`);
+    });
+    const open = r.data.findings.filter((f) => f.severity === "major" && (f.decision === "open" || f.decision === "apply"));
+    if (r.data.verdict === "ready" && open.length) err("review-verdict", r.file, `the verdict is ready, but the major finding '${open[0].id}' is open`, "verdict");
   }
 }
