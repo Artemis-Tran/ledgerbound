@@ -688,6 +688,13 @@ export const RollingMemory = z.strictObject({
   character_added: z
     .array(z.strictObject({ character: Slug, fact: Text, change: z.boolean().default(false), part: z.enum(APPEARANCE_PARTS).optional() }))
     .default([]),
+  /**
+   * Each place where this chapter refers back to an earlier chapter: an object, a promise, a gesture with a meaning.
+   * A revision of that chapter checks these chapters for seams (ADR 0007).
+   */
+  callbacks: z
+    .array(z.strictObject({ point: PosRef.refine((v) => PointRe.test(v), "must be a chapter point like 1.07"), what: Text }))
+    .default([]),
   phrase_log: z
     .strictObject({
       similes: TextList,

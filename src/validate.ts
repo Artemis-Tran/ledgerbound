@@ -849,6 +849,11 @@ function checkGeneration(project: Project, issues: Issue[], err: Report, warn: R
       if (!approved(book, m.data.chapter)) warn("memory-early", m.file, `chapter ${chapterKey(book, m.data.chapter)} is not approved; memory is written from the approved chapter`);
       const plan = project.chapters.get(book)?.find((p) => p.data.chapter === m.data.chapter);
       if (plan && plan.data.ending.type !== m.data.ending_type) warn("ending-type", m.file, `the chapter ends with '${m.data.ending_type}', but the plan says '${plan.data.ending.type}'`, "ending_type");
+      m.data.callbacks.forEach((c, i) => {
+        const [b, ch] = c.point.split(".").map(Number);
+        if (b > book || (b === book && ch >= m.data.chapter)) err("callback-order", m.file, `a callback refers back to ${c.point}, which is not before this chapter`, `callbacks.${i}.point`);
+        else if (!project.prose.get(b)?.some((p) => p.data.chapter === ch)) err("callback-chapter", m.file, `a callback refers back to ${c.point}, which has no prose`, `callbacks.${i}.point`);
+      });
     }
   }
 }

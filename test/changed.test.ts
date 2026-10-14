@@ -49,5 +49,11 @@ describe("lb changed", () => {
     expect(r.round).toBe(1);
     expect(r.ranges[0][0]).toBeLessThanOrEqual(at + 1);
     expect(r.ranges[0][1]).toBeGreaterThanOrEqual(at + 1);
+
+    // A later round copy has the change; --since 1 still gives it, for the seam check of the whole run.
+    writeFileSync(join(dir, "runs/verify/01-01.json"), JSON.stringify({ round: 2, verdict: "pass", open: [] }));
+    writeFileSync(join(dir, "runs/verify/01-01.r2.md"), lines.join("\n"));
+    expect(JSON.parse(lb(["changed", "1.01", "--json"], dir).stdout).ranges).toEqual([]);
+    expect(JSON.parse(lb(["changed", "1.01", "--since", "1", "--json"], dir).stdout).ranges).toEqual(r.ranges);
   });
 });

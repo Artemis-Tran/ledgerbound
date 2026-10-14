@@ -18,6 +18,7 @@ import { findProjectRoot, lintFile } from "./lint/index.ts";
 import { characterText, charactersNamedIn, entryText, lastSeen, loreEntry, loreNamedIn } from "./entries.ts";
 import { loadProject, pad2, type Project } from "./project.ts";
 import { chapterKey, chapterPath, checkDelta, commitChapter, fold, loadRecord, parsePoint, type Where } from "./record.ts";
+import { callbacksTo } from "./callbacks.ts";
 import { takeCensus } from "./census.ts";
 import { discardChapter, reopenChapters } from "./reopen.ts";
 import { changeBooks, changeStructure, type StructureOp } from "./structure.ts";
@@ -60,7 +61,9 @@ Generation (a point is 1.07 = book 1, chapter 7):
   lb claims <point> <claims.json> [--json]
                                          compare the prose's claims with the fold (exit 1 on a mismatch);
                                          each claim moves to the line where its quote is now
-  lb changed <point> [--json]            the lines that changed since the last verify round (runs/verify/NN-MM.rK.md)
+  lb changed <point> [--since K] [--json]
+                                         the lines that changed since the last verify round, or since round K
+                                         (runs/verify/NN-MM.rK.md)
   lb commit <point> [--json]             append a verified chapter's delta to the ledger and approve it
   lb reopen <point> [--dry-run] [--json] a deep revision: the ledger entries of this chapter and of every later
                                          chapter go back to staged deltas, and those chapters back to draft
@@ -74,6 +77,8 @@ Generation (a point is 1.07 = book 1, chapter 7):
   lb book move <N> <to> [--dry-run] [--json]
                                          in a story change: insert, remove or move a book with no approved
                                          chapter, and renumber the later books, their folders and each reference
+  lb callbacks <point> [--json]          the later chapters that refer back to a chapter (the callbacks of their
+                                         memory files), and the memory files after it that have no callbacks yet
   lb census <regex>... [--book N] [--json]
   lb census --finding <id> [--book N] [--json]
                                          each place of a pattern in the prose of a book, by chapter and line (case
@@ -109,6 +114,7 @@ const { values, positionals } = parseArgs({
     heading: { type: "string" },
     "dry-run": { type: "boolean", default: false },
     finding: { type: "string" },
+    since: { type: "string" },
     help: { type: "boolean", short: "h", default: false },
   },
 });
@@ -416,7 +422,8 @@ switch (command) {
   case "changed": {
     const { book, chapter } = chapterArg();
     const { project } = load();
-    const round = readVerify(project.root, book, chapter)?.round ?? fail(`${verifyPath(book, chapter)} does not exist: round 1 checks the whole chapter`);
+    // --since K: the changes since round K, for example of a whole revision run (the seam check).
+    const round = values.since ? Number(values.since) : (readVerify(project.root, book, chapter)?.round ?? fail(`${verifyPath(book, chapter)} does not exist: round 1 checks the whole chapter`));
     const copy = roundCopyPath(book, chapter, round);
     if (!existsSync(join(project.root, copy))) fail(`${copy} does not exist: check the whole chapter`);
     const ranges = changedRanges(readFileSync(join(project.root, copy), "utf8"), readFileSync(join(project.root, chapterPath(book, chapter)), "utf8"));
@@ -500,6 +507,22 @@ switch (command) {
       : `NOT changed:\n${r.errors.map((e) => `  ERROR ${e}`).join("\n")}`;
     out(human, r);
     process.exit(r.ok ? 0 : 1);
+  }
+
+  case "callbacks": {
+    const { book, chapter } = chapterArg();
+    const { project } = load();
+    const r = callbacksTo(project, book, chapter);
+    out(
+      [
+        r.callbacks.length ? r.callbacks.map((c) => `${c.from} refers back to ${r.point}: ${c.what}`).join("\n") : `No later chapter refers back to ${r.point}.`,
+        r.missing.length ? `${r.missing.length} memory file(s) after ${r.point} have no callbacks yet: ${r.missing.join(", ")}. The memory writer writes them first (callbacks only).` : "",
+      ]
+        .filter(Boolean)
+        .join("\n"),
+      r,
+    );
+    break;
   }
 
   case "census": {

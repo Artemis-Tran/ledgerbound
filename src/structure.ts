@@ -36,6 +36,7 @@ const POINT_KEYS = {
   threads: new Set(["plant", "beats", "payoff"]),
   changes: new Set(["from"]),
   review: new Set(["chapters", "point"]),
+  memory: new Set(["point"]),
 };
 
 /** The chapter numbers of a book that have a plan or prose. */
@@ -174,6 +175,11 @@ export function changeStructure(project: Project, book: number, op: StructureOp,
   scan("threads.yaml", (t, refs) => rewriteYaml(t, pointEdit(POINT_KEYS.threads, mapPoint), refs));
   for (const f of [...project.lore.values(), ...project.characters]) scan(f.file, (t, refs) => rewriteFrontmatter(t, pointEdit(POINT_KEYS.changes, mapPoint), refs));
   for (const r of project.reviews.values()) scan(r.file, (t, refs) => rewriteFrontmatter(t, pointEdit(POINT_KEYS.review, mapPoint), refs));
+  // The callbacks of the memory files. The memory of the removed chapter goes with it.
+  const removedMemory = op.kind === "remove" ? memoryPath(book, op.at) : undefined;
+  for (const m of [...project.memory.values()].flat()) {
+    if (m.file !== removedMemory) scan(m.file, (t, refs) => rewriteFrontmatter(t, pointEdit(POINT_KEYS.memory, mapPoint), refs));
+  }
   const changeDir = join(root, "runs/change");
   if (existsSync(changeDir)) {
     for (const f of readdirSync(changeDir).filter((n) => n.endsWith(".json")).sort()) {
@@ -196,7 +202,10 @@ export function changeStructure(project: Project, book: number, op: StructureOp,
     for (const [i, file] of numbered(book, from).entries()) {
       if (!existsSync(join(root, file))) continue;
       deletes.add(file);
-      if (to !== null) moved.set(numbered(book, to)[i], setFrontmatterKey(readFileSync(join(root, file), "utf8"), "chapter", String(to)));
+      // A moved memory file can have callbacks that change too: start from its new text.
+      const text = writes.get(file) ?? readFileSync(join(root, file), "utf8");
+      writes.delete(file);
+      if (to !== null) moved.set(numbered(book, to)[i], setFrontmatterKey(text, "chapter", String(to)));
     }
     const delta = stagedPath(book, from);
     if (existsSync(join(root, delta))) {

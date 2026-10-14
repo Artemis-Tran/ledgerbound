@@ -28,9 +28,12 @@ Inputs: the point, and the focus: the rule IDs from `lb rules` to judge (for exa
 5. **Record.** Run `lb validate`.
    Done when it gives no `ledger-quote-*` issue for the chapter that step 1 did not note.
 
-6. **Memory.** Start the `ledgerbound:memory-writer` agent with the point: the rolling memory and the phrase log then come from the revised chapter, so later chapters do not copy its new images. Add its `warnings` about lore or character files to the record, as the `Remember` step of `reference/chapter-steps.md` does.
+6. **Seams.** Run the **Seam check** of `${CLAUDE_PLUGIN_ROOT}/reference/chapter-steps.md` for the point, with the changed lines of `lb changed <point> --since <the R of step 1>`: each change of this run.
+   Done as that section says.
+
+7. **Memory.** Start the `ledgerbound:memory-writer` agent with the point: the rolling memory and the phrase log then come from the revised chapter, so later chapters do not copy its new images. Add its `warnings` about lore or character files to the record, as the `Remember` step of `reference/chapter-steps.md` does.
    Done when `lb validate` reports no error for `books/NN/memory/MM.md`.
 
-7. **Git.** In the novel repo: `git add -A && git commit -m "Book <N>, chapter <M>: revised (<focus in a few words>)"`.
+8. **Git.** In the novel repo: `git add -A && git commit -m "Book <N>, chapter <M>: revised (<focus in a few words>)"`.
 
-8. Return only: `{ "point": "1.07", "rounds": 2, "verdict": "pass | fail", "open_errors": 0, "words_before": 4100, "words_after": 4420 }`.
+9. Return only: `{ "point": "1.07", "rounds": 2, "verdict": "pass | fail", "open_errors": 0, "words_before": 4100, "words_after": 4420, "seams_open": 0 }`.

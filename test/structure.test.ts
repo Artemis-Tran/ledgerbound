@@ -155,3 +155,43 @@ describe("lb book", () => {
     expect(read(dir, "threads.yaml")).toContain("plant: 2.01");
   });
 });
+
+describe("callbacks", () => {
+  const MEMORY_3 = "books/01/memory/03.md";
+
+  test("lb callbacks lists the later chapters that refer back, and the memory files with no callbacks yet", () => {
+    const dir = importedCopy();
+    expect(JSON.parse(lb(["callbacks", "1.02", "--json"], dir).stdout)).toEqual({
+      point: "1.02",
+      callbacks: [{ from: "1.03", memory: MEMORY_3, what: expect.stringContaining("the rate") }],
+      missing: [],
+    });
+    edit(dir, "books/01/memory/04.md", "callbacks: []\n", "");
+    expect(JSON.parse(lb(["callbacks", "1.02", "--json"], dir).stdout).missing).toEqual(["books/01/memory/04.md"]);
+  });
+
+  test("a callback refers back to an earlier chapter that has prose", () => {
+    const dir = importedCopy();
+    edit(dir, MEMORY_3, 'point: "1.02"', 'point: "1.03"');
+    expect(check(dir).filter((i) => i.severity === "error").map((i) => i.code)).toEqual(["callback-order"]);
+    const other = fixtureCopy();
+    edit(other, "books/01/memory/01.md", "callbacks: []", 'callbacks: [{ point: "1.00", what: x }]');
+    expect(check(other).some((i) => i.severity === "error")).toBe(true);
+  });
+
+  test("lb chapter renumbers the callbacks, also in a memory file that moves", () => {
+    const dir = fixtureCopy();
+    writeFileSync(
+      join(dir, "books/01/memory/02.md"),
+      read(dir, "books/01/memory/01.md").replace("chapter: 1", "chapter: 2").replace("callbacks: []", 'callbacks: [{ point: "1.01", what: the red pages }]'),
+    );
+    writeFileSync(join(dir, "books/01/chapters/02.md"), read(dir, "books/01/chapters/01.md").replace("chapter: 1", "chapter: 2").replace("status: approved", "status: draft"));
+    expect(reopenChapters(load(dir), loadRecord(dir), 1, 1).ok).toBe(true);
+    writeFileSync(join(dir, "books/01/memory/01.md"), read(fixtureCopy(), "books/01/memory/01.md"));
+
+    expect(changeStructure(load(dir), 1, { kind: "move", from: 1, to: 2 }).ok).toBe(true);
+    expect(read(dir, "books/01/memory/01.md")).toContain('callbacks: [{ point: "1.02", what: the red pages }]');
+    expect(read(dir, "books/01/memory/01.md")).toMatch(/^chapter: 1$/m);
+    expect(read(dir, "books/01/memory/02.md")).toContain("callbacks: []");
+  });
+});

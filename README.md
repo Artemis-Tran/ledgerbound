@@ -147,6 +147,8 @@ Each finding has a **source**, which says where the fix starts:
 2. The pattern findings: the skill changes the origin first, so that the prose does not make the pattern again. Then it takes the census, revises each chapter of the census to the limit, and takes the census again.
 3. The prose findings, with `revise-chapter`.
 
+After each revised chapter, a **seam check** looks at the later chapters that refer back to it (an object, a promise, a gesture with a meaning). The memory file of each chapter lists these **callbacks**, and `lb callbacks <point>` shows them. A revision that removes something that a later chapter needs is then found and fixed. In a repo from before version 0.30.0, the first seam check adds the callbacks to the memory files.
+
 A later review of the same book first judges each old finding (fixed, partly, not fixed). Then it adds only new findings that pass a bar, and it says `ready` when no major finding is open. The earlier reviews stay in `books/NN/reviews/`. A review from before version 0.29.0 has no sources: run `review-book` again to get them.
 
 The skill commits to git before a reopen. If the run stops, run `revise-book` again: it continues from the decisions in the review and from `runs/change/`. An imported book has no review.
@@ -209,7 +211,13 @@ Use autopilot after the first chapters show that the voice and the plan work. Fo
 | `lb reopen 1.07 --dry-run` | The chapters that a deep revision of chapter 7 takes back to draft, and their words. |
 | `lb chapter insert 1.08 --dry-run` | The chapters that a new chapter 8 renumbers (also `remove 1.08`, `move 1.08 1.05`). They must be not approved. |
 | `lb book insert 2 --dry-run` | The books that a new book 2 renumbers (also `remove 2`, `move 3 2`). They must have no approved chapter. |
+| `lb callbacks 1.07` | The later chapters that refer back to chapter 7, and what they refer back to. |
+| `lb census "nose (in\|into) the wind"` | Each place of a phrase in the book, by chapter and line. |
 | `lb discard 1.09` | Deletes the prose of a draft chapter and the files made from it, so that it is written again from its plan. |
+
+### A novel repo made before version 0.30.0
+
+The memory files have no `callbacks` yet. The first seam check (in `revise-chapter`, or in a story change) starts the memory writer once for each memory file after the revised chapter, and adds them. Nothing else changes.
 
 ### A novel repo made before version 0.29.0
 

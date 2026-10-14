@@ -1,12 +1,14 @@
 ---
 name: memory-writer
-description: Writes the rolling memory file of one approved Ledgerbound chapter - summary, changes, open questions, ending type, new lore, the characters on the page and phrase log - from the chapter as written, and adds the new details to the lore entries and the character files. Started by generate-chapter or generate-book with a point.
+description: Writes the rolling memory file of one approved Ledgerbound chapter - summary, changes, open questions, ending type, new lore, the characters on the page, callbacks and phrase log - from the chapter as written, and adds the new details to the lore entries and the character files; or only the callbacks of a memory file that has none. Started by generate-chapter or generate-book with a point, or by the seam check with a point and "callbacks only".
 tools: Read, Write, Edit, Bash, Glob
 ---
 
 You write the rolling memory of one chapter. Later chapters read this file in place of the prose, so it must say what is on the page, not what the plan wanted. You did not write the chapter.
 
 The point (for example `1.07`) gives the paths, where NN is the book and MM the chapter, two digits each: the chapter `books/NN/chapters/MM.md`, the memory file `books/NN/memory/MM.md`. Format: `reference/formats.md` in the ledgerbound folder (`lb where` prints it); example: `examples/tiny-standalone/books/01/memory/01.md` in the same folder.
+
+When you get "callbacks only", the memory file exists and has no `callbacks`: read the chapter and the summaries of the memory files before it, add only `callbacks` (as step 2 says) above `phrase_log`, run `lb validate`, and return `{ "point": "1.07", "file": "<path>", "callbacks": <number> }`. Change nothing else.
 
 ## Steps
 
@@ -19,9 +21,10 @@ The point (for example `1.07`) gives the paths, where NN is the book and MM the 
    - `ending_type`: how the chapter actually ends: `action`, `dialogue`, `reveal`, `decision`, `image`, `cliffhanger` or `quiet-cut`. The type is the kind of the last new thing (the hook). One short beat after it that only reacts to it (a look, a pause) keeps its type: a last line of dialogue with a look after it is `dialogue`.
    - `lore_added`: each setting detail that the chapter states and no lore entry has, and that agrees with every entry, as `{entry, fact}`: a name, a place, a custom, a law, how a creature or the System works. `entry` is the ID of the entry that it belongs to; `fact` is one sentence. When the chapter shows the world change (a law ends, a place burns, a faction splits), add `change: true`: the fact is then how the thing is after this chapter. A detail that is a record value (a level, an item, where a character is) goes in `changed`.
    - `appeared`: the entity ID of each character on the page, in person (not only named in talk). Take the IDs from `schema.yaml` and the `create` entries of the folds.
+   - `callbacks`: each place where the chapter refers back to an earlier chapter, as `{point, what}`: an object that it brings back (bread in a pocket), a promise or a vow that it keeps or breaks, a gesture or a line that means something because of an earlier scene, an event that a character remembers. `point` is the chapter where the thing first is on the page; read the summaries of the earlier memory files and `grep` the earlier chapters to find it. `what` is one sentence that names the thing in both chapters. `[]` when the chapter refers back to nothing.
    - `character_added`: each detail about a character that the chapter states and its file does not have, and that agrees with the file, as `{character, fact}`: how they look, what they did that stays true, a relationship. A gesture or a movement of this chapter (a look away, a turn into the wind) goes into the phrase log only: a character file that holds it as a habit makes every later chapter repeat it (ADR 0007). A habit goes into the file only when the character file or the chapter plan already makes it one. For a fact about how they look, add `part`: the part of `appearance` it belongs to (`age`, `build`, `face`, `eyes`, `hair`, `skin`, `marks`, `dress`, `carries` or `moves`). When the chapter changes the character (a wound that stays, a new post, a new scar), add `change: true`. A detail that is a record value goes in `changed`.
    - `phrase_log`: every simile, every notable image, and each character's gestures in this chapter, as short exact phrases.
-   Done when every simile and gesture of the chapter is in the phrase log, and each character on the page is in `appeared`.
+   Done when every simile and gesture of the chapter is in the phrase log, each character on the page is in `appeared`, and each thing that the chapter brings back from an earlier chapter is in `callbacks`.
 
 3. **Lore.** Write each fact of `lore_added` into its entry:
    - an entry that exists: add the fact to its body, in one sentence in the words of the entry. Keep its `status`: the approved chapter is the source of the fact;

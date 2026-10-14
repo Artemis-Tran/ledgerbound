@@ -92,6 +92,7 @@ An optional phase between generation and publishing. See [ADR 0004](adr/0004-dee
 - `lb reopen <point>` refuses a chapter that is not approved or is imported. It moves the ledger entries from the chapter start on to the staged deltas (with no `point`), sets each approved chapter from there on to `draft`, deletes their briefs, deletes the memory and the verify record of the first chapter, and writes `{round: 0, verdict: fail, open: [], reopened: true}` for each later one.
 - A **prose revision** (the `apply` `prose` findings) runs `revise-chapter` once for each chapter, with the findings as the user's notes.
 - The memory writer puts a gesture of one chapter into the phrase log, not into the character file: a habit in a character file makes each later chapter repeat it.
+- Each memory file has `callbacks`: each earlier point that the chapter refers back to, and what. `lb callbacks <point>` lists the later chapters that refer back to a chapter, and the memory files with no callbacks yet. After `revise-chapter`, and after a `scene` or `discard` chapter of a story change, the **seam check** (`reference/chapter-steps.md`) runs the continuity checker in seam mode on the changed lines (`lb changed --since <round>`) and the callbacks; a seam is fixed in the revised chapter when it can be, else in the later chapter. `lb chapter` and `lb book` renumber the callbacks too.
 
 ## Story changes
 

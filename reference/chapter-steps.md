@@ -40,6 +40,15 @@ Done when `lb validate` reports no error for `books/NN/memory/MM.md`.
 
 In the novel repo: `git add -A && git commit -m "Book <N>, chapter <M>: <title>"`. When the folder is not a git repo, tell the user once and continue.
 
+## Seam check
+
+After a revision of an approved chapter (`revise-chapter`, or a chapter that a story change wrote again), the later chapters that refer back to it must still make sense (ADR 0007).
+
+1. Run `lb callbacks <point> --json`. When `missing` names memory files, start one `ledgerbound:memory-writer` agent for each, with its point and "callbacks only", all at the same time, and run the command again. This happens once in a repo from before version 0.30.0.
+2. When `callbacks` is empty, the check is done. Else start the `ledgerbound:continuity-checker` agent with "seam check", the point, the changed lines (`lb changed <point>`, or "whole chapter") and the callbacks.
+3. A `here:` seam: write it to `runs/verify/NN-MM.findings.json`, start the `ledgerbound:reviser` agent with the point, the brief path and the findings path, and check the seams again. A `later` seam: run `revise-chapter` for that later chapter, with the seam as the user's note.
+Done when the seam check returns `pass`, or after 2 rounds of fixes; then keep the open seams in the verify record and tell the user.
+
 ## Blocked in autopilot
 
 Read `runs/verify/NN-MM.json`.
