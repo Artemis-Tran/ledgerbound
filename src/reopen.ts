@@ -79,6 +79,19 @@ export function reopenChapters(project: Project, rec: RecordFiles, book: number,
   return result;
 }
 
+/**
+ * The verify files of a chapter that exist: its record, and the findings and round copies of verify-chapter,
+ * revise-chapter and the reviser (runs/verify/NN-MM.json, NN-MM.findings.json, NN-MM.rK.md).
+ */
+export function verifyFiles(root: string, book: number, chapter: number): string[] {
+  const record = verifyPath(book, chapter);
+  const dir = dirname(record);
+  const stem = basename(record, ".json");
+  if (!existsSync(join(root, dir))) return [];
+  const names = readdirSync(join(root, dir)).filter((f) => f === `${stem}.json` || f === `${stem}.findings.json` || /^r\d+\.md$/.test(f.slice(stem.length + 1)) && f.startsWith(`${stem}.`));
+  return names.sort().map((f) => `${dir}/${f}`);
+}
+
 export interface DiscardResult {
   ok: boolean;
   errors: string[];
@@ -99,15 +112,7 @@ export function discardChapter(project: Project, book: number, chapter: number, 
   if (errors.length) return { ok: false, errors, deleted: [] };
 
   const root = project.root;
-  const files = [chapterPath(book, chapter), stagedPath(book, chapter), memoryPath(book, chapter), briefPath(book, chapter), verifyPath(book, chapter)];
-  // The findings and the round copies of verify-chapter, revise-chapter and the reviser: runs/verify/NN-MM.findings.json, NN-MM.rK.md.
-  const verifyDir = dirname(verifyPath(book, chapter));
-  const stem = basename(verifyPath(book, chapter), ".json");
-  if (existsSync(join(root, verifyDir))) {
-    for (const f of readdirSync(join(root, verifyDir)).sort()) {
-      if (f === `${stem}.findings.json` || (f.startsWith(`${stem}.r`) && /^r\d+\.md$/.test(f.slice(stem.length + 1)))) files.push(`${verifyDir}/${f}`);
-    }
-  }
+  const files = [chapterPath(book, chapter), stagedPath(book, chapter), memoryPath(book, chapter), briefPath(book, chapter), ...verifyFiles(root, book, chapter)];
   const deleted = files.filter((f) => existsSync(join(root, f)));
   if (!opts.dryRun) for (const f of deleted) rmSync(join(root, f));
   return { ok: true, errors, deleted };

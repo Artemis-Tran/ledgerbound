@@ -119,7 +119,7 @@ After a stop, or after a usage limit or a closed session, run `/ledgerbound:gene
 2. Gives you the cost, and recommends a strategy:
    - **Forward**: every approved chapter stays, and the change starts at the next chapter. Only a replan runs. Use it when the old events can stay on the page.
    - **Reopen**: `lb reopen` takes the record back to that chapter. Each later chapter is then **checked** against the new record (its prose stays), gets one **scene** written again, or is **discarded** and written again from the new plan (`lb discard`). For a drastic change, discard each chapter from that point on.
-3. Runs one replan, top down from the level of the change, for your approval.
+3. Runs one replan, top down from the level of the change, for your approval. After a reopen, the replan can also insert, remove or move chapters (`lb chapter`): the later chapters, their files and each reference to them get the new numbers.
 4. Writes and checks the reopened chapters in order, as `generate-book` does.
 5. Shows you each lore or character detail that only a discarded chapter stated: you decide whether it stays.
 
@@ -198,7 +198,12 @@ Use autopilot after the first chapters show that the voice and the plan work. Fo
 | `lb who hale --at 1.07` | One character at the start of chapter 7: who it is, its arc so far, its voice card, its record and when it was last seen. |
 | `lb validate` | Every file and reference, and the ledger. |
 | `lb reopen 1.07 --dry-run` | The chapters that a deep revision of chapter 7 takes back to draft, and their words. |
+| `lb chapter insert 1.08 --dry-run` | The chapters that a new chapter 8 renumbers (also `remove 1.08`, `move 1.08 1.05`). They must be not approved. |
 | `lb discard 1.09` | Deletes the prose of a draft chapter and the files made from it, so that it is written again from its plan. |
+
+### A novel repo made before version 0.27.0
+
+Nothing changes. `lb chapter insert | remove | move` is new, for a story change.
 
 ### A novel repo made before version 0.26.0
 

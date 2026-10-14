@@ -155,8 +155,8 @@ describe("lb discard", () => {
       "books/01/deltas/02.jsonl",
       "books/01/memory/02.md",
       "runs/briefs/01-02.md",
-      "runs/verify/01-02.json",
       "runs/verify/01-02.findings.json",
+      "runs/verify/01-02.json",
       "runs/verify/01-02.r1.md",
       "runs/verify/01-02.r12.md",
     ]);

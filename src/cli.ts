@@ -16,9 +16,10 @@ import { splitFrontmatter } from "./frontmatter.ts";
 import { formatIssues, hasErrors, type Issue } from "./issues.ts";
 import { findProjectRoot, lintFile } from "./lint/index.ts";
 import { characterText, charactersNamedIn, entryText, lastSeen, loreEntry, loreNamedIn } from "./entries.ts";
-import { loadProject, type Project } from "./project.ts";
+import { loadProject, pad2, type Project } from "./project.ts";
 import { chapterKey, chapterPath, checkDelta, commitChapter, fold, loadRecord, parsePoint, type Where } from "./record.ts";
 import { discardChapter, reopenChapters } from "./reopen.ts";
+import { changeStructure, type StructureOp } from "./structure.ts";
 import { RULES } from "./rules.ts";
 import { readVerify, roundCopyPath, runReport, verifyPath } from "./run.ts";
 import { type Checkpoint, CHECKPOINTS } from "./schemas.ts";
@@ -62,6 +63,11 @@ Generation (a point is 1.07 = book 1, chapter 7):
   lb commit <point> [--json]             append a verified chapter's delta to the ledger and approve it
   lb reopen <point> [--dry-run] [--json] a deep revision: the ledger entries of this chapter and of every later
                                          chapter go back to staged deltas, and those chapters back to draft
+  lb chapter insert <point> [--dry-run] [--json]
+  lb chapter remove <point> [--dry-run] [--json]
+  lb chapter move <point> <to> [--dry-run] [--json]
+                                         in a story change: insert, remove or move a chapter that is not approved,
+                                         and renumber the later chapters, their files and each point reference
   lb discard <point> [--dry-run] [--json]
                                          delete the prose, staged delta, memory, brief and verify files of a
                                          chapter that is not approved; its plan stays, and it is written again
@@ -428,6 +434,33 @@ switch (command) {
         : `NOT reopened:\n${r.errors.map((e) => `  ERROR ${e}`).join("\n")}`,
       r,
     );
+    process.exit(r.ok ? 0 : 1);
+  }
+
+  case "chapter": {
+    const kind = args[0];
+    if (kind !== "insert" && kind !== "remove" && kind !== "move") fail(`use \`lb chapter insert|remove|move <point>\`, not '${kind ?? ""}'`);
+    const { book, chapter } = chapterArg(1);
+    let op: StructureOp = { kind, at: chapter } as StructureOp;
+    if (kind === "move") {
+      const to = chapterArg(2);
+      if (to.book !== book) fail("a chapter moves inside its book");
+      op = { kind, from: chapter, to: to.chapter };
+    }
+    const { project } = load();
+    const r = changeStructure(project, book, op, { dryRun: values["dry-run"] });
+    const lines = r.renumbered.map((c) => `  ${c.from} → ${c.to ?? "removed"}`);
+    const human = r.ok
+      ? [
+          r.renumbered.length ? `${values["dry-run"] ? "Would renumber" : "Renumbered"}:\n${lines.join("\n")}` : "No chapter changes its number.",
+          r.references.length ? `Point references: ${r.references.join(", ")}` : "",
+          kind === "insert" ? `Write the plan of the new chapter: books/${pad2(book)}/plan/${pad2(chapter)}.md.` : "",
+          "Run `lb validate`.",
+        ]
+          .filter(Boolean)
+          .join("\n")
+      : `NOT changed:\n${r.errors.map((e) => `  ERROR ${e}`).join("\n")}`;
+    out(human, r);
     process.exit(r.ok ? 0 : 1);
   }
 
