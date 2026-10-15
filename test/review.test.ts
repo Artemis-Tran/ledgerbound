@@ -114,6 +114,40 @@ describe("finding sources and the census", () => {
   });
 });
 
+describe("dialogue measures and a census by lint", () => {
+  const quips = '\n\n"Late again."\n\n"The rope was slow."\n\n"Ropes are not slow."\n\n"This one is."\n\n"Then buy another."\n';
+  const withChain = () => {
+    const dir = fixtureCopy();
+    writeFileSync(join(dir, "books/01/chapters/01.md"), read(dir, "books/01/chapters/01.md") + quips);
+    return dir;
+  };
+
+  test("lb census --lint counts the findings of a lint rule, and a finding can take its census by lint", () => {
+    const dir = withChain();
+    expect(JSON.parse(lb(["census", "--lint", "dialogue.quip-chain", "--json"], dir).stdout)).toMatchObject({ lint: "dialogue.quip-chain", total: 1 });
+    expect(lb(["census", "--lint", "dialogue.subtext"], dir).status).toBe(2);
+    edit(dir, REVIEW, "census: { match: ['\\bthe rope\\b'], limit: { per_chapter: 3 } }", "census: { lint: dialogue.quip-chain, limit: { per_chapter: 0 } }");
+    expect(errorCodes(check(dir))).toEqual([]);
+    const r = lb(["census", "--finding", "rope-in-every-beat", "--json"], dir);
+    expect(r.status).toBe(1);
+    expect(JSON.parse(r.stdout)).toMatchObject({ total: 1, over: ["1.01"] });
+  });
+
+  test("a census lint rule must be one that lb lint checks", () => {
+    const dir = fixtureCopy();
+    edit(dir, REVIEW, "census: { match: ['\\bthe rope\\b'], limit: { per_chapter: 3 } }", "census: { lint: dialogue.subtext, limit: { per_chapter: 0 } }");
+    expect(check(dir)).toContainEqual(expect.objectContaining({ message: expect.stringContaining("not a rule that lb lint checks") }));
+  });
+
+  test("lb dialogue measures each chapter of a book, or any prose file", () => {
+    const dir = withChain();
+    const [row] = JSON.parse(lb(["dialogue", "--json"], dir).stdout);
+    expect(row).toMatchObject({ file: "books/01/chapters/01.md", longestRun: 5, quipChains: [expect.any(Number)] });
+    const sample = JSON.parse(lb(["dialogue", "voice/dialogue.md", "--json"], dir).stdout);
+    expect(sample[0]).toMatchObject({ file: "voice/dialogue.md", quipChains: [] });
+  });
+});
+
 describe("lb reopen", () => {
   test("a dry run names the chapters and changes nothing", () => {
     const dir = twoChapters();

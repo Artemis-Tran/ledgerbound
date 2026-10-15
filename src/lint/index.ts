@@ -3,7 +3,9 @@ import { basename, dirname, join, relative, resolve } from "node:path";
 import { parse as parseYaml } from "yaml";
 import { splitFrontmatter } from "../frontmatter.ts";
 import { ChapterPlan, ProjectConfig } from "../schemas.ts";
+import { dialogueShape, QUIP_CHAIN } from "./dialogue.ts";
 import { type CorpusFile, type Finding, type LintResult, lintProse } from "./lint.ts";
+import { parseProse } from "./text.ts";
 
 export function findProjectRoot(from: string): string | undefined {
   let dir = resolve(from);
@@ -88,6 +90,37 @@ export function lintFile(path: string, opts: FileLintOptions = {}): LintResult &
     if (length) result.findings.unshift(waive.includes(length.rule) ? { ...length, waived: true } : length);
   }
   return { file, ...result };
+}
+
+export interface DialogueMeasures {
+  file: string;
+  turns: number;
+  median: number;
+  shortShare: number;
+  longShare: number;
+  longestRun: number;
+  /** The first line of each run of QUIP_CHAIN or more short turns. */
+  quipChains: number[];
+  /** Each echo topper: its line and the word it takes. */
+  toppers: { line: number; word: string }[];
+}
+
+/** The measures of `lb dialogue` for one prose file (a chapter, a voice sample, or prose that a person wrote). */
+export function measureDialogue(path: string): DialogueMeasures {
+  const abs = resolve(path);
+  const root = findProjectRoot(dirname(abs));
+  const { body, firstLine } = readBody(abs);
+  const s = dialogueShape(parseProse(body, firstLine));
+  return {
+    file: root ? relative(root, abs) : path,
+    turns: s.turns.length,
+    median: s.median,
+    shortShare: s.shortShare,
+    longShare: s.longShare,
+    longestRun: Math.max(0, ...s.runs.map((r) => r.length)),
+    quipChains: s.runs.filter((r) => r.length >= QUIP_CHAIN).map((r) => r[0].line),
+    toppers: s.toppers.map((t) => ({ line: t.turn.line, word: t.word })),
+  };
 }
 
 /**

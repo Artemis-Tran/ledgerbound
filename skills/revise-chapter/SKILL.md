@@ -9,7 +9,7 @@ An approved chapter is committed: its delta is in the ledger, and the ledger nev
 
 The point (for example `1.07`) gives the paths, where NN is the book and MM the chapter, two digits each. The skill uses the verify record `runs/verify/NN-MM.json` and its round copies, so `lb changed` works. Its round numbers go on from the record's last round.
 
-Inputs: the point, and the focus: the rule IDs from `lb rules` to judge (for example `emotion.felt, dialogue.delivery, dialogue.plain-talk, dialogue.quip-chain, dialogue.natural, dialogue.speeches`), the user's notes, or both.
+Inputs: the point, and the focus: the rule IDs from `lb rules` to judge (for example `emotion.felt, dialogue.delivery, dialogue.plain-talk, dialogue.quip-chain, dialogue.natural, dialogue.speeches`, or after version 0.31.0 `dialogue.work, dialogue.wants, dialogue.chemistry`), the user's notes, or both.
 
 ## Steps
 

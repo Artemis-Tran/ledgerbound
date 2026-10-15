@@ -17,6 +17,7 @@ import {
   TAGS,
   THERAPY,
 } from "./patterns.ts";
+import { dialogueShape, QUIP_CHAIN, TOPPERS, TURN_LENGTH_MEDIAN, TURN_LENGTH_MIN_TURNS, TURN_LENGTH_SHORT_SHARE } from "./dialogue.ts";
 import { parseProse, type Paragraph, type Prose, wordsOf } from "./text.ts";
 
 export interface Finding {
@@ -292,6 +293,38 @@ export function lintProse(body: string, firstLine: number, file: string, opts: L
   const allowed = Math.ceil((perThousand * prose.wordCount) / 1000);
   if (dashes.length > allowed) {
     add({ rule: "rhythm.em-dash", severity: "error", line: dashes[allowed], text: `${dashes.length} em dashes`, message: `${dashes.length} em dashes in ${prose.wordCount} words; max ${allowed}. Lines: ${dashes.join(", ")}` });
+  }
+
+  // §5 the shape of the dialogue: quip chains, echo toppers, turn length.
+  const shape = dialogueShape(prose);
+  for (const run of shape.runs.filter((r) => r.length >= QUIP_CHAIN)) {
+    add({
+      rule: "dialogue.quip-chain",
+      severity: "error",
+      line: run[0].line,
+      text: run.map((t) => t.spoken).join(" / "),
+      message: `${run.length} short turns in a row (max ${QUIP_CHAIN - 1}): slow the exchange with a longer turn, a reaction or a silence the POV character feels (lines ${run.map((t) => t.line).join(", ")})`,
+    });
+  }
+  if (shape.toppers.length >= TOPPERS) {
+    for (const t of shape.toppers) {
+      add({
+        rule: "dialogue.toppers",
+        severity: "warn",
+        line: t.turn.line,
+        text: `${t.before.spoken} / ${t.turn.spoken}`,
+        message: `echo topper: the short reply takes "${t.word}" from the line before and turns it (${shape.toppers.length} in the file; max ${TOPPERS - 1})`,
+      });
+    }
+  }
+  if (shape.turns.length >= TURN_LENGTH_MIN_TURNS && (shape.median < TURN_LENGTH_MEDIAN || shape.shortShare > TURN_LENGTH_SHORT_SHARE)) {
+    add({
+      rule: "dialogue.turn-length",
+      severity: "warn",
+      line: shape.turns[0].line,
+      text: `${shape.turns.length} turns`,
+      message: `the turns are short: median ${shape.median} words (min ${TURN_LENGTH_MEDIAN}), ${Math.round(shape.shortShare * 100)}% with 6 words or fewer (max ${Math.round(TURN_LENGTH_SHORT_SHARE * 100)}%). Let more turns carry a thought: a reason, an offer, an objection`,
+    });
   }
 
   // §1 endings and §2 openings.

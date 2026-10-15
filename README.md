@@ -213,7 +213,12 @@ Use autopilot after the first chapters show that the voice and the plan work. Fo
 | `lb book insert 2 --dry-run` | The books that a new book 2 renumbers (also `remove 2`, `move 3 2`). They must have no approved chapter. |
 | `lb callbacks 1.07` | The later chapters that refer back to chapter 7, and what they refer back to. |
 | `lb census "nose (in\|into) the wind"` | Each place of a phrase in the book, by chapter and line. |
+| `lb dialogue` | The shape of the dialogue of each chapter: the turns, how long they are, quip chains and echo toppers. Give it files (`lb dialogue mybook/*.md`) to measure prose that a person wrote. |
 | `lb discard 1.09` | Deletes the prose of a draft chapter and the files made from it, so that it is written again from its plan. |
+
+### A novel repo made before version 0.31.0
+
+Section 5 of `guidelines/writing.md` now checks the shape of the dialogue (ADR 0008). `lb lint` reports a run of 5 or more short turns (`dialogue.quip-chain`, an error), 3 or more echo toppers in a chapter (`dialogue.toppers`, a warning), and a chapter of mostly short turns (`dialogue.turn-length`, a warning). The prose checker judges three new rules: the talk does work (`dialogue.work`), each speaker goes after their scene want (`dialogue.wants`), and two characters of a relationship file are alive to each other (`dialogue.chemistry`). A scene can have `wants`, what each speaker goes after in the talk; `plan-book` gives them to new plans, and an approved plan needs none. The new lint can find errors in approved chapters. They stay approved, and a `revise-chapter` run of a chapter fixes them too, because the prose checker keeps every lint finding. To get the new text, copy `guidelines/writing.md` over your copy. To see the old chapters, run `lb dialogue --book N`; to bring them to the new rules, use `revise-chapter` with the rules above.
 
 ### A novel repo made before version 0.30.0
 
@@ -244,7 +249,7 @@ Nothing changes. `review-book` and `revise-book` are new and optional, for a com
 Sections 5, 6 and 9 of `guidelines/writing.md` now ask for feeling on the page. Turn length follows the moment, so a turn under strong feeling can be longer and less tidy (`dialogue.speeches`). The new rules are:
 - `emotion.felt`: the POV character's reaction at each turn that matters.
 - `dialogue.delivery`: how a line is said.
-- `dialogue.quip-chain`: no long runs of one-line quips.
+- `dialogue.quip-chain`: no long runs of one-line quips (since 0.31.0 also a lint check).
 - `dialogue.natural`: speech is less tidy than narration.
 - `dialogue.plain-talk`: banter only between characters whose voice card or relationship asks for it. The dialogue sample's speech pattern belongs to its pair.
 

@@ -190,6 +190,40 @@ describe("§5 dialogue and §6 hedges", () => {
   });
 });
 
+describe("§5 the shape of the dialogue", () => {
+  const turns = (lines: string[]) => lines.map((l) => `"${l}"`).join("\n\n");
+  const quips = ["Late again.", "The rope was slow.", "Ropes are not slow.", "This one is.", "Then buy another."];
+
+  test("five short turns in a row are a quip chain; four are not", () => {
+    const f = lint(`${FILLER}\n\n${turns(quips)}`);
+    expect(f).toContainEqual(expect.objectContaining({ rule: "dialogue.quip-chain", severity: "error", line: 3 }));
+    expect(rules(`${FILLER}\n\n${turns(quips.slice(0, 4))}`)).not.toContain("dialogue.quip-chain");
+  });
+
+  test("a turn with a beat still counts, but a narration paragraph or a long turn ends the run", () => {
+    const beat = quips.map((q, i) => (i === 2 ? `"${q}" She did not look up from the page.` : `"${q}"`)).join("\n\n");
+    expect(rules(beat)).toContain("dialogue.quip-chain");
+    const split = [...quips.slice(0, 3).map((q) => `"${q}"`), FILLER, ...quips.slice(3).map((q) => `"${q}"`)].join("\n\n");
+    expect(rules(split)).not.toContain("dialogue.quip-chain");
+    const long = turns([...quips.slice(0, 2), "Ropes are not slow, and you know it, because you were the one who spliced it last week.", ...quips.slice(2)]);
+    expect(rules(long)).not.toContain("dialogue.quip-chain");
+  });
+
+  test("three echo toppers in a file are a warning; two are not", () => {
+    const pair = (a: string, b: string) => `"${a}"\n\n"${b}"\n\n${FILLER}`;
+    const three = [pair("Brave of you.", "Brave? Stupid."), pair("You owe the well.", "The well owes me."), pair("Count it twice.", "Count it yourself.")];
+    expect(lint(three.join("\n\n"))).toContainEqual(expect.objectContaining({ rule: "dialogue.toppers", severity: "warn" }));
+    expect(rules(three.slice(0, 2).join("\n\n"))).not.toContain("dialogue.toppers");
+  });
+
+  test("a file of mostly short turns gets the turn-length warning", () => {
+    const short = Array.from({ length: 20 }, (_, i) => `"Level ${i}, then."\n\n${FILLER}`).join("\n\n");
+    expect(lint(short)).toContainEqual(expect.objectContaining({ rule: "dialogue.turn-length", severity: "warn" }));
+    const long = Array.from({ length: 20 }, () => `"If the rate drops at copper I am clear of the tithe in four seasons, three with the gallery."\n\n${FILLER}`).join("\n\n");
+    expect(rules(long)).not.toContain("dialogue.turn-length");
+  });
+});
+
 describe("§8 repetition", () => {
   const corpus = [{ file: "books/01/chapters/01.md", body: "The water was black like a closed eye under the lamp.", firstLine: 1 }];
 

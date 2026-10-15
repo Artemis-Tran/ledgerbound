@@ -85,7 +85,8 @@ characters are, or if the scene is a joke, a fight or a threat. Or it is a chain
 lines with nobody feeling anything: each character tops the line before, the POV character has no
 reaction, and the scene reads like a script. Good dialogue has subtext **and** text, and it has
 people in it: some things are said at an angle, some are said plainly, and the reader feels what
-each line does to the people who hear it.
+each line does to the people who hear it. And the talk gets something done: the characters think,
+argue and decide in it.
 
 - **The tone is clear; the reason can stay hidden.** Subtext hides *why* a character says a line.
   It does not hide *how* they say it. By the third exchange, a reader can name the tone of the
@@ -110,13 +111,23 @@ each line does to the people who hear it.
   card (angry, afraid, lying, close), their speech changes as the state says, and it is still
   their voice. A character who talks the same when calm and when afraid is one note. Use the
   state's `tell` at most once in a scene.
-- **Personality is on the page.** Each speaker wants something in the scene and goes after it in
-  their own way. The card's `humour` shows when the scene allows it: a dry character is dry on the
-  page, and the reader sees it.
+- **The talk does work.** Characters use talk to get things done: they reason aloud, propose,
+  object, bargain, set a condition, plan, and test an idea against the other's mind. A turn carries
+  a thought (a reason, an offer, a doubt), not only a jab. Two clever people who disagree are more
+  fun to read than two people who score points.
+- **Each speaker has a want.** In a scene with dialogue, the chapter plan gives each speaker a want
+  in the talk (the scene's `wants`). Each speaker goes after it in their own way, and the talk
+  moves when a want meets resistance: a speaker pushes, gives ground, changes the subject, or
+  tries another way. A line can also serve no want: small talk, a false start, a joke that fails.
+  People talk like that too, so not every line must work.
+- **Personality is on the page.** The card's `humour` shows when the scene allows it: a dry
+  character is dry on the page, and the reader sees it.
 - **Sarcasm needs a truth that the reader knows** and that the line contradicts. Give the reader
   that truth before the line, or in the answer to it.
 - **Banter comes from character.** Each speaker jokes in their own way, from their voice card, not
-  in one shared register. In a back-and-forth, each quip answers the previous line and raises the
+  in one shared register. Most wit rides on a line that also says something plain: the joke is the
+  tail of a real answer ("He despises me. A feeling I return, so it evens out."), not a separate
+  volley. In a back-and-forth, each quip answers the previous line and raises the
   stakes, and the exchange ends when one character wins, loses or leaves. A scene that the plan
   marks as funny has jokes that land. A scene with no reason for a joke has none.
 - **Most talk is plain.** Banter and sparring belong to the characters whose voice card `humour` or
@@ -124,16 +135,22 @@ each line does to the people who hear it.
   characters with other people, talks in a natural way: they ask, answer, agree, worry, explain
   badly, and change the subject. The dialogue voice sample shows one pair; its speech pattern is
   theirs, not the book's.
-- **Quips are a spice.** After about four quick one-line exchanges in a row, something slows the
-  scene: a longer turn, a line that lands and hurts, a silence that the POV character feels, a
-  thought, a reaction in the body. Not every line is clever, and not every line tops the one
-  before. Most people answer plainly most of the time.
+- **[lint] Quips are a spice.** At most 4 short turns (8 words or fewer each) in a row. After
+  about four quick exchanges, something slows the scene: a longer turn, a line that lands and
+  hurts, a silence that the POV character feels, a thought, a reaction in the body. A beat on a
+  short turn does not slow the scene; a paragraph of narration or a longer turn does. Not every
+  line is clever, and not every line tops the one before. Most people answer plainly most of the
+  time.
+- **[lint] Few echo toppers.** An echo topper is a short reply that takes a word from the line
+  before and turns it ("Brave." / "Brave? Stupid."). One in a chapter can be good; three is a tic.
 - **People talk like people.** Speech is less tidy than narration. A character starts a sentence
   and changes it, repeats a word, answers half a question, trails off, says "well" or "look" or
   "I don't know" in their own voice, and talks over someone. Under strong feeling, speech breaks
   first: it gets shorter, or it runs on.
 - **No "As you know"**: characters do not tell each other things they both know.
-- **Turn length follows the moment.** A quick exchange is 1–3 sentences a turn. A character who
+- **[lint] Turn length follows the moment.** Most turns are a full sentence or two. In a chapter
+  with 20 turns or more, the median turn has at least 8 words, and at most 45% of the turns have 6
+  words or fewer. A quick exchange is 1–3 sentences a turn. A character who
   is upset, pleading, confessing, persuading, telling what happened or thinking aloud can talk
   longer, and the turn is less tidy: it stops, restarts and goes back. A lecture, an info-dump or
   a monologue that the moment does not need is a speech: it needs a reason in the plan (a villain
@@ -148,8 +165,16 @@ each line does to the people who hear it.
 - **Tags**: mostly "said" and "asked", or no tag. No adverbs on tags ("she said softly"): show the
   delivery in a beat instead ("Her voice had gone very quiet."). No fancy verbs (hissed, growled,
   breathed) unless the sound is literal.
-- **Action beats**: not on every line, and not a gesture with no meaning. A beat shows a feeling,
-  a change in the scene or who speaks. A scene with no beats and no reactions reads as a script.
+- **Action beats**: most turns stand with no beat. A beat is not a gesture with no meaning: it
+  shows a feeling, a change in the scene or who speaks. Put the POV character's thought and
+  reaction in their own paragraph at the turns that matter, not a small gesture on every line. A
+  scene with no beats and no reactions reads as a script.
+- **Chemistry.** When two characters of a relationship file talk, they are alive to each other.
+  One notices a specific thing about the other. Each answers what the other meant, not only what
+  they said. They push on each other a little (the `friction` of the file), and they use their
+  private words (its `talk`). The timing is theirs: a pause, an interruption, a line the other did
+  not expect. Chemistry is not a bigger number of jokes: two characters can have it in a quiet,
+  plain exchange. Other pairs talk as people who know each other less.
 - **Names**: characters rarely say each other's names in conversation.
 - **Conflict is not resolved by one honest talk.** Agreement costs something or comes slowly.
 

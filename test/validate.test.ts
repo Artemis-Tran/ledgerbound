@@ -87,7 +87,7 @@ describe("the cast", () => {
 
   test("a chapter plan lists a character that does not exist", () => {
     const dir = fixtureCopy();
-    edit(dir, "books/01/plan/03.md", "characters: [ivo, sabine, hale]", "characters: [ivo, pell]");
+    edit(dir, "books/01/plan/03.md", "characters: [ivo, sabine, hale]", "characters: [ivo, pell, hale]");
     expect(check(dir)).toContainEqual(expect.objectContaining({ code: "character-unknown", file: "books/01/plan/03.md", path: "characters.1" }));
     writeFileSync(join(dir, "characters/pell.md"), "---\nid: pell\nname: Oren Pell\nrole: supporting\nvoice: { vocabulary: Crew words., sentence_length: Short., verbal_habits: [], never_says: [] }\n---\n\nThe crew boss.\n");
     expect(errorCodes(check(dir))).toEqual([]);
@@ -664,6 +664,17 @@ describe("relationships", () => {
     dir = fixtureCopy();
     edit(dir, "books/01/plan/01.md", "characters: [ivo, sabine]", "characters: [ivo]");
     expect(codes(dir)).toContain("warn stage-cast books/01/plan/01.md");
+  });
+
+  test("a scene want belongs to a character of the cast, and a draft scene with a tone needs a want for each speaker", () => {
+    let dir = fixtureCopy();
+    edit(dir, "books/01/plan/01.md", "sabine: to keep him off copper", "hale: to keep him off copper");
+    expect(check(dir)).toContainEqual(expect.objectContaining({ code: "want-cast", file: "books/01/plan/01.md", path: "scenes.1.wants.hale" }));
+    dir = fixtureCopy();
+    edit(dir, "books/01/plan/01.md", /wants: \{[^}]*\}, /, "");
+    expect(codes(dir)).not.toContain("warn wants-missing books/01/plan/01.md");
+    edit(dir, "books/01/plan/01.md", "status: approved", "status: draft");
+    expect(codes(dir)).toContain("warn wants-missing books/01/plan/01.md");
   });
 
   test("a relationship with no stage, or with only closer stages, is a warning", () => {

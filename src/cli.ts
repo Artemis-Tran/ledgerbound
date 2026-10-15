@@ -19,7 +19,8 @@ import { characterText, charactersNamedIn, entryText, lastSeen, loreEntry, loreN
 import { loadProject, pad2, type Project } from "./project.ts";
 import { chapterKey, chapterPath, checkDelta, commitChapter, fold, loadRecord, parsePoint, type Where } from "./record.ts";
 import { callbacksTo } from "./callbacks.ts";
-import { takeCensus } from "./census.ts";
+import { takeCensus, takeLintCensus } from "./census.ts";
+import { measureDialogue } from "./lint/index.ts";
 import { discardChapter, reopenChapters } from "./reopen.ts";
 import { changeBooks, changeStructure, type StructureOp } from "./structure.ts";
 import { RULES } from "./rules.ts";
@@ -80,10 +81,16 @@ Generation (a point is 1.07 = book 1, chapter 7):
   lb callbacks <point> [--json]          the later chapters that refer back to a chapter (the callbacks of their
                                          memory files), and the memory files after it that have no callbacks yet
   lb census <regex>... [--book N] [--json]
+  lb census --lint <rule> [--book N] [--json]
   lb census --finding <id> [--book N] [--json]
                                          each place of a pattern in the prose of a book, by chapter and line (case
-                                         does not matter); --finding takes the regexes and the limit of a review
+                                         does not matter); --lint counts the findings of a lint rule (a quip chain);
+                                         --finding takes the regexes or the lint rule and the limit of a review
                                          finding, and exits 1 while the census is over its limit
+  lb dialogue [file...] [--book N] [--json]
+                                         the shape of the dialogue of each chapter of a book, or of any prose
+                                         files: turns, median turn length, short and long turns, the longest run
+                                         of short turns, quip chains and echo toppers
   lb discard <point> [--dry-run] [--json]
                                          delete the prose, staged delta, memory, brief and verify files of a
                                          chapter that is not approved; its plan stays, and it is written again
@@ -114,6 +121,7 @@ const { values, positionals } = parseArgs({
     heading: { type: "string" },
     "dry-run": { type: "boolean", default: false },
     finding: { type: "string" },
+    lint: { type: "string" },
     since: { type: "string" },
     help: { type: "boolean", short: "h", default: false },
   },
@@ -529,15 +537,18 @@ switch (command) {
     const { project } = load();
     const book = bookArg(project);
     let match = args;
+    let rule = values.lint;
     let limit: Census["limit"] | undefined;
     if (values.finding) {
       const f = project.reviews.get(book)?.data.findings.find((x) => x.id === values.finding);
       if (!f) fail(`book ${book} has no review finding '${values.finding}'`);
-      if (!f.census?.match.length) fail(`finding '${f.id}' has no census regexes: checker agents take its census (look_for)`);
+      if (!f.census?.match.length && !f.census?.lint) fail(`finding '${f.id}' has no census regexes and no lint rule: checker agents take its census (look_for)`);
       match = f.census.match;
+      rule = f.census.lint;
       limit = f.census.limit;
     }
-    if (!match.length) fail("give one regex or more, or --finding <id>");
+    if (rule && !RULES.some((r) => r.id === rule && r.check.includes("lint"))) fail(`'${rule}' is not a rule that lb lint checks (see \`lb rules\`)`);
+    if (!match.length && !rule) fail("give one regex or more, --lint <rule>, or --finding <id>");
     for (const m of match) {
       try {
         new RegExp(m, "giu");
@@ -545,11 +556,31 @@ switch (command) {
         fail(`not a regex: ${m} (${(e as Error).message})`);
       }
     }
-    const r = takeCensus(project, book, match, limit);
+    const r = rule ? takeLintCensus(project, book, rule, limit) : takeCensus(project, book, match, limit);
     const lines = r.chapters.flatMap((c) => [`${c.point}: ${c.count}${r.over.includes(c.point) ? " (over the limit)" : ""}`, ...c.matches.map((m) => `  line ${m.line}: ${m.text}`)]);
     const lim = limit ? ` Limit: ${[limit.per_chapter !== undefined ? `${limit.per_chapter} per chapter` : "", limit.per_book !== undefined ? `${limit.per_book} in the book` : ""].filter(Boolean).join(", ")}: ${r.within ? "inside" : "OVER"}.` : "";
     out([...lines, `Total: ${r.total} in ${r.chapters.length} chapter(s) of book ${book}.${lim}`].join("\n"), r);
     process.exit(r.within ? 0 : 1);
+  }
+
+  case "dialogue": {
+    let files = args;
+    if (!files.length) {
+      const { project } = load();
+      const book = bookArg(project);
+      files = (project.prose.get(book) ?? []).map((c) => join(project.root, c.file));
+      if (!files.length) fail(`book ${book} has no chapters`);
+    }
+    const rows = files.map((f) => measureDialogue(f));
+    const pct = (x: number) => `${Math.round(x * 100)}%`;
+    out(
+      [
+        "file: turns, median words, turns of 6 words or fewer, turns of 25 or more, longest run of short turns, quip chains, echo toppers",
+        ...rows.map((r) => `${r.file}: ${r.turns} turns, median ${r.median}, ${pct(r.shortShare)} short, ${pct(r.longShare)} long, longest run ${r.longestRun}, ${r.quipChains.length} quip chain(s), ${r.toppers.length} topper(s)`),
+      ].join("\n"),
+      rows,
+    );
+    break;
   }
 
   case "discard": {

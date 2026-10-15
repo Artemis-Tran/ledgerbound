@@ -39,10 +39,10 @@ The `source` says where the fix starts (ADR 0007 in the ledgerbound folder). A f
 - `prose`: the problem is in one place, or a few, and nothing outside the prose makes it. A prose revision fixes it.
 - `pattern`: the problem comes back across the book: a tic, an image, a gesture, a shape of sentence, a way of hiding a feeling. Something makes it, so a fix of the prose alone lets it come back in a new form. Give:
   - `origin`: the files or rules that make it, each with the line or rule that does it: a character file (a gesture written as a habit, a signature detail, a voice-card habit), a voice sample, a rule of `guidelines/writing.md`, or a missing entry in the lint lists of `project.yaml`. Read those files to find it. When the origin is the chapter-writer itself, name the rule or the lint list that must change so that it stops.
-  - `census`: `match`, one regex for each form of the pattern (case does not matter; `lb census <regex>...` tests them), or `look_for` when no regex finds it (a kind of simile, a kind of chapter ending); and `limit`: how many places the book may keep (`per_chapter`, `per_book` or both). The census is each place, not only the evidence.
+  - `census`: `match`, one regex for each form of the pattern (case does not matter; `lb census <regex>...` tests them); or `lint`, a rule that `lb lint` checks, when its findings are the places (`dialogue.quip-chain`, `dialogue.toppers`; `lb census --lint <rule>` tests it); or `look_for` when neither finds it (a kind of simile, a kind of chapter ending); and `limit`: how many places the book may keep (`per_chapter`, `per_book` or both). The census is each place, not only the evidence.
 - `plan`: the problem is in the plan, and the prose did what the plan said: an arc beat that is missing (a vow that the story never tests), a thread with a payoff it did not earn, an act that is a run of the same chapter, a character with no want in the plan. A story change fixes it, from the plan down. A plan finding can keep the record (an added scene that tests the vow) or change it.
 
-When you are not sure between `prose` and `pattern`, run `lb census` with the forms you saw: a problem in 3 or more chapters is a pattern.
+When you are not sure between `prose` and `pattern`, run `lb census` with the forms you saw: a problem in 3 or more chapters is a pattern. For the shape of the dialogue (short turns, quip chains, toppers), run `lb dialogue --book N`.
 
 ## Record and size
 

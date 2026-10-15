@@ -338,6 +338,17 @@ function checkChapters(project: Project, index: PlanIndex, characterIds: Set<str
         const away = r.data.between.filter((x) => !cast.includes(x));
         if (away.length) warn("stage-cast", c.file, `stage ${ref} moves ${r.data.between.join(" and ")}, but ${away.join(" and ")} is not in \`characters\``, `stages.${k}`);
       });
+      d.scenes.forEach((s, k) => {
+        const cast = [d.pov, ...d.characters];
+        for (const who of Object.keys(s.wants ?? {})) {
+          if (!cast.includes(who)) err("want-cast", c.file, `scene ${k + 1} gives a want to '${who}', who is not the pov or in \`characters\``, `scenes.${k}.wants.${who}`);
+        }
+        // A scene with a tone has dialogue (plan-book gives one to each such scene); its speakers need wants.
+        // An approved plan is from before scene wants, so only a plan that is still a draft gets the warning.
+        if (d.status !== "approved" && s.tone && Object.keys(s.wants ?? {}).length < 2) {
+          warn("wants-missing", c.file, `scene ${k + 1} has a tone but not a want for each speaker: give \`wants\` for at least two characters`, `scenes.${k}`);
+        }
+      });
       for (const kind of ["plants", "advances", "pays_off"] as const) {
         d.threads[kind].forEach((t, k) => {
           if (!threads.has(t)) err("unknown-thread", c.file, `thread '${t}' is not in threads.yaml`, `threads.${kind}.${k}`);

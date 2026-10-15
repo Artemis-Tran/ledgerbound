@@ -108,6 +108,22 @@ The rules for how one character speaks: vocabulary, sentence length, verbal habi
 How a character's speech changes in one emotional state (angry, afraid, lying, close to someone), with one body tell. Part of the voice card.
 _Avoid_: Mood, emotion card
 
+**Scene want**:
+What one speaker goes after in the talk of a scene, in the scene's `wants`. The wants of a scene pull against each other, so the talk has work to do. It is not the arc's want (for the whole story), and not the scene's goal (what the POV character wants from the whole scene).
+_Avoid_: Purpose, agenda, motive
+
+**Turn of dialogue**:
+One paragraph of dialogue: what one speaker says, with its tag and beat. A short turn has 8 spoken words or fewer. The turn of a scene or a chapter is a different thing: the point where it changes.
+_Avoid_: Utterance, line (for a whole turn)
+
+**Quip chain**:
+A run of 5 or more short turns with no narration paragraph between them. `lb lint` reports it as an error.
+_Avoid_: Banter (banter can be good), volley
+
+**Echo topper**:
+A short reply that takes a word from the short turn before it and turns it ("Brave." / "Brave? Stupid."). Three in a chapter is a tic.
+_Avoid_: Comeback, zinger
+
 **Wound**:
 The one event before the story that made a character's lie feel true. The writer knows it; the prose never tells it, and shows it only in what the character avoids.
 _Avoid_: Backstory, trauma
@@ -261,7 +277,7 @@ The fix of a `pattern` finding: change the origin, take a census, revise each ch
 _Avoid_: Sweep, global fix
 
 **Census**:
-Each place of a pattern in a book, with its chapter and line: from `lb census` with the finding's regexes, or from checker agents for a pattern that a regex cannot find.
+Each place of a pattern in a book, with its chapter and line: from `lb census` with the finding's regexes or the findings of one lint rule (a quip chain), or from checker agents for a pattern that neither can find.
 _Avoid_: Count (for the list), search
 
 **Review verdict**:

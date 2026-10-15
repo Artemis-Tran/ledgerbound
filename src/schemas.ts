@@ -3,6 +3,7 @@
  * reference/formats.md shows them with examples.
  */
 import { z } from "zod";
+import { RULES } from "./rules.ts";
 
 export const Slug = z.string().regex(/^[a-z0-9][a-z0-9-]*$/, "use lower-case letters, digits and '-'");
 const Text = z.string().trim().min(1, "must not be empty");
@@ -405,12 +406,14 @@ export const SCENE_RESULTS = ["win", "loss", "mixed"] as const;
  * `tone`: how the scene must read (funny, sarcastic, hostile, tender). The writer makes it clear on the page.
  * `stakes`: what the goal's owner loses if the goal fails, when it differs from the chapter's `stakes`.
  * `result`: is the goal met? `win` (met), `loss` (not met, or worse), `mixed` (met at a cost).
+ * `wants`: for a scene with dialogue, what each speaker goes after in the talk (a scene want), by character ID.
  */
 export const Scene = z.strictObject({
   goal: Text,
   conflict: Text,
   outcome: Text,
   tone: Text.optional(),
+  wants: z.record(Slug, Text).optional(),
   stakes: Text.optional(),
   result: z.enum(SCENE_RESULTS).optional(),
 });
@@ -597,11 +600,16 @@ export const REVIEW_SOURCES = ["prose", "pattern", "plan"] as const;
 export const EARLIER_STATUS = ["fixed", "partly", "not-fixed"] as const;
 export const REVIEW_VERDICTS = ["ready", "revise"] as const;
 
-/** Each place of a pattern in a book: `lb census` finds the `match` regexes, else checker agents look for `look_for`. */
+/**
+ * Each place of a pattern in a book: `lb census` finds the `match` regexes or the findings of the `lint` rule,
+ * else checker agents look for `look_for`.
+ */
 export const Census = z
   .strictObject({
     /** One regex for each form of the pattern. Case does not matter. */
     match: z.array(Text).default([]),
+    /** A rule that lb lint checks: each of its findings is a place (a pattern that no regex finds, such as a quip chain). */
+    lint: z.string().optional(),
     /** What checker agents look for, when no regex finds the pattern. */
     look_for: Text.optional(),
     /** How many places the book may keep. The pattern fix is done when the census is inside it. */
@@ -610,7 +618,9 @@ export const Census = z
       .refine((l) => l.per_chapter !== undefined || l.per_book !== undefined, "give per_chapter, per_book or both"),
   })
   .superRefine((c, ctx) => {
-    if (c.match.length === 0 && !c.look_for) ctx.addIssue({ code: "custom", path: ["match"], message: "give the regexes in match, or what to look for in look_for" });
+    if (c.match.length === 0 && !c.lint && !c.look_for) ctx.addIssue({ code: "custom", path: ["match"], message: "give the regexes in match, a lint rule in lint, or what to look for in look_for" });
+    if (c.lint && c.match.length) ctx.addIssue({ code: "custom", path: ["lint"], message: "give match or lint, not both" });
+    if (c.lint && !RULES.some((r) => r.id === c.lint && r.check.includes("lint"))) ctx.addIssue({ code: "custom", path: ["lint"], message: `'${c.lint}' is not a rule that lb lint checks (see \`lb rules\`)` });
     c.match.forEach((m, i) => {
       try {
         new RegExp(m, "giu");
