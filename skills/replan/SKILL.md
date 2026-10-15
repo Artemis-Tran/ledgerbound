@@ -14,7 +14,7 @@ The written chapters are the story now. A replan moves the plan to meet them, an
 - The series ending and the later book plans in `series.md` and `books/NN/plan.md`: the acts, the custom anchors, the `climax` and the `tension` range. The climax stays in a chapter that is not approved.
 - The arcs, wounds and appearances in the character files, and the `characters` of the chapter plans: an arc beat or a character change at a point after the last approved chapter.
 - The relationship files: a stage that no approved chapter places, and the `stages` and `bonding` of the chapter plans.
-- The chapter plans of chapters that are not approved, with their `tension`, `stakes` and scene `result`s.
+- The chapter plans of chapters that are not approved, with their `tension`, `stakes`, scene `result`s and scene `wants`.
 - The chapter structure from the first chapter that is not approved on: `lb chapter insert | remove | move` renumbers the chapters, their files and each point reference (ADR 0006). A remove refuses while the plan of the chapter places anchors, arc beats or stages, or a thread, a change or a review finding names it: move each one first. An insert leaves a gap that the new plan fills. `lb book insert | remove | move` does the same for the books of a series, from the first book with no approved chapter on: a remove refuses while an arc beat, a stage, a target, a thread or a change names the book.
 - `threads.yaml`: the beats and payoffs in chapters that are not approved. A plant in an approved chapter stays.
 - `targets.yaml`: a target moves, changes, or gets `reset: true`.
@@ -27,13 +27,14 @@ The approved chapters and `ledger.jsonl` stay as they are. When the committed re
 
 1. **Cause.** Write down in one or two sentences why the plan must change: the `REPLAN NEEDED` lines of `lb commit`, the open errors in `runs/verify/NN-MM.json`, or the story change from `change-story` with its level.
    When `lb validate` gives `tension-missing` or `climax-missing` (a plan from an earlier version), the replan adds them: the `climax` and `tension` range of the book plan by step 4 of `${CLAUDE_PLUGIN_ROOT}/skills/plan-series/SKILL.md`, then the `tension`, `stakes` and scene `result`s of each chapter that is not written by steps 3 and 5 of `${CLAUDE_PLUGIN_ROOT}/skills/plan-book/SKILL.md`. Read the memory files of the written chapters first: the curve starts from where the story is. Give the written chapters no new fields.
+   When `lb validate` gives `wants-missing`, the replan gives each scene with dialogue of that plan its `wants`, by step 5 of `${CLAUDE_PLUGIN_ROOT}/skills/plan-book/SKILL.md`.
 
 2. Read `bible.md`, the book plan, `targets.yaml`, `threads.yaml`, the plans of the chapters that are not written, the memory files of the written chapters, and `lb fold` (the state now).
 
 3. **Options.** When there is a real choice (for example: move the target, or add a chapter that earns it), give the user two options with their trade-offs, and recommend one. Wait for their choice.
    In autopilot, choose the option that keeps the most of the approved plan, and continue. When every option needs a change to a `locked` decision or a draw, stop and ask the user: that is theirs.
 
-4. **Change** the files, top down from the highest level that changes: the series and the book plans by `${CLAUDE_PLUGIN_ROOT}/skills/plan-series/SKILL.md`, the arcs and relationships by `${CLAUDE_PLUGIN_ROOT}/skills/plan-arcs/SKILL.md`, then the chapter plans and threads by `${CLAUDE_PLUGIN_ROOT}/skills/plan-book/SKILL.md`. Each level hands its new ending states to the level below. Run `lb book` and `lb chapter` before you write the plans of the books and chapters that they move. Set `status: draft` in each plan file that you changed. Delete `runs/briefs/NN-MM.md` and `books/NN/deltas/MM.jsonl` of every chapter whose plan changed and that has no prose yet: they were made from the old plan.
+4. **Change** the files, top down from the highest level that changes: the series and the book plans by `${CLAUDE_PLUGIN_ROOT}/skills/plan-series/SKILL.md`, the arcs and relationships by `${CLAUDE_PLUGIN_ROOT}/skills/plan-arcs/SKILL.md`, then the chapter plans and threads by `${CLAUDE_PLUGIN_ROOT}/skills/plan-book/SKILL.md`. Each level hands its new ending states to the level below. Run `lb book` and `lb chapter` before you write the plans of the books and chapters that they move. Set `status: draft` in each plan file that you changed. A changed or new scene with dialogue has a `want` for each speaker, and a want that names a character who leaves the chapter's cast changes too (`want-cast`). Delete `runs/briefs/NN-MM.md` and `books/NN/deltas/MM.jsonl` of every chapter whose plan changed and that has no prose yet: they were made from the old plan.
    Run `lb validate`, and fix each error.
    Done when `lb validate` reports no error.
 
