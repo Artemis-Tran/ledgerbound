@@ -19,7 +19,7 @@ The human prose has about half as many very short turns. It never has 5 short tu
 
 **The lint measures the shape of the dialogue** (`src/lint/dialogue.ts`), where the data shows a clear difference:
 
-- `dialogue.quip-chain` (now lint and judge): a run of 5 or more short turns (8 spoken words or fewer) with no narration paragraph between them is an error. A beat on a short turn does not end the run. The judge looks only at shorter runs where each line tops the one before.
+- `dialogue.quip-chain` (now lint and judge): a run of 5 or more short turns (8 spoken words or fewer) with no narration paragraph between them is an error. A short beat on a short turn does not end the run; a turn whose paragraph has 15 words or more of narration (a reaction, a thought) ends it, as a narration paragraph does (0.32.0, after a test revision where the reviser added a second reaction next to one the lint did not count). In the same test, the reviser made short turns longer with words that said nothing new, to meet the turn-length count; `dialogue.natural` is a warning only, so nothing stopped it. Since 0.32.0, the judge rule `dialogue.padding` (no cap, so a clear case is an error) compares each changed turn of a revision with the round before. The judge looks only at shorter runs where each line tops the one before.
 - `dialogue.toppers` (lint, a warning): 3 or more echo toppers in a chapter.
 - `dialogue.turn-length` (lint, a warning): in a chapter with 20 or more turns, a median turn under 8 words, or more than 45% of the turns with 6 words or fewer.
 

@@ -54,7 +54,7 @@ In round 2 or later of a chapter check, you also get the round, the changed line
    Then compare the chapter with each `Relationship:` section of the brief: what each one hides, what they never say to each other, and where they stand at the start of the chapter. A pair who act closer or further apart than the section says, before a stage of this chapter moves them, is an `error` finding, rule `continuity.relationship`, with the relationship file in `fix_hint`. A romance beat beyond `on_page` is an `error` finding with the same rule.
    Done when each relationship in the brief has had its own pass.
 
-In round 2 or later, do steps 4 to 7 for the changed lines and for each open finding of the round before: when the problem is still there, return the finding again with the same rule and severity; when it is gone, return nothing for it.
+In round 2 or later, do steps 4 to 7 for the changed lines and for each open finding of the round before: when the problem is still there, return the finding again with the same rule and severity; when it is gone, return nothing for it. Also compare each changed line with the rest of the chapter: a changed line that contradicts what the chapter shows elsewhere (an action, a count, the order of events) is an `error` finding, rule `continuity.claim`, with the line that it contradicts in `problem`.
 
 8. Each finding quotes the exact words (at most 20) and gives the line. When the fix is in the delta, start `fix_hint` with `delta:`. Return only this JSON, with no text before or after it:
 

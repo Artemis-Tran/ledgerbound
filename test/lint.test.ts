@@ -209,6 +209,14 @@ describe("§5 the shape of the dialogue", () => {
     expect(rules(long)).not.toContain("dialogue.quip-chain");
   });
 
+  test("a short turn with a reaction of 15 words or more in its paragraph ends the run", () => {
+    const reaction = "He heard too late who he had said it to, and his breath went high and small in his chest.";
+    const paused = quips.map((q, i) => (i === 2 ? `"${q}" ${reaction}` : `"${q}"`)).join("\n\n");
+    expect(rules(paused)).not.toContain("dialogue.quip-chain");
+    const after = quips.map((q, i) => (i === 4 ? `"${q}" ${reaction}` : `"${q}"`)).join("\n\n");
+    expect(rules(after)).toContain("dialogue.quip-chain");
+  });
+
   test("three echo toppers in a file are a warning; two are not", () => {
     const pair = (a: string, b: string) => `"${a}"\n\n"${b}"\n\n${FILLER}`;
     const three = [pair("Brave of you.", "Brave? Stupid."), pair("You owe the well.", "The well owes me."), pair("Count it twice.", "Count it yourself.")];

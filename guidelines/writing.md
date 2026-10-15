@@ -118,7 +118,8 @@ argue and decide in it.
 - **Each speaker has a want.** In a scene with dialogue, the chapter plan gives each speaker a want
   in the talk (the scene's `wants`). Each speaker goes after it in their own way, and the talk
   moves when a want meets resistance: a speaker pushes, gives ground, changes the subject, or
-  tries another way. A line can also serve no want: small talk, a false start, a joke that fails.
+  tries another way. The want shows in these moves; the speaker seldom says it aloud. A line can
+  also serve no want: small talk, a false start, a joke that fails.
   People talk like that too, so not every line must work.
 - **Personality is on the page.** The card's `humour` shows when the scene allows it: a dry
   character is dry on the page, and the reader sees it.
@@ -137,8 +138,9 @@ argue and decide in it.
   theirs, not the book's.
 - **[lint] Quips are a spice.** At most 4 short turns (8 words or fewer each) in a row. After
   about four quick exchanges, something slows the scene: a longer turn, a line that lands and
-  hurts, a silence that the POV character feels, a thought, a reaction in the body. A beat on a
-  short turn does not slow the scene; a paragraph of narration or a longer turn does. Not every
+  hurts, a silence that the POV character feels, a thought, a reaction in the body. A short beat
+  on a short turn does not slow the scene. A reaction or a thought of 15 words or more does, after
+  the line or in its own paragraph, and so does a longer turn. Not every
   line is clever, and not every line tops the one before. Most people answer plainly most of the
   time.
 - **[lint] Few echo toppers.** An echo topper is a short reply that takes a word from the line
@@ -150,7 +152,8 @@ argue and decide in it.
 - **No "As you know"**: characters do not tell each other things they both know.
 - **[lint] Turn length follows the moment.** Most turns are a full sentence or two. In a chapter
   with 20 turns or more, the median turn has at least 8 words, and at most 45% of the turns have 6
-  words or fewer. A quick exchange is 1–3 sentences a turn. A character who
+  words or fewer. A turn is longer because it says more: a reason, an offer, a doubt. A quick
+  exchange is 1–3 sentences a turn. A character who
   is upset, pleading, confessing, persuading, telling what happened or thinking aloud can talk
   longer, and the turn is less tidy: it stops, restarts and goes back. A lecture, an info-dump or
   a monologue that the moment does not need is a speech: it needs a reason in the plan (a villain

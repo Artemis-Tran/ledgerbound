@@ -15,6 +15,8 @@ import { type Prose, wordsOf } from "./text.ts";
 export const SHORT_TURN = 8;
 /** This many short turns in a row is a quip chain (an error). Human prose stays at 4 or fewer. */
 export const QUIP_CHAIN = 5;
+/** A turn whose paragraph has this many words of narration (a reaction, a thought) ends a run of short turns. */
+export const PAUSE_WORDS = 15;
 /** This many echo toppers in a chapter is a warning. Human prose has 2 at most; a quote back is not always a quip. */
 export const TOPPERS = 3;
 /** The turn-length warning needs this many turns in the file. */
@@ -32,6 +34,8 @@ export interface Turn {
   /** The words inside quotation marks. */
   spoken: string;
   words: number;
+  /** The words of the paragraph outside the quotation marks: the tag, the beat and the reaction. */
+  narration: number;
 }
 
 export interface DialogueShape {
@@ -42,7 +46,7 @@ export interface DialogueShape {
   shortShare: number;
   /** The share of turns with 25 words or more. */
   longShare: number;
-  /** Each run of consecutive short turns in one scene, with no narration paragraph between them. */
+  /** Each run of consecutive short turns in one scene, with no narration paragraph between them; a turn with a pause ends its run. */
   runs: Turn[][];
   /** Each short turn that takes a word from the short turn just before it ("Brave." / "Stupid-brave."). */
   toppers: { turn: Turn; before: Turn; word: string }[];
@@ -81,16 +85,19 @@ export function dialogueShape(prose: Prose): DialogueShape {
   for (const p of prose.paragraphs) {
     const spoken = spokenIn(p.text);
     const words = wordsOf(spoken).length;
-    if (words > 0) turns.push({ paragraph: p.index, line: p.line, scene: p.scene, spoken, words });
+    if (words > 0) turns.push({ paragraph: p.index, line: p.line, scene: p.scene, spoken, words, narration: wordsOf(p.text).length - words });
   }
   const short = (t: Turn) => t.words <= SHORT_TURN;
+  // A short beat does not slow the scene; a reaction or a thought of PAUSE_WORDS or more does, as a narration paragraph does.
+  const pause = (t: Turn) => t.narration >= PAUSE_WORDS;
   // Two turns are next to each other when no narration paragraph and no scene break is between them.
   const adjacent = (a: Turn, b: Turn) => b.paragraph === a.paragraph + 1 && b.scene === a.scene;
 
   const runs: Turn[][] = [];
   let run: Turn[] = [];
   for (const t of turns) {
-    if (short(t) && run.length && adjacent(run.at(-1)!, t)) run.push(t);
+    const last = run.at(-1);
+    if (short(t) && last && !pause(last) && adjacent(last, t)) run.push(t);
     else {
       if (run.length) runs.push(run);
       run = short(t) ? [t] : [];

@@ -216,6 +216,10 @@ Use autopilot after the first chapters show that the voice and the plan work. Fo
 | `lb dialogue` | The shape of the dialogue of each chapter: the turns, how long they are, quip chains and echo toppers. Give it files (`lb dialogue mybook/*.md`) to measure prose that a person wrote. |
 | `lb discard 1.09` | Deletes the prose of a draft chapter and the files made from it, so that it is written again from its plan. |
 
+### A novel repo made before version 0.32.0
+
+A short turn with a reaction or a thought of 15 words or more in its paragraph now ends a quip chain, so `lb lint` can report fewer quip chains in old chapters. The reviser makes a turn longer only with a new thought, and the prose checker reports padding in a revision (`dialogue.padding`). A speaker shows a scene want in the moves of the talk and seldom says it. To get the new text, copy `guidelines/writing.md` over your copy.
+
 ### A novel repo made before version 0.31.0
 
 Section 5 of `guidelines/writing.md` now checks the shape of the dialogue (ADR 0008). `lb lint` reports a run of 5 or more short turns (`dialogue.quip-chain`, an error), 3 or more echo toppers in a chapter (`dialogue.toppers`, a warning), and a chapter of mostly short turns (`dialogue.turn-length`, a warning). The prose checker judges three new rules: the talk does work (`dialogue.work`), each speaker goes after their scene want (`dialogue.wants`), and two characters of a relationship file are alive to each other (`dialogue.chemistry`). A scene can have `wants`, what each speaker goes after in the talk; `plan-book` gives them to new plans, and an approved plan needs none. The new lint can find errors in approved chapters. They stay approved, and a `revise-chapter` run of a chapter fixes them too, because the prose checker keeps every lint finding. To get the new text, copy `guidelines/writing.md` over your copy. To see the old chapters, run `lb dialogue --book N`; to bring them to the new rules, use `revise-chapter` with the rules above.

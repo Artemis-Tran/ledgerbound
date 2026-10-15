@@ -55,6 +55,7 @@ export const RULES: Rule[] = [
   { id: "dialogue.toppers", section: "5", check: ["lint"], summary: "Few echo toppers: a short reply that takes a word from the short line before and turns it (3 or more in a chapter is a warning).", max: "warn" },
   { id: "dialogue.turn-length", section: "5", check: ["lint"], summary: "In a chapter with 20 or more turns, the median turn has 8 words or more, and at most 45% of the turns have 6 words or fewer.", max: "warn" },
   { id: "dialogue.natural", section: "5", check: ["judge"], summary: "Speech is less tidy than narration: restarts, half answers, trailing off; not every line is clever.", max: "warn" },
+  { id: "dialogue.padding", section: "5", check: ["judge"], summary: "In a revision, a turn made longer carries a new thought (a reason, an offer, a doubt), not words around the same short line." },
   { id: "dialogue.delivery", section: "5", check: ["judge"], summary: "At the lines that matter, the reader hears how the line is said and sees each speaker's feeling on the outside." },
   { id: "dialogue.banter", section: "5", check: ["judge"], summary: "Jokes come from each speaker's voice card; most wit rides on a line that also says something plain; quips answer, raise the stakes and have a winner; a funny scene has jokes that land." },
   { id: "dialogue.work", section: "5", check: ["judge"], summary: "The talk does work: the characters reason, propose, object, bargain and plan aloud; a turn carries a thought, not only a jab." },
