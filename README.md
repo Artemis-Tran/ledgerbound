@@ -218,7 +218,7 @@ Use autopilot after the first chapters show that the voice and the plan work. Fo
 
 ### A novel repo made before version 0.32.0
 
-A short turn with a reaction or a thought of 15 words or more in its paragraph now ends a quip chain, so `lb lint` can report fewer quip chains in old chapters. The reviser makes a turn longer only with a new thought, and the prose checker reports padding in a revision (`dialogue.padding`). A speaker shows a scene want in the moves of the talk and seldom says it. To get the new text, copy `guidelines/writing.md` over your copy.
+A short turn with a reaction or a thought of 15 words or more in its paragraph now ends a quip chain, so `lb lint` can report fewer quip chains in old chapters. The reviser makes a turn longer only with a new thought, and the prose checker reports padding in a revision (`dialogue.padding`). A speaker shows a scene want in the moves of the talk and seldom says it. Since 0.32.1, two characters of a relationship file talk mostly plainly, and their running joke comes at most once in a scene; a card's `humour` example is one kind of joke, not the way that the character talks. To get the new text, copy `guidelines/writing.md` over your copy.
 
 ### A novel repo made before version 0.31.0
 

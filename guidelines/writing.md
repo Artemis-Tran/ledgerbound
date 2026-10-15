@@ -130,7 +130,8 @@ argue and decide in it.
   tail of a real answer ("He despises me. A feeling I return, so it evens out."), not a separate
   volley. In a back-and-forth, each quip answers the previous line and raises the
   stakes, and the exchange ends when one character wins, loses or leaves. A scene that the plan
-  marks as funny has jokes that land. A scene with no reason for a joke has none.
+  marks as funny has jokes that land. A scene with no reason for a joke has none. The example in
+  a card's `humour` is one kind of joke, not the way that the character talks.
 - **Most talk is plain.** Banter and sparring belong to the characters whose voice card `humour` or
   relationship `talk` asks for them, and only between those characters. Everyone else, and the same
   characters with other people, talks in a natural way: they ask, answer, agree, worry, explain
@@ -176,8 +177,12 @@ argue and decide in it.
   One notices a specific thing about the other. Each answers what the other meant, not only what
   they said. They push on each other a little (the `friction` of the file), and they use their
   private words (its `talk`). The timing is theirs: a pause, an interruption, a line the other did
-  not expect. Chemistry is not a bigger number of jokes: two characters can have it in a quiet,
-  plain exchange. Other pairs talk as people who know each other less.
+  not expect. Chemistry is plain talk, not a bigger number of jokes: most of their turns have
+  interest in the other person (a real question, an answer that gives something, a task talked
+  through, a small kindness with no joke on it, an easy silence, a turn of two or three sentences
+  that is not tidy). The pair's running joke (a correction, a pet name, a standing threat of care)
+  comes at most once in a scene, and it is not the first thing that they say. Other pairs talk as
+  people who know each other less.
 - **Names**: characters rarely say each other's names in conversation.
 - **Conflict is not resolved by one honest talk.** Agreement costs something or comes slowly.
 

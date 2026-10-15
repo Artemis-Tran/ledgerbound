@@ -60,7 +60,7 @@ export const RULES: Rule[] = [
   { id: "dialogue.banter", section: "5", check: ["judge"], summary: "Jokes come from each speaker's voice card; most wit rides on a line that also says something plain; quips answer, raise the stakes and have a winner; a funny scene has jokes that land." },
   { id: "dialogue.work", section: "5", check: ["judge"], summary: "The talk does work: the characters reason, propose, object, bargain and plan aloud; a turn carries a thought, not only a jab." },
   { id: "dialogue.wants", section: "5", check: ["judge"], summary: "Each speaker goes after their scene want (the scene's `wants` in the plan) in their own way, and the talk moves when a want meets resistance." },
-  { id: "dialogue.chemistry", section: "5", check: ["judge"], summary: "Two characters of a relationship file are alive to each other: attention, answers to what was meant, friction, private words, timing.", max: "warn" },
+  { id: "dialogue.chemistry", section: "5", check: ["judge"], summary: "Two characters of a relationship file are alive to each other: attention, answers to what was meant, friction, private words, timing; mostly plain turns, and their running joke at most once in a scene.", max: "warn" },
   { id: "dialogue.aphorisms", section: "5", check: ["judge"], summary: "No wise aphorisms." },
   { id: "dialogue.tags", section: "5", check: ["lint", "judge"], summary: "Mostly 'said'/'asked' or no tag; no tag adverbs; no fancy tag verbs." },
   { id: "dialogue.action-beats", section: "5", check: ["judge"], summary: "Most turns stand with no beat; a beat shows a feeling, a change or who speaks.", max: "warn" },
