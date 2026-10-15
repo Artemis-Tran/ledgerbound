@@ -128,8 +128,9 @@ argue and decide in it.
 - **Banter comes from character.** Each speaker jokes in their own way, from their voice card, not
   in one shared register. Most wit rides on a line that also says something plain: the joke is the
   tail of a real answer ("He despises me. A feeling I return, so it evens out."), not a separate
-  volley. In a back-and-forth, each quip answers the previous line and raises the
-  stakes, and the exchange ends when one character wins, loses or leaves. A scene that the plan
+  volley. A back-and-forth of quips is one exchange, not the scene: each quip answers the previous
+  line and raises the stakes, and the exchange ends when one character wins, loses, leaves, or
+  drops the joke and says a plain thing. A scene that the plan
   marks as funny has jokes that land. A scene with no reason for a joke has none. The example in
   a card's `humour` is one kind of joke, not the way that the character talks.
 - **Most talk is plain.** Banter and sparring belong to the characters whose voice card `humour` or
@@ -137,8 +138,9 @@ argue and decide in it.
   characters with other people, talks in a natural way: they ask, answer, agree, worry, explain
   badly, and change the subject. The dialogue voice sample shows one pair; its speech pattern is
   theirs, not the book's.
-- **[lint] Quips are a spice.** At most 4 short turns (8 words or fewer each) in a row. After
-  about four quick exchanges, something slows the scene: a longer turn, a line that lands and
+- **[lint] Quips are a spice.** A scene has at most one run of quick one-line turns, and at most
+  one line that only tops the line before it. At most 4 short turns (8 words or fewer each) in a
+  row. After about four quick exchanges, something slows the scene: a longer turn, a line that lands and
   hurts, a silence that the POV character feels, a thought, a reaction in the body. A short beat
   on a short turn does not slow the scene. A reaction or a thought of 15 words or more does, after
   the line or in its own paragraph, and so does a longer turn. Not every
@@ -174,13 +176,14 @@ argue and decide in it.
   reaction in their own paragraph at the turns that matter, not a small gesture on every line. A
   scene with no beats and no reactions reads as a script.
 - **Chemistry.** When two characters of a relationship file talk, they are alive to each other.
-  One notices a specific thing about the other. Each answers what the other meant, not only what
+  People who like each other do not only spar. One notices a specific thing about the other. Each answers what the other meant, not only what
   they said. They push on each other a little (the `friction` of the file), and they use their
-  private words (its `talk`). The timing is theirs: a pause, an interruption, a line the other did
+  private words (its `talk`, which says how the pair is at ease). The timing is theirs: a pause, an interruption, a line the other did
   not expect. Chemistry is plain talk, not a bigger number of jokes: most of their turns have
   interest in the other person (a real question, an answer that gives something, a task talked
   through, a small kindness with no joke on it, an easy silence, a turn of two or three sentences
-  that is not tidy). The pair's running joke (a correction, a pet name, a standing threat of care)
+  that is not tidy). The pair's running joke (a correction, a pun and its grade, an order to eat, a pet
+  name, a standing threat of care)
   comes at most once in a scene, and it is not the first thing that they say. Other pairs talk as
   people who know each other less.
 - **Names**: characters rarely say each other's names in conversation.
