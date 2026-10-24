@@ -47,7 +47,7 @@ const HELP = `lb: the Ledgerbound CLI. Run it inside a novel repo (or pass --dir
   lb who <id> --at <point> [--json]      one character as it is at the start of a chapter: who it is,
                                          its arc so far, its voice card, its record state and the chapter it was last seen
   lb phrases <file|point> [--json]      the phrase log of the book before a chapter: the similes, images,
-                                         gestures and ending types that the chapter must not use again
+                                         gestures, deadpan lines and ending types that the chapter must not use again
   lb where                               the ledgerbound folder (reference/, examples/)
   lb import <manuscript> [--book N] [--heading REGEX] [--dry-run] [--json]
                                          split the Markdown or plain-text manuscript of a book written
@@ -351,6 +351,7 @@ switch (command) {
         list("Similes", log.similes),
         list("Images", log.images),
         ...Object.entries(log.gestures).map(([who, gs]) => list(`Gestures: ${who}`, gs)),
+        list(`Deadpan category lines (${log.deadpan.length} of at most 2)`, log.deadpan),
         list("Ending types", log.ending_types),
       ].join("\n\n"),
       { book: at.book, chapter: at.chapter, ...log },

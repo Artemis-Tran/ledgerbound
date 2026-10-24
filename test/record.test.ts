@@ -389,6 +389,17 @@ describe("lb brief", () => {
     expect(log).not.toContain("a slate token stained red-brown");
   });
 
+  test("the brief gives the deadpan category lines of the book, and says when the book has its 2", () => {
+    const dir = fixtureCopy();
+    const b1 = join(dir, "books", "01");
+    const m1 = readFileSync(join(b1, "memory", "01.md"), "utf8");
+    writeFileSync(join(b1, "memory", "01.md"), m1.replace("deadpan: []", 'deadpan: ["It was a $300 hat, and hats do not answer."]'));
+    expect(section(briefText(dir, 2), "Deadpan category lines of this book (1 of at most 2)")).toContain("01: It was a $300 hat, and hats do not answer.");
+    writeFileSync(join(b1, "memory", "02.md"), m1.replace("chapter: 1", "chapter: 2").replace("deadpan: []", 'deadpan: ["It was a rope, and ropes do not care."]'));
+    const log = section(briefText(dir, 3), "Deadpan category lines of this book (2 of at most 2: write no more in this book)");
+    expect(log).toContain("02: It was a rope, and ropes do not care.");
+  });
+
   const briefText = (dir: string, chapter: number) => readFileSync(join(dir, buildBrief(load(dir), loadRecord(dir), 1, chapter).file), "utf8");
 
   test("has the act, the climax, the tension and the stakes of the chapter", () => {

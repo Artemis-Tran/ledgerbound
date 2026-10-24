@@ -108,6 +108,7 @@ export const RULES: Rule[] = [
   { id: "repetition.image", section: "8", check: ["judge"], summary: "No simile, image or gesture of the book's phrase log (`lb phrases`) again in the book, in the same words or in other words." },
   { id: "record.max-step", section: "rec", check: ["record"], summary: "A counter changes by at most its max_step in one chapter." },
   { id: "record.direction", section: "rec", check: ["record"], summary: "A counter or ladder changes only in its direction (a ladder only goes up)." },
+  { id: "repetition.deadpan", section: "8", check: ["judge"], summary: "At most 2 deadpan category lines in a book (a thing named as its plain category, then a flat general truth about the category); the third is an error." },
   { id: "repetition.verbal-habit", section: "8", check: ["judge"], summary: "A character's verbal habit at most once every few chapters.", max: "warn" },
 ];
 

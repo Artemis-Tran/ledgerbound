@@ -711,6 +711,8 @@ export const RollingMemory = z.strictObject({
       images: TextList,
       /** character ID → gestures */
       gestures: z.record(Slug, TextList).default({}),
+      /** Each deadpan category line, word for word: a book has at most 2 (`repetition.deadpan`). */
+      deadpan: TextList,
     })
     .prefault({}),
 });

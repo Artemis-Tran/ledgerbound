@@ -216,6 +216,10 @@ Use autopilot after the first chapters show that the voice and the plan work. Fo
 | `lb dialogue` | The shape of the dialogue of each chapter: the turns, how long they are, quip chains and echo toppers. Give it files (`lb dialogue mybook/*.md`) to measure prose that a person wrote. |
 | `lb discard 1.09` | Deletes the prose of a draft chapter and the files made from it, so that it is written again from its plan. |
 
+### A novel repo made before version 0.34.0
+
+Section 8 of `guidelines/writing.md` has a new rule, `repetition.deadpan`: a book has at most 2 deadpan category lines, where a thing is named as its plain category and a flat general truth about the category closes the joke ("It was a $300 hat, and hats do not answer."). The memory writer puts each one in `deadpan` of the phrase log, `lb phrases` and the brief list them, and the prose checker reports a third one as an error. Old memory files have no `deadpan` list, so the count starts from the next chapter: add the lines of the approved chapters by hand to `phrase_log.deadpan` of their memory files. To get the new text, copy `guidelines/writing.md` over your copy.
+
 ### A novel repo made before version 0.33.0
 
 Section 3 of `guidelines/writing.md` has a new lint rule, `rhythm.short-run` (4 or more narration sentences under 10 words in a row, a `warn`), and a target for sentence length: most narration sentences have 10 to 25 words. In section 11, `plain.words` no longer asks for one main idea per sentence: a sentence can hold several linked ideas when a reader can follow it in one read. The reviser joins linked sentences, and it splits a sentence only when nothing links its parts. Nothing in the ledger changes. To get the new text, copy `guidelines/writing.md` over your copy. To make old chapters less choppy, use `revise-chapter` with `rhythm.short-run` and `rhythm.variety`.

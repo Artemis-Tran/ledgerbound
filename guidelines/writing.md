@@ -247,6 +247,11 @@ argue and decide in it.
 - The same distinctive phrase must not occur twice in a book. A phrase or simile from a voice
   sample counts too: copy the voice of the samples, not their words.
 - A character's verbal habit is shown, but at most once every few chapters. It is a spice, not the meal.
+- **Deadpan category lines**: at most 2 in a book. The line names a thing as its plain category,
+  then closes the joke with a flat general truth about that category: "It was a $300 hat, and hats
+  do not answer." Its forms: "It was a [noun], and [nouns] do not [verb]", or "[Noun]s did not
+  [verb]. This one did not either." The phrase log counts them (`lb phrases`). Give a third joke a
+  different shape: an understatement, a character's reply, a detail that undercuts the moment.
 
 ## 9. Voice [review]
 The three voice samples are the reference for the narration. Each chapter sounds like the same

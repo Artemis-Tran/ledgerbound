@@ -128,6 +128,7 @@ describe("lb phrases", () => {
     expect(log.images).toContain("a slate token stained red-brown by the bucket iron");
     expect(log.gestures.sabine).toEqual(["holds out her hand without looking up"]);
     expect(log.ending_types).toEqual(["01: decision"]);
+    expect(log.deadpan).toEqual([]);
     expect(at("1.01").images).toEqual([]);
     expect(at("books/01/chapters/01.md").ending_types).toEqual([]);
   });
