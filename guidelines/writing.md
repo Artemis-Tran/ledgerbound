@@ -45,15 +45,25 @@ type. A book uses `cliffhanger` for no more than one chapter in three.
 - **Triplets**: no automatic lists of three ("cold, dark, and silent"). Use one precise item, two,
   or four. If you use three, the third must add something.
 - **[lint] Clause chains**: no sentence with 2 or more clauses joined by ", and" / ", but" / ", so"
-  (a triplet of clauses). Each "and" then only means "next". Subordinate one clause, or split.
+  (a triplet of clauses). Each "and" then only means "next". Subordinate one clause, or use a
+  conjunction that names the relation ("when", "because", "until"). Split only when the parts are
+  not linked, and never into a run of short sentences.
   Bad: "Then they were gone, and the sand was grey and pocked, and the sea came in over it."
-  Better: "Then they were gone. The sand lay grey and pocked, and the sea came in over it."
-- **[lint] Commas**: at most 4 commas in one sentence. Split it.
+  Better: "When they were gone, the sand lay grey and pocked, and the sea came in over it."
+- **[lint] Commas**: at most 4 commas in one sentence. Subordinate a clause, or move one clause to
+  the next sentence.
 - **Contrast framing**: no "It wasn't X. It was Y." / "not X, but Y" / "Not because X, but because
   Y". At most once per chapter.
 - **[lint] One-line paragraphs for drama**: at most 2 per chapter, and never 3 in a row.
 - **[lint] Em dashes**: at most 3 per 1,000 words.
-- Vary sentence length because the content needs it, not because of a pattern.
+- **[lint] Short runs**: no more than 3 consecutive narration sentences under 10 words. Join the
+  linked actions and thoughts: an action and its result, a cause and its effect, two things that
+  happen at the same time. A fast action beat can be the exception.
+  Bad: "Ivo found the rope. It was wet. He tied it to the post. Then he went down."
+  Better: "Ivo found the rope, still wet from the seep, and tied it to the post before he went down."
+- **Sentence length**: vary it because the content needs it, not because of a pattern. In narration,
+  most sentences have 10 to 25 words, and some are longer. A short sentence lands because longer
+  sentences are round it. The voice samples set the length for the project.
 
 ## 4. Banned words and phrases [lint]
 testament to, tapestry, symphony (of), dance (as a metaphor), palpable, visceral, electric (air or
@@ -268,9 +278,11 @@ correct when one of these asks for it:
 
 Even then, a reader must be able to follow the sentence.
 
-- **Plain words and sentences.** Use the common word before the rare one. Give a sentence one
-  main idea, and join two only when the content links them. One image or metaphor in a paragraph
-  is enough; do not put one in every sentence.
+- **Plain words and sentences.** Use the common word before the rare one. A sentence can hold
+  several ideas when the content links them and a reader can follow it in one read: join them with
+  a conjunction or a subordinate clause that shows how they relate. Split a sentence only when a
+  reader must read it twice. One image or metaphor in a paragraph is enough; do not put one in
+  every sentence.
 - **New terms, few at a time.** A new term is a name, title, place, creature, custom or System
   term that the reader meets for the first time in the book. At most one new term in a sentence,
   and at most two in a paragraph. Until a name matters to the scene, use a common word ("the

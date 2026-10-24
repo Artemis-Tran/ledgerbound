@@ -116,6 +116,16 @@ describe("§3 rhythm", () => {
     expect(rules('"No." "Why?" "Rope." "Fine."')).not.toContain("rhythm.staccato");
   });
 
+  test("four narration sentences under 10 words in a row is a warning", () => {
+    const choppy = "Ivo found the rope by the gate. It was wet. He tied it to the post. Then he went down into the dark.";
+    expect(lint(choppy)).toContainEqual(expect.objectContaining({ rule: "rhythm.short-run", severity: "warn", line: 1 }));
+    expect(rules(`Ivo found the rope by the gate. It was wet. ${FILLER} Then he went down into the dark.`)).not.toContain("rhythm.short-run");
+  });
+
+  test("short dialogue lines do not count as a short run", () => {
+    expect(rules('"Go on." "Where?" "Down the shaft." "With what rope?"')).not.toContain("rhythm.short-run");
+  });
+
   test("three sentences that start with the same word", () => {
     const text = "He climbed down the ladder to the second gallery. He counted the rungs as he went past them. He stopped at the flooded seam and listened.";
     expect(lint(text)).toContainEqual(expect.objectContaining({ rule: "rhythm.openings", line: 1 }));

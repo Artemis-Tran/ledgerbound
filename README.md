@@ -216,6 +216,10 @@ Use autopilot after the first chapters show that the voice and the plan work. Fo
 | `lb dialogue` | The shape of the dialogue of each chapter: the turns, how long they are, quip chains and echo toppers. Give it files (`lb dialogue mybook/*.md`) to measure prose that a person wrote. |
 | `lb discard 1.09` | Deletes the prose of a draft chapter and the files made from it, so that it is written again from its plan. |
 
+### A novel repo made before version 0.33.0
+
+Section 3 of `guidelines/writing.md` has a new lint rule, `rhythm.short-run` (4 or more narration sentences under 10 words in a row, a `warn`), and a target for sentence length: most narration sentences have 10 to 25 words. In section 11, `plain.words` no longer asks for one main idea per sentence: a sentence can hold several linked ideas when a reader can follow it in one read. The reviser joins linked sentences, and it splits a sentence only when nothing links its parts. Nothing in the ledger changes. To get the new text, copy `guidelines/writing.md` over your copy. To make old chapters less choppy, use `revise-chapter` with `rhythm.short-run` and `rhythm.variety`.
+
 ### A novel repo made before version 0.32.0
 
 A short turn with a reaction or a thought of 15 words or more in its paragraph now ends a quip chain, so `lb lint` can report fewer quip chains in old chapters. The reviser makes a turn longer only with a new thought, and the prose checker reports padding in a revision (`dialogue.padding`). A speaker shows a scene want in the moves of the talk and seldom says it. Since 0.32.1, two characters of a relationship file talk mostly plainly, and their running joke comes at most once in a scene; a card's `humour` example is one kind of joke, not the way that the character talks. Since 0.32.2, a scene has at most one run of quick one-line turns and at most one line that only tops the line before it, and a quip exchange can end when a speaker drops the joke and says a plain thing. To get the new text, copy `guidelines/writing.md` over your copy.

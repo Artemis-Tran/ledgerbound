@@ -238,6 +238,16 @@ export function lintProse(body: string, firstLine: number, file: string, opts: L
       }
       i = Math.max(j, i + 1);
     }
+    // Choppy prose: 4 or more sentences under 10 words in a row.
+    for (let k = 0; k < seq.length; ) {
+      let end = k;
+      while (end < seq.length && seq[end].words.length < 10) end++;
+      if (end - k >= 4) {
+        const group = seq.slice(k, end);
+        add({ rule: "rhythm.short-run", severity: "warn", line: group[0].line, text: group.map((s) => s.text).join(" "), message: `${group.length} consecutive sentences under 10 words: join the linked ones` });
+      }
+      k = Math.max(end, k + 1);
+    }
     for (let k = 0; k + 2 < seq.length; k++) {
       const w = firstWord(seq[k]);
       if (w && w === firstWord(seq[k + 1]) && w === firstWord(seq[k + 2]) && ![seq[k], seq[k + 1], seq[k + 2]].every((s) => reported.has(s))) {
@@ -263,9 +273,9 @@ export function lintProse(body: string, firstLine: number, file: string, opts: L
   for (const s of sentences) {
     if (s.dialogue) continue;
     const joins = [...s.text.matchAll(CLAUSE_JOIN)].length;
-    if (joins >= 2) add({ rule: "rhythm.clause-chains", severity: "warn", line: s.line, text: s.text, message: `${joins + 1} clauses chained with a conjunction: subordinate one, or split the sentence` });
+    if (joins >= 2) add({ rule: "rhythm.clause-chains", severity: "warn", line: s.line, text: s.text, message: `${joins + 1} clauses chained with a conjunction: subordinate one, or name the relation with a conjunction` });
     const commas = (s.text.match(/,/g) ?? []).length;
-    if (commas >= 5) add({ rule: "rhythm.commas", severity: "warn", line: s.line, text: s.text, message: `${commas} commas in one sentence (max 4): split it` });
+    if (commas >= 5) add({ rule: "rhythm.commas", severity: "warn", line: s.line, text: s.text, message: `${commas} commas in one sentence (max 4): subordinate a clause, or move one to the next sentence` });
   }
 
   // §3 contrast framing: at most once.
