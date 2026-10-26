@@ -52,8 +52,8 @@ type. A book uses `cliffhanger` for no more than one chapter in three.
   Better: "When they were gone, the sand lay grey and pocked, and the sea came in over it."
 - **[lint] Commas**: at most 4 commas in one sentence. Subordinate a clause, or move one clause to
   the next sentence.
-- **Contrast framing**: no "It wasn't X. It was Y." / "not X, but Y" / "Not because X, but because
-  Y". At most once per chapter.
+- **Contrast framing**: never, in narration or dialogue: no "It wasn't X. It was Y." / "That's not X.
+  That's Y." / "not X, but Y" / "Not because X, but because Y". Say the Y plainly.
 - **[lint] One-line paragraphs for drama**: at most 2 per chapter, and never 3 in a row.
 - **[lint] Em dashes**: at most 3 per 1,000 words.
 - **[lint] Short runs**: no more than 3 consecutive narration sentences under 10 words. Join the

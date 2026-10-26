@@ -153,9 +153,12 @@ describe("§3 rhythm", () => {
     expect(rules("He took the rope, the hook, the slate, and the lamp from the shelf.")).not.toContain("rhythm.commas");
   });
 
-  test("the second contrast frame is a warning", () => {
+  test("each contrast frame is a warning", () => {
     const text = "It wasn't the rope. It was the hook. He came not for the pay, but for the rank.";
-    expect(lint(text).filter((f) => f.rule === "rhythm.contrast")).toHaveLength(1);
+    expect(lint(text).filter((f) => f.rule === "rhythm.contrast")).toHaveLength(2);
+    expect(rules('"That\'s not an answer. That\'s a price list."')).toContain("rhythm.contrast");
+    expect(rules('"That\'s not a line, that\'s me losing."')).toContain("rhythm.contrast");
+    expect(rules('"I asked for a job. You gave me a price list."')).not.toContain("rhythm.contrast");
   });
 
   test("a third one-line paragraph is a warning, and a third in a row is an error", () => {
@@ -164,6 +167,7 @@ describe("§3 rhythm", () => {
     const together = [FILLER, "He waited.", "The bell rang.", "Nobody came."].join("\n\n");
     expect(lint(together).filter((f) => f.rule === "rhythm.one-line-paragraphs").map((f) => [f.line, f.severity])).toEqual([[7, "error"]]);
   });
+
 });
 
 describe("§1 endings and §2 openings", () => {

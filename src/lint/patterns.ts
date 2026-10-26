@@ -115,6 +115,7 @@ export const TAGS: Pattern[] = [
 
 export const CONTRAST: Pattern[] = [
   P("wasnt-x-was-y", "\\b(?:it|this|that|he|she|they)\\s+(?:wasn['’]t|was not|isn['’]t|is not)\\s+[^.!?]{1,60}[.;]\\s+(?:it|this|that|he|she|they)\\s+(?:was|is)\\b", "warn"),
+  P("thats-not-x-thats-y", "\\b(?:it|this|that|he|she|they)['’](?:s|re) not\\s+[^.!?,]{1,60}[.;,]\\s+(?:it|this|that|he|she|they)['’](?:s|re)\\b", "warn"),
   P("not-because-but-because", "\\bnot because\\b[^.!?]{1,100},?\\s+but because\\b", "warn"),
   P("not-x-but-y", "\\bnot (?:just |only |merely |a |an |the )?\\w+(?: \\w+){0,3},\\s+but\\b", "warn"),
 ];

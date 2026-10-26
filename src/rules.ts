@@ -33,7 +33,7 @@ export const RULES: Rule[] = [
   { id: "rhythm.openings", section: "3", check: ["lint"], summary: "No 3 consecutive sentences that start with the same word." },
   { id: "rhythm.anadiplosis", section: "3", check: ["lint", "judge"], summary: "A sentence does not start with the last word of the one before for effect; a chain of reasoning is permitted.", max: "warn" },
   { id: "rhythm.triplets", section: "3", check: ["judge"], summary: "No automatic lists of three.", max: "warn" },
-  { id: "rhythm.contrast", section: "3", check: ["lint", "judge"], summary: "At most one 'not X, but Y' contrast frame per chapter.", max: "warn" },
+  { id: "rhythm.contrast", section: "3", check: ["lint", "judge"], summary: "No 'not X, but Y' or 'That's not X. That's Y.' contrast frame, in narration or dialogue.", max: "warn" },
   { id: "rhythm.clause-chains", section: "3", check: ["lint"], summary: "No sentence with 2 or more clauses joined by ', and' / ', but' / ', so'.", max: "warn" },
   { id: "rhythm.commas", section: "3", check: ["lint"], summary: "At most 4 commas in one sentence.", max: "warn" },
   { id: "rhythm.one-line-paragraphs", section: "3", check: ["lint"], summary: "At most 2 one-line dramatic paragraphs per chapter; never 3 in a row." },

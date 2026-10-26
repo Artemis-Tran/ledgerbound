@@ -28,7 +28,7 @@ The point (for example `1.07`) gives the paths, where NN is the book and MM the 
    - For `emotion.felt`, `dialogue.delivery`, `dialogue.quip-chain` and `dialogue.natural`, a fix can add a sentence or a short paragraph of reaction, delivery or thought next to the span, or make a turn longer and less tidy. It stays in the voice of the samples and the voice card, and its gestures and images are new for the book (`lb phrases <point>`).
    - For `dialogue.natural`, put the untidiness in the spoken words: a restart, a word said twice, half an answer, a "well" or "look" in the speaker's voice. A line that breaks off is cut by the next speaker or by what happens. A turn that you write again keeps the words of the speaker's `vocabulary` (a dock word stays a dock word).
    - A plan finding can need new material: add at most one paragraph for it. When it needs more (a new scene, a different outcome), leave it and mark it `replan`.
-   - Keep the counts of the chapter: when a fix cuts a sentence free, join it to the paragraph before or after it. A fix adds no one-line paragraph, contrast frame, em dash or body tell.
+   - Keep the counts of the chapter: when a fix cuts a sentence free, join it to the paragraph before or after it. A fix adds no one-line paragraph, em dash or body tell, and no contrast frame at all.
    - A changed line uses a verbal habit of a voice card only when the finding asks for it.
    - After each fix, run `lb lint --lines <A-B> books/NN/chapters/MM.md` on the changed lines, and fix what it finds there.
    Done when each finding is fixed or marked.

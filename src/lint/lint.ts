@@ -278,9 +278,14 @@ export function lintProse(body: string, firstLine: number, file: string, opts: L
     if (commas >= 5) add({ rule: "rhythm.commas", severity: "warn", line: s.line, text: s.text, message: `${commas} commas in one sentence (max 4): subordinate a clause, or move one to the next sentence` });
   }
 
-  // §3 contrast framing: at most once.
-  const contrasts = paragraphs.flatMap((p) => CONTRAST.flatMap((pattern) => matches(p, pattern)));
-  contrasts.slice(1).forEach((m) => add({ rule: "rhythm.contrast", severity: "warn", line: m.line, text: m.text, message: `contrast frame number ${contrasts.indexOf(m) + 1} (max 1 per chapter)` }));
+  // §3 contrast framing: never.
+  // Two patterns can match one frame: an overlapping match is the same frame.
+  const contrasts = paragraphs.flatMap((p) =>
+    CONTRAST.flatMap((pattern) => matches(p, pattern))
+      .sort((a, b) => a.index - b.index)
+      .filter((m, i, all) => i === 0 || m.index >= all[i - 1].index + all[i - 1].text.length),
+  );
+  contrasts.forEach((m) => add({ rule: "rhythm.contrast", severity: "warn", line: m.line, text: m.text, message: "contrast frame (none permitted): say the Y plainly" }));
 
   // §3 one-line paragraphs for drama: at most 2 (a warning), and never 3 in a row (an error).
   const oneLiners = paragraphs.filter((p) => p.sentences.length === 1 && !p.sentences[0].dialogue && p.sentences[0].words.length <= 10);
