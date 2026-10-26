@@ -168,6 +168,10 @@ describe("§3 rhythm", () => {
     expect(lint(together).filter((f) => f.rule === "rhythm.one-line-paragraphs").map((f) => [f.line, f.severity])).toEqual([[7, "error"]]);
   });
 
+  test("a combat line is not a one-line paragraph", () => {
+    const text = [FILLER, "[Hook · −34 · Health 101/135]", "[Effect: Numb leg]", "[Rat defeated · Level 1 → 3]", "He waited."].join("\n\n");
+    expect(rules(text)).not.toContain("rhythm.one-line-paragraphs");
+  });
 });
 
 describe("§1 endings and §2 openings", () => {

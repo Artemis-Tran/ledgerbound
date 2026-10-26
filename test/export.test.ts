@@ -62,6 +62,12 @@ describe("markdown to XHTML", () => {
     expect(x).toContain('<p class="break">* * *</p>');
     expect(x).toContain("<ul>\n<li>a</li>\n<li>b</li>\n</ul>");
   });
+
+  test("a paragraph of [bracketed] lines is a combat line, one <p> each", () => {
+    const x = toXhtml("He ran.\n\n[Hook · −34 · Health 101/135]\n[Effect: Numb leg]\n\nA [link](https://a.example) here.");
+    expect(x).toContain('<p class="combat">[Hook · −34 · Health 101/135]</p>\n<p class="combat">[Effect: Numb leg]</p>');
+    expect(x).toContain('<p>A <a href="https://a.example">link</a> here.</p>');
+  });
 });
 
 describe("ISBN", () => {

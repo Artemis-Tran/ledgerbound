@@ -109,13 +109,15 @@ const PAGE_TYPES: Record<string, string> = {
 
 const CSS = `body { margin: 0; padding: 0; }
 p { margin: 0; text-indent: 1.5em; line-height: 1.4; }
-h1 + p, h2 + p, h3 + p, .break + p, .window + p, ul + p { text-indent: 0; }
+h1 + p, h2 + p, h3 + p, .break + p, .window + p, .combat + p, ul + p { text-indent: 0; }
 h1 { font-size: 1.5em; text-align: center; margin: 2em 0 1.5em; page-break-before: always; break-before: page; }
 h2, h3, h4 { font-size: 1.1em; margin: 1.5em 0 0.5em; }
 .chapter-number { display: block; font-size: 0.7em; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.5em; }
 .break { text-align: center; text-indent: 0; margin: 1em 0; }
 .window { font-family: monospace; font-size: 0.85em; border: 1px solid; padding: 0.5em 0.75em; margin: 1em 0; page-break-inside: avoid; break-inside: avoid; }
 .window p { text-indent: 0; white-space: pre-wrap; line-height: 1.3; }
+.combat { font-family: monospace; font-size: 0.85em; text-indent: 0; margin: 0.6em 0; }
+.combat + .combat { margin-top: 0; }
 .page p { text-indent: 0; margin-bottom: 0.8em; }
 .page-copyright p, .page-copyright li { font-size: 0.85em; }
 .page-dedication, .page-epigraph { text-align: center; margin-top: 30%; }

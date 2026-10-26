@@ -288,7 +288,8 @@ export function lintProse(body: string, firstLine: number, file: string, opts: L
   contrasts.forEach((m) => add({ rule: "rhythm.contrast", severity: "warn", line: m.line, text: m.text, message: "contrast frame (none permitted): say the Y plainly" }));
 
   // §3 one-line paragraphs for drama: at most 2 (a warning), and never 3 in a row (an error).
-  const oneLiners = paragraphs.filter((p) => p.sentences.length === 1 && !p.sentences[0].dialogue && p.sentences[0].words.length <= 10);
+  // A combat line ([Hook · −34 · Health 101/135]) is System text, not a paragraph for drama.
+  const oneLiners = paragraphs.filter((p) => p.sentences.length === 1 && !p.sentences[0].dialogue && p.sentences[0].words.length <= 10 && !/^\[[^\]]+\]$/.test(p.text.trim()));
   const inRun = new Set(oneLiners.filter((p, i) => i >= 2 && oneLiners[i - 2].index === p.index - 2 && oneLiners[i - 1].index === p.index - 1));
   oneLiners.slice(2).forEach((p) =>
     add({

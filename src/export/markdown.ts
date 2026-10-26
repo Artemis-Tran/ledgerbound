@@ -56,6 +56,7 @@ export function inline(text: string): string {
 const BREAK = /^(\*\s*){3,}$|^(-\s*){3,}$|^#$/;
 const HEADING = /^(#{1,6})\s+(.+)$/;
 const ITEM = /^[-*]\s+(.+)$/;
+const COMBAT = /^\[[^\]]+\]$/;
 
 /** Markdown body → XHTML block elements. */
 export function toXhtml(body: string): string {
@@ -65,7 +66,9 @@ export function toXhtml(body: string): string {
   let fence: string[] | undefined;
 
   const flushPara = () => {
-    if (para.length) out.push(`<p>${inline(para.join(" "))}</p>`);
+    // A combat line: a paragraph of [bracketed] lines, one <p> each, kept as written.
+    if (para.length && para.every((l) => COMBAT.test(l))) out.push(...para.map((l) => `<p class="combat">${escapeXml(l)}</p>`));
+    else if (para.length) out.push(`<p>${inline(para.join(" "))}</p>`);
     para = [];
   };
   const flushList = () => {
