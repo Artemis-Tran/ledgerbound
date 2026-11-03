@@ -256,6 +256,14 @@ _Avoid_: Prompt, context pack
 
 ### Review and revision
 
+**Reader review**:
+The read of one chapter after its checks pass, by the chapter-reader agent, as a reader of the genre who knows the user's taste. It finds what the checks cannot see (a missed reaction, a sudden cut, a logic gap), and the chosen fixes go to the reviser. It is not a book review.
+_Avoid_: Chapter review, critique
+
+**Reader notes**:
+`reader-notes.md`: one line for each lasting thing that the user wants as a reader of the book, written by the main session from what the user says. Each reader review looks for each one. A session note gives the review what the user said about one chapter.
+_Avoid_: Preferences, taste file
+
 **Book review**:
 A critic's judgment of one complete book, in `books/NN/review.md`: a score for each area (enjoyment, plot, pacing, characters, prose), the review findings and the verdict. It judges the book as a whole, which no chapter check sees. An imported book has none.
 _Avoid_: Critique, report, feedback

@@ -78,7 +78,8 @@ Both skills do the same steps for each chapter. `lb run` finds the stage of each
 | `planned` | **Brief** | `lb brief 1.07` | `runs/briefs/01-07.md`: the only input of the writer (see below) |
 | `briefed` | **Write** | `chapter-writer` agent | First the delta `books/01/deltas/07.jsonl`, which `lb delta` must accept. Then the prose `books/01/chapters/07.md`. Then a quote from the prose on each delta entry. Then `lb lint` until clean. |
 | `drafted` | **Verify** | `verify-chapter`: `prose-checker` and `continuity-checker` agents at the same time, then the `reviser` agent | Findings in `runs/verify/01-07.json`. The reviser changes only the flagged spans. A maximum of 3 rounds. |
-| `verified` | **Approve** | `lb commit 1.07` (for chapter 1.01: you, then `lb approve chapter-1`) | The delta goes into `ledger.jsonl`, and the chapter gets `status: approved` |
+| `verified` | **Review** | the main session writes a session note, then the `chapter-reader` agent; then the `reviser` and one more verify round for the chosen fixes | `runs/reader/01-07.json`: a short list of fixes that a reader of the genre would want (a missed reaction, a sudden cut, a logic gap), checked against `reader-notes.md`. In `generate-chapter` you choose the fixes; in `generate-book` the errors are applied. |
+| `reviewed` | **Approve** | `lb commit 1.07` (for chapter 1.01: you, then `lb approve chapter-1`) | The delta goes into `ledger.jsonl`, and the chapter gets `status: approved` |
 | `approved` | **Remember** | `memory-writer` agent | `books/01/memory/07.md`: summary, changes, open questions, ending type, the characters on the page, phrase log. New setting details go into the lore entries, and new details about a character into its file. A character who speaks or comes back gets a file. |
 | `remembered` | **Git** | the skill | One commit: `Book 1, chapter 7: <title>` |
 | `done` | – | – | The next chapter starts |

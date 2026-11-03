@@ -9,7 +9,8 @@ With `mode: autopilot` in `project.yaml`, the run makes the user's decisions its
 | `planned` | Run `lb brief <point>`, then **write**. |
 | `briefed` | **Write**. |
 | `drafted` | **Verify**. |
-| `verified` | **Approve**. |
+| `verified` | **Review**. |
+| `reviewed` | **Approve**. |
 | `approved` | **Remember**. |
 | `remembered` | **Git**. |
 | `blocked` | **Stop**, or in autopilot **Blocked in autopilot**. |
@@ -23,6 +24,25 @@ Done when the agent returns `"status": "drafted"` and `lb delta <point>` exits 0
 
 Run the `verify-chapter` skill for the point.
 Done when it returns `pass`. When it returns `blocked` or `replan`, go to **Stop** (in autopilot: `replan` runs the `replan` skill, then **verify** again; `blocked` goes to **Blocked in autopilot**).
+
+## Review
+
+A reader of the genre who knows the user's taste reads the chapter after its checks pass. The chapter-reader agent reads the prose, and the main session gives it what only the session knows, so the session stays small.
+
+1. **Notes.** Add each lasting thing that the user said in this session about what they want as a reader (for example "a level-up gets a reaction on the page") to `reader-notes.md` at the root of the novel repo: one line each, with no line that `guidelines/writing.md` or the file already has. Create the file when it is missing. Then write the session note `runs/reader/NN-MM.note.md`: what the user said in this session about this chapter, its plan or the chapters next to it, in a few lines. Write "None." when the session has nothing.
+   Done when both files are written.
+
+2. **Read.** Start the `ledgerbound:chapter-reader` agent with the point and the session note path.
+   Done when `runs/reader/NN-MM.json` exists.
+
+3. **Choose.**
+   - In `generate-chapter`, outside autopilot: show the user each finding in one or two lines, most important first, with the agent's `works` line, and ask which to apply. Wait for their choice.
+   - In `generate-book` or autopilot: apply each `error` finding. In autopilot, write them in the log.
+   A `replan:` finding goes to the user in `generate-chapter`; in `generate-book` it waits for the report at the end, and in autopilot it is skipped and logged.
+   Done when the findings to apply are chosen.
+
+4. **Fix.** When no finding is chosen, set `"reviewed": true` in `runs/verify/NN-MM.json`, and you are done. Else write the chosen findings to `runs/verify/NN-MM.findings.json`, and start the `ledgerbound:reviser` agent with the point, the record's `round`, the brief path and that file. Then set `"reviewed": true` and `"verdict": "fail"` in the record, with the chosen findings in `open`, and run the `verify-chapter` skill: its next round checks the changed lines, and the review adds 2 rounds to its last round.
+   Done when `lb run` shows the chapter as `reviewed`.
 
 ## Approve
 

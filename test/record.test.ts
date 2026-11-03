@@ -573,6 +573,11 @@ describe("lb run", () => {
     writeFileSync(join(dir, "runs/verify/01-02.json"), JSON.stringify({ round: 2, verdict: "pass", open: [{ severity: "warn", rule: "rhythm.triplets", problem: "y" }] }));
     r = runReport(load(dir), 1);
     expect(r.chapters[1]).toMatchObject({ stage: "verified" });
+    expect(r.next.step).toContain("chapter-reader");
+
+    writeFileSync(join(dir, "runs/verify/01-02.json"), JSON.stringify({ round: 2, verdict: "pass", reviewed: true, open: [{ severity: "warn", rule: "rhythm.triplets", problem: "y" }] }));
+    r = runReport(load(dir), 1);
+    expect(r.chapters[1]).toMatchObject({ stage: "reviewed" });
     expect(r.next.step).toContain("lb commit 1.02");
     expect(r.warnings).toEqual([{ chapter: 2, rule: "rhythm.triplets", problem: "y" }]);
     expect(existsSync(join(dir, "runs/book-01.json"))).toBe(true);
@@ -617,6 +622,23 @@ describe("lb run", () => {
     expect(lb(["commit", "1.02"], dir).status).toBe(0);
   });
 
+  test("the fixes of a reader review get 2 more verify rounds, and a reopened chapter needs no new review", () => {
+    const dir = fixtureCopy();
+    stage(dir, GOOD_DELTA);
+    writeChapter2(dir);
+    mkdirSync(join(dir, "runs/verify"), { recursive: true });
+    const record = (extra: object) =>
+      writeFileSync(join(dir, "runs/verify/01-02.json"), JSON.stringify({ verdict: "fail", open: [{ severity: "error", rule: "reader", line: 9, problem: "x" }], ...extra }));
+
+    record({ round: 4, reviewed: true });
+    expect(runReport(load(dir), 1).chapters[1]).toMatchObject({ stage: "drafted" });
+    record({ round: 5, reviewed: true });
+    expect(runReport(load(dir), 1).chapters[1]).toMatchObject({ stage: "blocked" });
+
+    writeFileSync(join(dir, "runs/verify/01-02.json"), JSON.stringify({ round: 1, verdict: "pass", reopened: true, open: [] }));
+    expect(runReport(load(dir), 1).chapters[1]).toMatchObject({ stage: "reviewed" });
+  });
+
   test("chapter 1.01 waits for the user when the checkpoint is on", () => {
     const dir = fixtureCopy();
     edit(dir, "books/01/chapters/01.md", "status: approved", "status: draft");
@@ -624,7 +646,7 @@ describe("lb run", () => {
     writeFileSync(join(dir, "books/01/deltas/01.jsonl"), readFileSync(join(dir, "ledger.jsonl")));
     writeFileSync(join(dir, "ledger.jsonl"), "");
     mkdirSync(join(dir, "runs/verify"), { recursive: true });
-    writeFileSync(join(dir, "runs/verify/01-01.json"), JSON.stringify({ round: 1, verdict: "pass", open: [] }));
+    writeFileSync(join(dir, "runs/verify/01-01.json"), JSON.stringify({ round: 1, verdict: "pass", reviewed: true, open: [] }));
     expect(runReport(load(dir), 1).next.step).toContain("lb approve chapter-1");
     expect(lb(["gate", "chapter-1"], dir).status).toBe(1);
 
@@ -656,7 +678,7 @@ describe("imported books: the record starts after book 1", () => {
     mkdirSync(join(dir, "books/02/chapters"), { recursive: true });
     writeFileSync(join(dir, "books/02/chapters/01.md"), "---\nstatus: draft\nbook: 2\nchapter: 1\ntitle: Red Wax\n---\n\nIvo climbed.\n");
     mkdirSync(join(dir, "runs/verify"), { recursive: true });
-    writeFileSync(join(dir, "runs/verify/02-01.json"), JSON.stringify({ round: 1, verdict: "pass", open: [] }));
+    writeFileSync(join(dir, "runs/verify/02-01.json"), JSON.stringify({ round: 1, verdict: "pass", reviewed: true, open: [] }));
     expect(runReport(load(dir), 2).next.step).toContain("Checkpoint chapter-1: show the user chapter 2.01");
   });
 });

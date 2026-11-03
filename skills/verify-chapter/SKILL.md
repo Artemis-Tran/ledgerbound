@@ -24,11 +24,11 @@ Two checkers that did not write the chapter find the problems, and a reviser fix
    { "round": 1, "verdict": "pass | fail", "open": [{ "severity": "error", "rule": "plan.ending", "line": 88, "quote": "...", "problem": "..." }] }
    ```
 
-   `verdict` is `pass` when no finding is an `error`. `open` holds every finding, with its severity and quote. Keep `extra_round` and `reopened` when the old record has them.
+   `verdict` is `pass` when no finding is an `error`. `open` holds every finding, with its severity and quote. Keep `extra_round`, `reopened` and `reviewed` when the old record has them.
 
 4. **Decide.**
    - `pass`: return `pass`. The open warnings stay in the record for the report at the end of the book.
-   The last round is 3, or 4 when the record has `"extra_round": true`.
+   The last round is 3, plus 1 when the record has `"extra_round": true`, plus 2 when it has `"reviewed": true`.
    - `fail` before the last round: when the record has `"reopened": true`, delete `books/NN/memory/MM.md`: the memory writer writes it again from the revised chapter. Start the `ledgerbound:reviser` agent with the point, the round, the brief path and the findings path. When it returns a `not_fixed` item with `"replan": true`, return `replan` with its reason. Else go back to step 1.
    - `fail` in the last round: return `blocked` with the open errors.
 

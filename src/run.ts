@@ -11,7 +11,7 @@ import { firstPlannedBook, isOn } from "./checkpoints.ts";
 import { pad2, bookDir, type Project } from "./project.ts";
 import { chapterKey, chapterPath, LEDGER, stagedPath } from "./record.ts";
 
-export const STAGES = ["planned", "briefed", "drafted", "verified", "approved", "remembered", "done"] as const;
+export const STAGES = ["planned", "briefed", "drafted", "verified", "reviewed", "approved", "remembered", "done"] as const;
 export type Stage = (typeof STAGES)[number] | "blocked";
 
 export const verifyPath = (book: number, chapter: number) => `runs/verify/${pad2(book)}-${pad2(chapter)}.json`;
@@ -19,6 +19,8 @@ export const verifyPath = (book: number, chapter: number) => `runs/verify/${pad2
 export const roundCopyPath = (book: number, chapter: number, round: number) => `runs/verify/${pad2(book)}-${pad2(chapter)}.r${round}.md`;
 export const memoryPath = (book: number, chapter: number) => `${bookDir(book)}/memory/${pad2(chapter)}.md`;
 export const MAX_ROUNDS = 3;
+/** The verify rounds that the fixes of a reader review add. */
+export const REVIEW_ROUNDS = 2;
 export const AUTOPILOT_LOG = "runs/autopilot.md";
 
 /** What verify-chapter writes after each round. */
@@ -33,9 +35,11 @@ export interface VerifyRecord {
   accepted?: boolean;
   /** `lb reopen` took the chapter back to draft after an earlier chapter: its prose passed before, so the check starts with the record. */
   reopened?: boolean;
+  /** The reader review of the chapter is done: the chapter-reader agent read it, and the chosen fixes went to the reviser. */
+  reviewed?: boolean;
 }
 
-export const maxRounds = (v: VerifyRecord) => MAX_ROUNDS + (v.extra_round ? 1 : 0);
+export const maxRounds = (v: VerifyRecord) => MAX_ROUNDS + (v.extra_round ? 1 : 0) + (v.reviewed ? REVIEW_ROUNDS : 0);
 
 export function readVerify(root: string, book: number, chapter: number): VerifyRecord | undefined {
   const p = join(root, verifyPath(book, chapter));
@@ -117,8 +121,10 @@ export function runReport(project: Project, book: number): RunReport {
       return { chapter: n, stage: committed && !committed(book, n) ? "remembered" : "done" };
     }
     if (prose) {
-      if (verify?.verdict === "pass") return { chapter: n, stage: "verified" };
-      if (verify?.accepted) return { chapter: n, stage: "verified", note: "open errors accepted" };
+      // A reopened chapter was read before: only its record changed.
+      const checked = verify?.reviewed || verify?.reopened ? "reviewed" : "verified";
+      if (verify?.verdict === "pass") return { chapter: n, stage: checked };
+      if (verify?.accepted) return { chapter: n, stage: checked, note: "open errors accepted" };
       if (verify && verify.round >= maxRounds(verify)) {
         return { chapter: n, stage: "blocked", note: `${verify.open.filter((f) => f.severity === "error").length} open error(s) after ${verify.round} rounds` };
       }
@@ -135,7 +141,8 @@ export function runReport(project: Project, book: number): RunReport {
     planned: `Run \`lb brief ${key}\`, then the chapter-writer agent (generate-chapter).`,
     briefed: `Run the chapter-writer agent for ${key} (generate-chapter). A staged delta from an earlier try is its to replace.`,
     drafted: `Run verify-chapter for ${key}.`,
-    verified:
+    verified: `Run the Review step of chapter-steps.md for ${key}: the chapter-reader agent, then the fixes that are chosen.`,
+    reviewed:
       book === firstPlannedBook(project) && first?.chapter === 1 && isOn(project, "chapter-1")
         ? `Checkpoint chapter-1: show the user chapter ${key} and the check results. When they approve, run \`lb approve chapter-1\`.`
         : `Run \`lb commit ${key}\`.`,
