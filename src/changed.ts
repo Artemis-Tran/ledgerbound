@@ -3,14 +3,8 @@
  * keeps of each round. Rounds 2 and 3 check only these spans and the open findings.
  */
 
-/**
- * The lines of `after` that differ from `before`, as inclusive ranges of file lines, each widened to
- * whole paragraphs (runs of non-blank lines). A deletion marks the paragraph where the text was.
- */
-export function changedRanges(before: string, after: string): [number, number][] {
-  const a = before.split(/\r?\n/);
-  const b = after.split(/\r?\n/);
-  // Longest common subsequence of lines; lcs[i][j] is for a[i..] and b[j..].
+/** Longest common subsequence: the cell `i * (b.length + 1) + j` is for a[i..] and b[j..]. */
+export function lcsTable(a: string[], b: string[]): Uint32Array {
   const w = b.length + 1;
   const lcs = new Uint32Array((a.length + 1) * w);
   for (let i = a.length - 1; i >= 0; i--) {
@@ -18,6 +12,18 @@ export function changedRanges(before: string, after: string): [number, number][]
       lcs[i * w + j] = a[i] === b[j] ? lcs[(i + 1) * w + j + 1] + 1 : Math.max(lcs[(i + 1) * w + j], lcs[i * w + j + 1]);
     }
   }
+  return lcs;
+}
+
+/**
+ * The lines of `after` that differ from `before`, as inclusive ranges of file lines, each widened to
+ * whole paragraphs (runs of non-blank lines). A deletion marks the paragraph where the text was.
+ */
+export function changedRanges(before: string, after: string): [number, number][] {
+  const a = before.split(/\r?\n/);
+  const b = after.split(/\r?\n/);
+  const w = b.length + 1;
+  const lcs = lcsTable(a, b);
   const changed = new Set<number>();
   let i = 0;
   let j = 0;

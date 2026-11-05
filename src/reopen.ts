@@ -80,15 +80,16 @@ export function reopenChapters(project: Project, rec: RecordFiles, book: number,
 }
 
 /**
- * The verify files of a chapter that exist: its record, and the findings and round copies of verify-chapter,
- * revise-chapter and the reviser (runs/verify/NN-MM.json, NN-MM.findings.json, NN-MM.rK.md).
+ * The verify files of a chapter that exist: its record, the findings and round copies of verify-chapter,
+ * revise-chapter and the reviser, and the proposal of a tic pass (runs/verify/NN-MM.json, NN-MM.findings.json,
+ * NN-MM.rK.md, NN-MM.proposed.md).
  */
 export function verifyFiles(root: string, book: number, chapter: number): string[] {
   const record = verifyPath(book, chapter);
   const dir = dirname(record);
   const stem = basename(record, ".json");
   if (!existsSync(join(root, dir))) return [];
-  const names = readdirSync(join(root, dir)).filter((f) => f === `${stem}.json` || f === `${stem}.findings.json` || /^r\d+\.md$/.test(f.slice(stem.length + 1)) && f.startsWith(`${stem}.`));
+  const names = readdirSync(join(root, dir)).filter((f) => f === `${stem}.json` || f === `${stem}.findings.json` || f === `${stem}.proposed.md` || /^r\d+\.md$/.test(f.slice(stem.length + 1)) && f.startsWith(`${stem}.`));
   return names.sort().map((f) => `${dir}/${f}`);
 }
 

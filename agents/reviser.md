@@ -1,6 +1,6 @@
 ---
 name: reviser
-description: Fixes the flagged spans of one Ledgerbound chapter from a findings file - only the flagged spans, and the staged delta when the record is what is wrong. Started by verify-chapter with a point, a round, a brief path and a findings path.
+description: Fixes the flagged spans of one Ledgerbound chapter from a findings file - only the flagged spans, and the staged delta when the record is what is wrong. Started by verify-chapter or tic-pass with a point, a round, a brief path and a findings path.
 tools: Read, Write, Edit, Bash
 ---
 
@@ -27,6 +27,7 @@ The point (for example `1.07`) gives the paths, where NN is the book and MM the 
    - For `dialogue.wants`, show the want in a move of the talk: a push, a condition, ground given, another way tried. The speaker seldom says the want aloud, and the plan's words for it stay in the plan.
    - For `emotion.felt`, `dialogue.delivery`, `dialogue.quip-chain` and `dialogue.natural`, a fix can add a sentence or a short paragraph of reaction, delivery or thought next to the span, or make a turn longer and less tidy. It stays in the voice of the samples and the voice card, and its gestures and images are new for the book (`lb phrases <point>`).
    - For `dialogue.natural`, put the untidiness in the spoken words: a restart, a word said twice, half an answer, a "well" or "look" in the speaker's voice. A line that breaks off is cut by the next speaker or by what happens. A turn that you write again keeps the words of the speaker's `vocabulary` (a dock word stays a dock word).
+   - In a tic pass, the file has `findings` and `keeps`. Change each span of `findings` as its `fix_hint` says, in the fewest words, and keep each line of `keeps` word for word. Each changed span has no new tic of the same kind and no new reaction beat. It holds every plot fact of the span, and it keeps the text of a status window or a combat line as it is. Your only other job is step 3.
    - For rule `reader`, from the reader review: make the change that the `fix_hint` names (a reaction, a line, a beat, a move between places), at most one paragraph, in the voice of the samples and the POV character. It uses only facts that the chapter, the brief or the record already have.
    - A plan finding can need new material: add at most one paragraph for it. When it needs more (a new scene, a different outcome), leave it and mark it `replan`.
    - Keep the counts of the chapter: when a fix cuts a sentence free, join it to the paragraph before or after it. A fix adds no one-line paragraph, em dash or body tell, and no contrast frame at all.

@@ -5,6 +5,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { buildBrief, phraseLog } from "./brief.ts";
 import { changedRanges } from "./changed.ts";
+import { applyChanges, changesMarkdown, listChanges, shelve, spreadExamples } from "./changes.ts";
 import { parseArgs } from "node:util";
 import { buildPlanIndex } from "./anchors.ts";
 import { approve, currentBook, firstPlannedBook, gate, isOn, status } from "./checkpoints.ts";
@@ -65,6 +66,13 @@ Generation (a point is 1.07 = book 1, chapter 7):
   lb changed <point> [--since K] [--json]
                                          the lines that changed since the last verify round, or since round K
                                          (runs/verify/NN-MM.rK.md)
+  lb changes <point>... [--since K] [--out FILE] [--json]
+                                         each changed sentence since the last verify round, before and after, numbered
+                                         across the chapters (the shelf of a tic pass when it exists, else the chapter)
+  lb changes <point> --shelve [--json]   a tic pass: move the revision to runs/verify/NN-MM.proposed.md, and put the
+                                         round copy back in books/ until the user answers
+  lb changes <point>... --apply [--restore N,N] [--json]
+                                         write the shelved chapters, with the words of those numbers from the round copy
   lb commit <point> [--json]             append a verified chapter's delta to the ledger and approve it
   lb reopen <point> [--dry-run] [--json] a deep revision: the ledger entries of this chapter and of every later
                                          chapter go back to staged deltas, and those chapters back to draft
@@ -123,6 +131,9 @@ const { values, positionals } = parseArgs({
     finding: { type: "string" },
     lint: { type: "string" },
     since: { type: "string" },
+    shelve: { type: "boolean", default: false },
+    apply: { type: "boolean", default: false },
+    restore: { type: "string" },
     help: { type: "boolean", short: "h", default: false },
   },
 });
@@ -438,6 +449,37 @@ switch (command) {
     const ranges = changedRanges(readFileSync(join(project.root, copy), "utf8"), readFileSync(join(project.root, chapterPath(book, chapter)), "utf8"));
     const lines = ranges.map(([a, b]) => (a === b ? `${a}` : `${a}-${b}`));
     out(ranges.length ? `Changed since round ${round}: lines ${lines.join(", ")}` : `No change since round ${round}.`, { round, copy, ranges });
+    break;
+  }
+
+  case "changes": {
+    if (!args.length) fail("give a chapter (lb changes 1.07) or several (lb changes 1.07 1.08)");
+    const points = args.map((_, i) => chapterArg(i));
+    const { project } = load();
+    try {
+      if (values.shelve) {
+        if (points.length > 1) fail("--shelve takes one chapter");
+        const r = shelve(project, points[0].book, points[0].chapter);
+        out(r.changes ? `${r.point}: ${r.changes} change(s) moved to ${r.proposed}; the chapter is the round copy again.` : `${r.point}: no change.`, r);
+      } else if (values.apply) {
+        const restore = values.restore ? values.restore.split(",").map((n) => Number(n.trim())) : [];
+        const r = applyChanges(project, points, restore);
+        const warn = r.warnings.map((w) => `WARN ${w.point} line ${w.line}: restored ${w.n} is next to ${w.neighbour}, which stays. Read them together:\n  ${w.context}`);
+        const stale = r.chapters.flatMap((c) => c.stale_log.map((s) => `STALE ${c.point} phrase_log.${s.list}: ${s.entry}`));
+        out([...r.chapters.map((c) => `${c.point}: ${c.changes - c.restored} change(s) kept, ${c.restored} restored.`), ...warn, ...stale].join("\n"), r);
+      } else {
+        if (values.since && points.length > 1) fail("--since takes one chapter");
+        const list = listChanges(project, points, values.since ? Number(values.since) : undefined);
+        if (values.out) {
+          const file = resolve(values.out);
+          mkdirSync(dirname(file), { recursive: true });
+          writeFileSync(file, changesMarkdown(list));
+          out(`${list.total} change(s) in ${file}`, { file: values.out, total: list.total, chapters: list.chapters, examples: spreadExamples(list.changes) });
+        } else out(changesMarkdown(list), list);
+      }
+    } catch (e) {
+      fail((e as Error).message);
+    }
     break;
   }
 

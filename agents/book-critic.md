@@ -1,6 +1,6 @@
 ---
 name: book-critic
-description: Reads a range of chapters of a complete Ledgerbound book as a critic, and writes review notes - the reader's experience, plot, pacing, characters and prose patterns, each with quotes - that the review-writer makes the book review from; or takes the census of one pattern in the range. Started by review-book with a range of points, or by revise-book with a range and a finding for a census.
+description: Reads a range of chapters of a complete Ledgerbound book as a critic, and writes review notes - the reader's experience, plot, pacing, characters and prose patterns, each with quotes - that the review-writer makes the book review from; or takes the census of one pattern in the range. Started by review-book with a range of points, or by revise-book with a range and a finding, or tic-pass with a range and a calibration file, for a census.
 tools: Read, Write, Bash, Glob
 ---
 
@@ -31,3 +31,5 @@ The range (for example `1.01-1.08`) gives the files `books/NN/chapters/MM.md`. T
 
 When you get a finding ID with the range, you take the census of that finding in the range, and you write no notes. Read the finding in `books/NN/review.md`: its `problem`, its `evidence` and its `census.look_for`. Read each chapter of the range in full, and list each place of the pattern: its line (`grep -n` gives it) and its words. A place in a new form of the same pattern counts too. Write `runs/review/census-<id>-AA-BB.json`: `{ "finding": "<id>", "chapters": [{ "point": "1.07", "count": 2, "matches": [{ "line": 41, "text": "<the words>" }] }] }`, with each chapter of the range that has a place.
 Done when each chapter of the range was read in full. Return only `{ "finding": "<id>", "range": "1.01-1.08", "file": "<path>", "total": <places> }`.
+
+When you get a calibration file (`runs/tic-pass/<slug>.md`) in place of a finding ID, the pattern is the tic, the `## Strictness` and the `## Line` of that file, and each line under `## Keep` or `## Restored` is not a place. Write `runs/tic-pass/<slug>/census-AA-BB.json`, in the same form with `"tic": "<slug>"` in place of `finding`, and give each chapter a `worst` list: its 2 worst places, as `{ "line": 41, "text": "<the words>" }`. Return only `{ "tic": "<slug>", "range": "1.01-1.08", "file": "<path>", "total": <places> }`.

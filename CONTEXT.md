@@ -292,6 +292,18 @@ _Avoid_: Count (for the list), search
 `ready` when no `major` finding of a book review is open, else `revise`. A later review first judges each old finding (`fixed`, `partly`, `not fixed`), and adds only new findings that pass its bar.
 _Avoid_: Pass, grade
 
+**Tic pass**:
+A prose revision for a tic that the user names in their own words: each change goes to the user as a numbered before-and-after list, the user restores by number, and their choices tune the next chapters (`tic-pass`). A pattern fix works to a limit that a review gives; a tic pass works to the strictness that the author chooses and the line that their restores show.
+_Avoid_: Sweep, global fix
+
+**Calibration file**:
+`runs/tic-pass/<slug>.md`: the tic in the user's words, its strictness, the line that each answer of the user makes sharper, and each sentence that the user restored. Each later checker reads it, and no prose checker flags a restored sentence again.
+_Avoid_: Style guide, rule file (a rule is in `guidelines/writing.md`)
+
+**Strictness**:
+How much of a tic the author wants flagged in a tic pass: `light` (only the worst), `medium` (each clear case that does no real work), `strict` (every case), or the author's own words. The author chooses it, and a restore wins over it.
+_Avoid_: Level (a level is a unit of the plan), sensitivity, severity (a severity belongs to one finding)
+
 **Callback**:
 A place where a chapter refers back to an earlier point: an object, a promise, a gesture with a meaning. The memory file of the chapter that refers back lists it, so that a revision of the earlier chapter can find the later chapters that depend on it.
 _Avoid_: Reference, echo, setup (a setup is a thread)

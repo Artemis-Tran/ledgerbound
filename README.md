@@ -130,6 +130,14 @@ The cost grows with the chapters after the change: `lb reopen <point> --dry-run`
 
 `/ledgerbound:revise-chapter` changes the prose of an approved chapter: for rules that you name (from `lb rules`), for your own notes, or both. The prose checker finds the spans (or a whole flat scene, which the reviser rewrites with the same plan, events and quotes), the reviser fixes them, and both checkers check the changed lines, for at most 3 rounds. The ledger does not change: each committed quote stays in the prose, word for word, and `lb validate` gives `ledger-quote-not-found` when one is gone. The memory writer then writes the chapter's rolling memory again. Run it once for each chapter of a range, in order.
 
+### Take a tic out of approved chapters
+
+`/ledgerbound:tic-pass` is for a habit of the prose that you can name but no rule covers: "too many long similes", "characters who explain the joke". Give it the tic in your own words, a range of approved chapters, any examples to keep, and a strictness: `light` (only the worst cases), `medium` (each clear case that does no real work in its scene), `strict` (every case), or your own words ("at most 3 for each chapter"). The skill asks when you do not say. You can change it when you answer; a batch can then run again at the new strictness.
+
+It runs the first chapter alone. The prose checker finds each case and lists the near-misses that it left alone, the reviser changes each case, and you get a numbered before-and-after file of each changed sentence. Answer "restore 2, 4, 9" or "all good". The chapter stays as committed until you answer. Your restores go into `runs/tic-pass/<slug>.md`, with the rule that they show, and each later checker reads that file. A restore wins over the strictness. Then the rest of the range goes in batches of about 4 chapters, with the cost before each batch, and the skill asks about the strictness when you restore more than a quarter of a batch. Each answer gets a git commit. If the run stops, run `tic-pass` again with the same tic: it continues from `runs/tic-pass/`.
+
+To only count a tic, ask "how bad is this tic across the book?": you get a count for each chapter and the worst examples, and nothing changes.
+
 ### Review and revise a book (optional)
 
 When a book is complete, you can get a critic's review of it and revise it before you publish it.
@@ -212,10 +220,15 @@ Use autopilot after the first chapters show that the voice and the plan work. Fo
 | `lb reopen 1.07 --dry-run` | The chapters that a deep revision of chapter 7 takes back to draft, and their words. |
 | `lb chapter insert 1.08 --dry-run` | The chapters that a new chapter 8 renumbers (also `remove 1.08`, `move 1.08 1.05`). They must be not approved. |
 | `lb book insert 2 --dry-run` | The books that a new book 2 renumbers (also `remove 2`, `move 3 2`). They must have no approved chapter. |
+| `lb changes 1.07` | Each sentence that the last revision of chapter 7 changed, before and after, numbered. Compare `lb changed 1.07`, which gives the paragraphs by line. |
 | `lb callbacks 1.07` | The later chapters that refer back to chapter 7, and what they refer back to. |
 | `lb census "nose (in\|into) the wind"` | Each place of a phrase in the book, by chapter and line. |
 | `lb dialogue` | The shape of the dialogue of each chapter: the turns, how long they are, quip chains and echo toppers. Give it files (`lb dialogue mybook/*.md`) to measure prose that a person wrote. |
 | `lb discard 1.09` | Deletes the prose of a draft chapter and the files made from it, so that it is written again from its plan. |
+
+### A novel repo made before version 0.39.0
+
+Nothing changes. `tic-pass` and `lb changes` are new.
 
 ### A novel repo made before version 0.34.0
 
